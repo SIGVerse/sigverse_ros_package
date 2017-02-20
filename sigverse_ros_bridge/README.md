@@ -15,7 +15,7 @@ $ sudo make install
 ### Install Mongo C Driver
 
 ```bash:
-$ cd ..
+$ cd ~/Downloads
 $ wget https://github.com/mongodb/mongo-c-driver/releases/download/1.4.2/mongo-c-driver-1.4.2.tar.gz
 $ tar zxvf mongo-c-driver-1.4.2.tar.gz
 $ cd mongo-c-driver-1.4.2
@@ -27,7 +27,7 @@ $ sudo make install
 ### Install Mongo C++ Driver
 
 ```bash:
-$ cd ..
+$ cd ~/Downloads
 $ wget https://github.com/mongodb/mongo-cxx-driver/archive/r3.0.3.tar.gz
 $ tar zxvf r3.0.3.tar.gz
 $ cd mongo-cxx-driver-r3.0.3/build
