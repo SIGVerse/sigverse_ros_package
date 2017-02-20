@@ -41,7 +41,7 @@ $ sudo make install
 
 ```bash:
 $ cd ~/catkin_ws/src
-$ git clone http://fs.iir.nii.ac.jp/sigverse/sigverse_ros_bridge.git
+$ git clone https://github.com/SIGVerse/ros_package.git
 $ cd ..
 $ catkin_make
 ```
