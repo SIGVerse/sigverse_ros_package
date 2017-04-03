@@ -27,7 +27,7 @@ bool SIGVerseROSBridge::checkReceivable( int fd )
 
 	ret = select( fd+1 , &fdset , NULL , NULL , &timeout );
 
-	return (ret == 1) ? true : false;
+	return ret == 1;
 }
 
 
@@ -38,6 +38,16 @@ void SIGVerseROSBridge::setVectorDouble(std::vector<double> &destVec, const bson
 	for(auto itr = arrayView.cbegin(); itr != arrayView.cend(); ++itr)
 	{
 		destVec[i++] = (*itr).get_double();
+	}
+}
+
+void SIGVerseROSBridge::setVectorFloat(std::vector<float> &destVec, const bsoncxx::array::view &arrayView)
+{
+	int i = 0;
+
+	for(auto itr = arrayView.cbegin(); itr != arrayView.cend(); ++itr)
+	{
+		destVec[i++] = (float)((*itr).get_double());
 	}
 }
 
@@ -64,7 +74,7 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 	char **dummyArgv;
 
 	char buf[BUFFER_SIZE];
-	int totalReceivedSize;
+	long int totalReceivedSize;
 
 	std::map<std::string, ros::Publisher> publisherMap;
 
@@ -85,7 +95,7 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 
 		char bufHeader[4];
 
-		int numRcv = read(dstSocket, bufHeader, sizeof(4));
+		long int numRcv = read(dstSocket, bufHeader, sizeof(4));
 
 		if(numRcv == 0)
 		{
@@ -123,11 +133,11 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 		// Get BSON data
 		while(msgSize!=totalReceivedSize)
 		{
-			int unreceivedSize = msgSize - totalReceivedSize;
+			size_t unreceivedSize = msgSize - (size_t)totalReceivedSize;
 
 			if(!checkReceivable(dstSocket)){ break; }
 
-			int receivedSize = read(dstSocket, &(buf[totalReceivedSize]), unreceivedSize);
+			long int receivedSize = read(dstSocket, &(buf[totalReceivedSize]), unreceivedSize);
 
 			totalReceivedSize += receivedSize;
 
@@ -141,7 +151,7 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 		};
 
 
-		bsoncxx::document::view bsonView((const uint8_t*)buf, msgSize);
+		bsoncxx::document::view bsonView((const uint8_t*)buf, (std::size_t)msgSize);
 
 		bsoncxx::builder::core bsonCore(false);
 
@@ -156,7 +166,7 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 //		std::cout << "tp:" << topicValue << std::endl;
 
 		// Advertise
-		if(publisherMap.count(topicValue)==0)
+		if(publisherMap.count(topicValue)==0 && typeValue!=TYPE_TF_LIST)
 		{
 			ros::Publisher publisher;
 
@@ -207,30 +217,30 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 		{
 			sensor_msgs::CameraInfo cameraInfo;
 
-			cameraInfo.header.seq        = bsonView["msg"]["header"]["seq"]           .get_int32();
-			cameraInfo.header.stamp.sec  = bsonView["msg"]["header"]["stamp"]["secs"] .get_int32();
-			cameraInfo.header.stamp.nsec = bsonView["msg"]["header"]["stamp"]["nsecs"].get_int32();
-			cameraInfo.header.frame_id   = bsonView["msg"]["header"]["frame_id"]      .get_utf8().value.to_string();
+			cameraInfo.header.seq        = (uint32_t)bsonView["msg"]["header"]["seq"]           .get_int32();
+			cameraInfo.header.stamp.sec  = (uint32_t)bsonView["msg"]["header"]["stamp"]["secs"] .get_int32();
+			cameraInfo.header.stamp.nsec = (uint32_t)bsonView["msg"]["header"]["stamp"]["nsecs"].get_int32();
+			cameraInfo.header.frame_id   =           bsonView["msg"]["header"]["frame_id"]      .get_utf8().value.to_string();
 
-			cameraInfo.height            = bsonView["msg"]["height"].get_int32();
-			cameraInfo.width             = bsonView["msg"]["width"] .get_int32();
-			cameraInfo.distortion_model  = bsonView["msg"]["distortion_model"]    .get_utf8().value.to_string();
+			cameraInfo.height            = (uint32_t)bsonView["msg"]["height"].get_int32();
+			cameraInfo.width             = (uint32_t)bsonView["msg"]["width"] .get_int32();
+			cameraInfo.distortion_model  =           bsonView["msg"]["distortion_model"].get_utf8().value.to_string();
 
 			bsoncxx::array::view dView = bsonView["msg"]["D"].get_array().value;
-			cameraInfo.D.resize(std::distance(dView.cbegin(), dView.cend()));
+			cameraInfo.D.resize((size_t)std::distance(dView.cbegin(), dView.cend()));
 			setVectorDouble(cameraInfo.D, dView);
 
 			setArrayDouble(cameraInfo.K, bsonView["msg"]["K"].get_array().value);
 			setArrayDouble(cameraInfo.R, bsonView["msg"]["R"].get_array().value);
 			setArrayDouble(cameraInfo.P, bsonView["msg"]["P"].get_array().value);
 
-			cameraInfo.binning_x         = bsonView["msg"]["binning_x"].get_int32();
-			cameraInfo.binning_y         = bsonView["msg"]["binning_y"].get_int32();
-			cameraInfo.roi.x_offset      = bsonView["msg"]["roi"]["x_offset"]  .get_int32();
-			cameraInfo.roi.y_offset      = bsonView["msg"]["roi"]["y_offset"]  .get_int32();
-			cameraInfo.roi.height        = bsonView["msg"]["roi"]["height"]    .get_int32();
-			cameraInfo.roi.width         = bsonView["msg"]["roi"]["width"]     .get_int32();
-			cameraInfo.roi.do_rectify    = bsonView["msg"]["roi"]["do_rectify"].get_bool();
+			cameraInfo.binning_x         = (uint32_t)bsonView["msg"]["binning_x"].get_int32();
+			cameraInfo.binning_y         = (uint32_t)bsonView["msg"]["binning_y"].get_int32();
+			cameraInfo.roi.x_offset      = (uint32_t)bsonView["msg"]["roi"]["x_offset"]  .get_int32();
+			cameraInfo.roi.y_offset      = (uint32_t)bsonView["msg"]["roi"]["y_offset"]  .get_int32();
+			cameraInfo.roi.height        = (uint32_t)bsonView["msg"]["roi"]["height"]    .get_int32();
+			cameraInfo.roi.width         = (uint32_t)bsonView["msg"]["roi"]["width"]     .get_int32();
+			cameraInfo.roi.do_rectify    = (uint8_t) bsonView["msg"]["roi"]["do_rectify"].get_bool();
 
 			publisherMap[topicValue].publish(cameraInfo);
 		}
@@ -239,15 +249,15 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 		{
 			sensor_msgs::Image image;
 
-			image.header.seq        = bsonView["msg"]["header"]["seq"]           .get_int32();
-			image.header.stamp.sec  = bsonView["msg"]["header"]["stamp"]["secs"] .get_int32();
-			image.header.stamp.nsec = bsonView["msg"]["header"]["stamp"]["nsecs"].get_int32();
-			image.header.frame_id   = bsonView["msg"]["header"]["frame_id"]      .get_utf8().value.to_string();
-			image.height            = bsonView["msg"]["height"]      .get_int32();
-			image.width             = bsonView["msg"]["width"]       .get_int32();
-			image.encoding          = bsonView["msg"]["encoding"]    .get_utf8().value.to_string();
-			image.is_bigendian      = bsonView["msg"]["is_bigendian"].raw()[0];
-			image.step              = bsonView["msg"]["step"]        .get_int32();
+			image.header.seq        = (uint32_t)bsonView["msg"]["header"]["seq"]           .get_int32();
+			image.header.stamp.sec  = (uint32_t)bsonView["msg"]["header"]["stamp"]["secs"] .get_int32();
+			image.header.stamp.nsec = (uint32_t)bsonView["msg"]["header"]["stamp"]["nsecs"].get_int32();
+			image.header.frame_id   =           bsonView["msg"]["header"]["frame_id"]      .get_utf8().value.to_string();
+			image.height            = (uint32_t)bsonView["msg"]["height"]      .get_int32();
+			image.width             = (uint32_t)bsonView["msg"]["width"]       .get_int32();
+			image.encoding          =           bsonView["msg"]["encoding"]    .get_utf8().value.to_string();
+			image.is_bigendian      =           bsonView["msg"]["is_bigendian"].raw()[0];
+			image.step              = (uint32_t)bsonView["msg"]["step"]        .get_int32();
 
 			size_t sizet = (image.step * image.height);
 			image.data.resize(sizet);
@@ -255,33 +265,78 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 
 			publisherMap[topicValue].publish(image);
 		}
-		// LaserScan (!! Under construction !!)
+		// LaserScan
 		else if(typeValue==TYPE_LASER_SCAN)
 		{
-			sensor_msgs::LaserScan image;
+			sensor_msgs::LaserScan laserScan;
 
-			image.header.seq        = bsonView["msg"]["header"]["seq"]           .get_int32();
-			image.header.stamp.sec  = bsonView["msg"]["header"]["stamp"]["secs"] .get_int32();
-			image.header.stamp.nsec = bsonView["msg"]["header"]["stamp"]["nsecs"].get_int32();
-			image.header.frame_id   = bsonView["msg"]["header"]["frame_id"]      .get_utf8().value.to_string();
+			laserScan.header.seq        = (uint32_t)bsonView["msg"]["header"]["seq"]           .get_int32();
+			laserScan.header.stamp.sec  = (uint32_t)bsonView["msg"]["header"]["stamp"]["secs"] .get_int32();
+			laserScan.header.stamp.nsec = (uint32_t)bsonView["msg"]["header"]["stamp"]["nsecs"].get_int32();
+			laserScan.header.frame_id   =           bsonView["msg"]["header"]["frame_id"]      .get_utf8().value.to_string();
 
-			image.angle_min       = (float)bsonView["msg"]["angle_min"]      .get_double();
-			image.angle_max       = (float)bsonView["msg"]["angle_max"]      .get_double();
-			image.angle_increment = (float)bsonView["msg"]["angle_increment"].get_double();
-			image.time_increment  = (float)bsonView["msg"]["time_increment"] .get_double();
-			image.scan_time       = (float)bsonView["msg"]["scan_time"]      .get_double();
-			image.range_min       = (float)bsonView["msg"]["range_min"]      .get_double();
-			image.range_max       = (float)bsonView["msg"]["range_max"]      .get_double();
+			laserScan.angle_min       = (float)bsonView["msg"]["angle_min"]      .get_double();
+			laserScan.angle_max       = (float)bsonView["msg"]["angle_max"]      .get_double();
+			laserScan.angle_increment = (float)bsonView["msg"]["angle_increment"].get_double();
+			laserScan.time_increment  = (float)bsonView["msg"]["time_increment"] .get_double();
+			laserScan.scan_time       = (float)bsonView["msg"]["scan_time"]      .get_double();
+			laserScan.range_min       = (float)bsonView["msg"]["range_min"]      .get_double();
+			laserScan.range_max       = (float)bsonView["msg"]["range_max"]      .get_double();
 
-			size_t sizet = (image.angle_max - image.angle_min) / image.angle_increment;
+			size_t sizet = (size_t)((laserScan.angle_max - laserScan.angle_min) / laserScan.angle_increment + 1);
 
-			image.ranges.resize(sizet);
-			image.intensities.resize(sizet);
+			laserScan.ranges.resize(sizet);
+			laserScan.intensities.resize(sizet);
 
-			memcpy(&image.ranges[0],      bsonView["msg"]["ranges"]     .get_binary().bytes, sizet*sizeof(float));
-			memcpy(&image.intensities[0], bsonView["msg"]["intensities"].get_binary().bytes, sizet*sizeof(float));
+			bsoncxx::array::view dView_ranges = bsonView["msg"]["ranges"].get_array().value;
+			laserScan.ranges.resize(std::distance(dView_ranges.cbegin(), dView_ranges.cend()));
+			setVectorFloat(laserScan.ranges, dView_ranges);
 
-			publisherMap[topicValue].publish(image);
+			bsoncxx::array::view dView_intensities = bsonView["msg"]["intensities"].get_array().value;
+			laserScan.intensities.resize(std::distance(dView_intensities.cbegin(), dView_intensities.cend()));
+			setVectorFloat(laserScan.intensities, dView_intensities);
+
+			publisherMap[topicValue].publish(laserScan);
+		}
+		// Tf list data (sigverse original type)
+		else if(typeValue==TYPE_TF_LIST)
+		{
+			static tf::TransformBroadcaster transformBroadcaster;
+
+			bsoncxx::array::view tfArrayView = bsonView["msg"].get_array().value;
+
+			std::vector<tf::StampedTransform> stampedTransformList;
+
+			int i = 0;
+
+			for(auto itr = tfArrayView.cbegin(); itr != tfArrayView.cend(); ++itr)
+			{
+				std::string frameId      = (*itr)["header"]["frame_id"].get_utf8().value.to_string();
+				std::string childFrameId = (*itr)["child_frame_id"]    .get_utf8().value.to_string();
+
+				tf::Vector3 position = tf::Vector3
+				(
+					(double)(*itr)["transform"]["translation"]["x"].get_double(),
+					(double)(*itr)["transform"]["translation"]["y"].get_double(),
+					(double)(*itr)["transform"]["translation"]["z"].get_double()
+				);
+
+				tf::Quaternion quaternion = tf::Quaternion
+				(
+					(double)(*itr)["transform"]["rotation"]["x"].get_double(),
+					(double)(*itr)["transform"]["rotation"]["y"].get_double(),
+					(double)(*itr)["transform"]["rotation"]["z"].get_double(),
+					(double)(*itr)["transform"]["rotation"]["w"].get_double()
+				);
+
+				tf::Transform transform;
+				transform.setOrigin(position);
+				transform.setRotation(quaternion);
+
+				stampedTransformList.push_back(tf::StampedTransform(transform, ros::Time::now(), frameId, childFrameId));
+			}
+
+			transformBroadcaster.sendTransform(stampedTransformList);
 		}
 
 //		std::cout << "published. topic=" << topicValue << std::endl;
@@ -304,7 +359,7 @@ int SIGVerseROSBridge::run(int argc, char **argv)
 	// Set port number
 	if(argc > 1)
 	{
-		portNumber = std::atoi(argv[1]);
+		portNumber = (uint16_t)std::atoi(argv[1]);
 	}
 	else
 	{
