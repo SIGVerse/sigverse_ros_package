@@ -1,16 +1,9 @@
 
 #include "sigverse_ros_bridge.hpp"
 
-bool SIGVerseROSBridge::isInterrupted = false;
-
 pid_t SIGVerseROSBridge::gettid(void)
 {
 	return syscall(SYS_gettid);
-}
-
-void SIGVerseROSBridge::interruptEventHandler(int sig)
-{
-	isInterrupted = true;
 }
 
 bool SIGVerseROSBridge::checkReceivable( int fd )
@@ -66,8 +59,6 @@ void SIGVerseROSBridge::setArrayDouble(boost::array<double, ArrayNum> &destArray
 
 void * SIGVerseROSBridge::receivingThread(void *param)
 {
-	signal(SIGINT, interruptEventHandler);
-
 	int dstSocket = *((int *)param);
 
 	int dummyArgc;
@@ -352,8 +343,6 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 
 int SIGVerseROSBridge::run(int argc, char **argv)
 {
-	signal(SIGINT, interruptEventHandler);
-
 	uint16_t portNumber;
 
 	// Set port number
@@ -391,7 +380,6 @@ int SIGVerseROSBridge::run(int argc, char **argv)
 
 		if(!checkReceivable(srcSocket))
 		{
-			if(isInterrupted){ break; }
 			continue;
 		}
 
@@ -413,6 +401,8 @@ int SIGVerseROSBridge::run(int argc, char **argv)
 
 int main(int argc, char **argv)
 {
+	std::cout << "pid=" << getpid() << std::endl;
+
 	SIGVerseROSBridge sigverseROSBridge;
 	sigverseROSBridge.run(argc, argv);
 };

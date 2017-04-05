@@ -53,11 +53,7 @@
 class SIGVerseROSBridge
 {
 public:
-	static bool isInterrupted;
-
 	static pid_t gettid(void);
-
-	static void interruptEventHandler(int sig);
 
 	static bool checkReceivable( int fd );
 
