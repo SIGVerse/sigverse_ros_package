@@ -64,7 +64,16 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 	int dummyArgc;
 	char **dummyArgv;
 
-	char buf[BUFFER_SIZE];
+	char *buf;
+	buf = new char [BUFFER_SIZE];
+
+	if(buf == NULL)
+	{
+		std::cout << "Cannot malloc!" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+
 	long int totalReceivedSize;
 
 	std::map<std::string, ros::Publisher> publisherMap;
@@ -75,7 +84,7 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 	ros::init(dummyArgc, dummyArgv, "sigverse_ros_bridge_"+std::to_string(gettid()));
 
 	ros::NodeHandle rosNodeHandle;
-//	ros::Rate loop_rate(100);
+	ros::Rate loop_rate(100);
 
 	while(ros::ok())
 	{
@@ -337,6 +346,8 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 //		loop_rate.sleep();
 	}
 
+	delete[] buf;
+
 	return NULL;
 }
 
@@ -375,6 +386,7 @@ int SIGVerseROSBridge::run(int argc, char **argv)
 	while(true)
 	{
 		int dstSocket;
+
 		struct sockaddr_in dstAddr;
 		int dstAddrSize = sizeof(dstAddr);
 
@@ -388,9 +400,10 @@ int SIGVerseROSBridge::run(int argc, char **argv)
 		std::cout << "Connected from IP=" << inet_ntoa(dstAddr.sin_addr) << " Port=" << dstAddr.sin_port << std::endl;
 
 		pthread_t thread;
-		pthread_create( &thread, NULL, SIGVerseROSBridge::receivingThread, (void *)(&dstSocket) );
-
+		pthread_create( &thread, NULL, receivingThread, (void *)(&dstSocket));
 		pthread_detach(thread);
+
+		usleep(10 * 1000);
 	}
 
 	close(srcSocket);

@@ -46,7 +46,7 @@
 #define TYPE_LASER_SCAN         "sensor_msgs/LaserScan"
 #define TYPE_TF_LIST            "sigverse/TfList"
 
-#define BUFFER_SIZE 1024*1024 //1MB
+#define BUFFER_SIZE 25*1024*1024 //100MB
 
 #define PORT 50001
 
