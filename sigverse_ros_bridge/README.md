@@ -61,7 +61,3 @@ $ rosrun sigverse_ros_bridge sigverse_ros_bridge 12345
 ```
 
 
-## Note
-
-When you want to shut down, please use SIGQUIT(Ctrl-\\).
-
