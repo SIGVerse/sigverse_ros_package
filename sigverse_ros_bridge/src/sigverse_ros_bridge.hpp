@@ -40,11 +40,11 @@
 
 #include <boost/array.hpp>
 
-#define TYPE_TWIST              "geometry_msgs/Twist"
-#define TYPE_CAMERA_INFO        "sensor_msgs/CameraInfo"
-#define TYPE_IMAGE              "sensor_msgs/Image"
-#define TYPE_LASER_SCAN         "sensor_msgs/LaserScan"
-#define TYPE_TF_LIST            "sigverse/TfList"
+#define TYPE_TWIST        "geometry_msgs/Twist"
+#define TYPE_CAMERA_INFO  "sensor_msgs/CameraInfo"
+#define TYPE_IMAGE        "sensor_msgs/Image"
+#define TYPE_LASER_SCAN   "sensor_msgs/LaserScan"
+#define TYPE_TF_LIST      "sigverse/TfList"
 
 #define BUFFER_SIZE 25*1024*1024 //100MB
 
@@ -52,9 +52,10 @@
 
 class SIGVerseROSBridge
 {
-public:
+private:
 	static pid_t gettid(void);
 
+	static void rosSigintHandler(int sig);
 	static bool checkReceivable( int fd );
 
 	static void setVectorDouble(std::vector<double> &destVec, const bsoncxx::array::view &arrayView);
@@ -65,6 +66,9 @@ public:
 
 	static void *receivingThread(void *param);
 
+	static bool isRunning;
+
+public:
 	int run(int argc, char **argv);
 };
 

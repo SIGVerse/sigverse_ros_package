@@ -1,9 +1,18 @@
 
 #include "sigverse_ros_bridge.hpp"
 
+bool SIGVerseROSBridge::isRunning;
+
 pid_t SIGVerseROSBridge::gettid(void)
 {
 	return syscall(SYS_gettid);
+}
+
+void SIGVerseROSBridge::rosSigintHandler(int sig)
+{
+	isRunning = false;
+
+	ros::shutdown();
 }
 
 bool SIGVerseROSBridge::checkReceivable( int fd )
@@ -81,9 +90,14 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 	std::cout << "Socket open. tid=" << gettid() << std::endl;
 
 	// Initialize ROS
-	ros::init(dummyArgc, dummyArgv, "sigverse_ros_bridge_"+std::to_string(gettid()));
+	ros::init(dummyArgc, dummyArgv, "sigverse_ros_bridge_"+std::to_string(gettid()), ros::init_options::NoSigintHandler);
 
 	ros::NodeHandle rosNodeHandle;
+
+	// Override the default ros sigint handler.
+	// This must be set after the first NodeHandle is created.
+	signal(SIGINT, rosSigintHandler);
+
 	ros::Rate loop_rate(100);
 
 	while(ros::ok())
@@ -366,6 +380,8 @@ int SIGVerseROSBridge::run(int argc, char **argv)
 		portNumber = PORT;
 	}
 
+	isRunning = true;
+
 	int srcSocket;
 	struct sockaddr_in srcAddr;
 
@@ -383,7 +399,7 @@ int SIGVerseROSBridge::run(int argc, char **argv)
 
 	std::cout << "Waiting for connection... port=" << portNumber << std::endl;
 
-	while(true)
+	while(isRunning)
 	{
 		int dstSocket;
 
