@@ -41,7 +41,7 @@ $ sudo make install
 
 ```bash:
 $ cd ~/catkin_ws/src
-$ git clone https://github.com/SIGVerse/ros_package.git
+$ git clone https://github.com/SIGVerse/sigverse_ros_package.git
 $ cd ..
 $ catkin_make
 ```
