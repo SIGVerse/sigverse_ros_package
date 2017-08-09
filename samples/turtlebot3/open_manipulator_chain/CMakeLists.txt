@@ -198,7 +198,7 @@ include_directories(
 include_directories(include ${catkin_INCLUDE_DIRS})
 link_directories(/usr/local/lib)
 
-add_executable(sigverse_turtlebot3_open_manipulator_chain src/teleop_key.cpp)
-target_link_libraries(sigverse_turtlebot3_open_manipulator_chain ${catkin_LIBRARIES})
+add_executable(teleop_key src/teleop_key.cpp)
+target_link_libraries(teleop_key ${catkin_LIBRARIES})
 
 
