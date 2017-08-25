@@ -11,22 +11,23 @@
 class SIGVerseTb3OmcTeleopKey
 {
 private:
+  static const char KEY_1 = 0x31;
+  static const char KEY_2 = 0x32;
+  static const char KEY_3 = 0x33;
+  static const char KEY_4 = 0x34;
+  static const char KEY_5 = 0x35;
+  static const char KEY_6 = 0x36;
+  static const char KEY_7 = 0x37;
+  static const char KEY_8 = 0x38;
+
   static const char KEY_A = 0x61;
   static const char KEY_C = 0x63;
   static const char KEY_D = 0x64;
-  static const char KEY_G = 0x67;
   static const char KEY_H = 0x68;
-  static const char KEY_I = 0x69;
-  static const char KEY_J = 0x6a;
-  static const char KEY_K = 0x6b;
   static const char KEY_O = 0x6f;
-  static const char KEY_Q = 0x71;
   static const char KEY_S = 0x73;
-  static const char KEY_T = 0x74;
-  static const char KEY_U = 0x75;
   static const char KEY_W = 0x77;
   static const char KEY_X = 0x78;
-  static const char KEY_Y = 0x79;
 
   const std::string JOINT1_NAME = "joint1";
   const std::string JOINT2_NAME = "joint2";
@@ -36,10 +37,12 @@ private:
   const std::string GRIP_JOINT_NAME     = "grip_joint";
   const std::string GRIP_JOINT_SUB_NAME = "grip_joint_sub";
 
+  const double LINEAR_VEL  = 0.2;
+  const double ANGULAR_VEL = 0.2;
   const double JOINT_MIN = -2.83;
   const double JOINT_MAX = +2.83;
   const double GRIP_MIN = -0.01;
-  const double GRIP_MAX = +0.04;
+  const double GRIP_MAX = +0.035;
 
 public:
   SIGVerseTb3OmcTeleopKey();
@@ -230,28 +233,30 @@ int SIGVerseTb3OmcTeleopKey::calcDuration(const double val, const double current
 
 void SIGVerseTb3OmcTeleopKey::showHelp()
 {
+  puts("\n");
+  puts("---------------------------");
   puts("Operate from keyboard");
   puts("---------------------------");
-  puts("s : Stop");
+  puts("s : Stop all movements");
   puts("---------------------------");
   puts("w : Go Forward");
   puts("x : Go Back");
   puts("d : Turn Right");
   puts("a : Turn Left");
   puts("---------------------------");
-  puts("t : Joint1 Right");
-  puts("g : Joint1 Left");
-  puts("y : Joint2 Up");
-  puts("h : Joint2 Down");
-  puts("u : Joint3 Up");
-  puts("j : Joint3 Down");
-  puts("i : Joint4 Up");
-  puts("k : Joint4 Down");
+  puts("1 : Joint1 Right");
+  puts("2 : Joint1 Left");
+  puts("3 : Joint2 Up");
+  puts("4 : Joint2 Down");
+  puts("5 : Joint3 Up");
+  puts("6 : Joint3 Down");
+  puts("7 : Joint4 Up");
+  puts("8 : Joint4 Down");
   puts("---------------------------");
   puts("o : Hand Open");
   puts("c : Hand Close");
-//  puts("---------------------------");
-//  puts("h : Show help");
+  puts("---------------------------");
+  puts("h : Show help");
 }
 
 
@@ -273,8 +278,6 @@ void SIGVerseTb3OmcTeleopKey::keyLoop(int argc, char** argv)
   tcsetattr(kfd, TCSANOW, &raw);
   /////////////////////////////////////////////
 
-  showHelp();
-
   ros::init(argc, argv, "tb3_omc_teleop_key", ros::init_options::NoSigintHandler);
 
   ros::NodeHandle node_handle;
@@ -285,15 +288,21 @@ void SIGVerseTb3OmcTeleopKey::keyLoop(int argc, char** argv)
 
   ros::Rate loop_rate(30);
 
-  std::string sub_joint_state_topic_name      = "/tb3omc/joint_state";
-  std::string pub_base_twist_topic_name       = "/tb3omc/cmd_vel";
-  std::string pub_joint_trajectory_topic_name = "/tb3omc/joint_trajectory";
+  std::string sub_joint_state_topic_name;
+  std::string pub_base_twist_topic_name;
+  std::string pub_joint_trajectory_topic_name;
 
+  node_handle.param<std::string>("sub_joint_state_topic_name",      sub_joint_state_topic_name,      "/tb3omc/joint_state");
+  node_handle.param<std::string>("pub_twist_topic_name",            pub_base_twist_topic_name,       "/tb3omc/cmd_vel");
+  node_handle.param<std::string>("pub_joint_trajectory_topic_name", pub_joint_trajectory_topic_name, "/tb3omc/joint_trajectory");
 
   ros::Subscriber sub_joint_state = node_handle.subscribe<sensor_msgs::JointState>(sub_joint_state_topic_name, 10, &SIGVerseTb3OmcTeleopKey::jointStateCallback, this);
-
   ros::Publisher pub_base_twist = node_handle.advertise<geometry_msgs::Twist>            (pub_base_twist_topic_name, 10);
   ros::Publisher pub_joint_traj = node_handle.advertise<trajectory_msgs::JointTrajectory>(pub_joint_trajectory_topic_name, 10);
+
+  sleep(2);
+
+  showHelp();
 
   while (ros::ok())
   {
@@ -318,70 +327,70 @@ void SIGVerseTb3OmcTeleopKey::keyLoop(int argc, char** argv)
         case KEY_W:
         {
           ROS_DEBUG("Go Forward");
-          moveBase(pub_base_twist, +1.0, 0.0);
+          moveBase(pub_base_twist, +LINEAR_VEL, 0.0);
           break;
         }
         case KEY_X:
         {
           ROS_DEBUG("Go Back");
-          moveBase(pub_base_twist, -1.0, 0.0);
+          moveBase(pub_base_twist, -LINEAR_VEL, 0.0);
           break;
         }
         case KEY_D:
         {
           ROS_DEBUG("Turn Right");
-          moveBase(pub_base_twist, 0.0, -1.0);
+          moveBase(pub_base_twist, 0.0, -ANGULAR_VEL);
           break;
         }
         case KEY_A:
         {
           ROS_DEBUG("Turn Left");
-          moveBase(pub_base_twist, 0.0, +1.0);
+          moveBase(pub_base_twist, 0.0, +ANGULAR_VEL);
           break;
         }
-        case KEY_T:
+        case KEY_1:
         {
           ROS_DEBUG("Joint1 Right");
           moveArm(pub_joint_traj, JOINT1_NAME, JOINT_MIN, joint1_pos_);
           break;
         }
-        case KEY_G:
+        case KEY_2:
         {
           ROS_DEBUG("Joint1 Left");
           moveArm(pub_joint_traj, JOINT1_NAME, JOINT_MAX, joint1_pos_);
           break;
         }
-        case KEY_Y:
+        case KEY_3:
         {
           ROS_DEBUG("Joint2 Up");
           moveArm(pub_joint_traj, JOINT2_NAME, JOINT_MIN, joint2_pos_);
           break;
         }
-        case KEY_H:
+        case KEY_4:
         {
           ROS_DEBUG("Joint2 Down");
           moveArm(pub_joint_traj, JOINT2_NAME, JOINT_MAX, joint2_pos_);
           break;
         }
-        case KEY_U:
+        case KEY_5:
         {
           ROS_DEBUG("Joint3 Up");
           moveArm(pub_joint_traj, JOINT3_NAME, JOINT_MIN, joint3_pos_);
           break;
         }
-        case KEY_J:
+        case KEY_6:
         {
           ROS_DEBUG("Joint3 Down");
           moveArm(pub_joint_traj, JOINT3_NAME, JOINT_MAX, joint3_pos_);
           break;
         }
-        case KEY_I:
+        case KEY_7:
         {
           ROS_DEBUG("Joint4 Up");
           moveArm(pub_joint_traj, JOINT4_NAME, JOINT_MIN, joint4_pos_);
           break;
         }
-        case KEY_K:
+        case KEY_8:
         {
           ROS_DEBUG("Joint4 Down");
           moveArm(pub_joint_traj, JOINT4_NAME, JOINT_MAX, joint4_pos_);
@@ -397,6 +406,12 @@ void SIGVerseTb3OmcTeleopKey::keyLoop(int argc, char** argv)
         {
           ROS_DEBUG("Hand Close");
           moveHand(pub_joint_traj, GRIP_MAX, grip_joint_pos_);
+          break;
+        }
+        case KEY_H:
+        {
+          ROS_DEBUG("Show Help");
+          showHelp();
           break;
         }
       }

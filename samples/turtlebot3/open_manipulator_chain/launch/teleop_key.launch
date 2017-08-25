@@ -1,0 +1,34 @@
+<launch>
+	<arg name="sub_joint_state_topic_name"      default="/tb3omc/joint_state" />
+	<arg name="pub_twist_topic_name"            default="/tb3omc/cmd_vel" />
+	<arg name="pub_joint_trajectory_topic_name" default="/tb3omc/joint_trajectory" />
+	<arg name="sigverse_ros_bridge_port"        default="50001" />
+	<arg name="ros_bridge_port"                 default="9090" />
+
+	<arg name="camera"  default="camera" />
+
+	<group ns="teleop_key">
+		<node name="teleop_key" pkg="sigverse_turtlebot3_open_manipulator_chain" type="teleop_key" output="screen">
+
+			<param name="sub_joint_state_topic_name"      type="string" value="$(arg sub_joint_state_topic_name)" />
+			<param name="pub_twist_topic_name"            type="string" value="$(arg pub_twist_topic_name)" />
+			<param name="pub_joint_trajectory_topic_name" type="string" value="$(arg pub_joint_trajectory_topic_name)" />
+
+		</node>
+	</group>
+
+	<group ns="sigverse_ros_bridge">
+		<node name="sigverse_ros_bridge" pkg="sigverse_ros_bridge" type="sigverse_ros_bridge" args="$(arg sigverse_ros_bridge_port)"/>
+	</group>
+	
+	<include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" > 
+		<arg name="port" value="$(arg ros_bridge_port)"/>
+	</include>
+
+	<include file="$(find realsense_camera)/launch/r200_nodelet_rgbd.launch">
+		<arg name="camera"      value="$(arg camera)"/>
+		<arg name="load_driver" value="false"/>
+	</include>
+
+</launch>
+

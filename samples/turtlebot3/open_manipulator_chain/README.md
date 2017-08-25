@@ -28,9 +28,7 @@ $ catkin_make
 ## How to use
 
 ```bash:
-$ roslaunch rosbridge_server rosbridge_websocket.launch
-$ rosrun sigverse_ros_bridge sigverse_ros_bridge
-$ rosrun sigverse_turtlebot3_open_manipulator_chain teleop_key
+$ roslaunch sigverse_turtlebot3_open_manipulator_chain teleop_key.launch
 ```
 
 
