@@ -25,10 +25,10 @@ $ cd ..
 $ catkin_make
 ```
 
-## How to use
+## How to use teleoperation tool
 
 ```bash:
-$ roslaunch sigverse_turtlebot3_open_manipulator_chain teleop_key.launch
+$ roslaunch sigverse_turtlebot3_open_manipulator teleop_key.launch
 ```
 
 

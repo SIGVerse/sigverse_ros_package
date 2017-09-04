@@ -1,0 +1,10 @@
+<launch>
+	<arg name="ros_bridge_port"                 default="9090" />
+
+	<include file="$(find turtlebot_teleop)/launch/keyboard_teleop.launch" /> 
+
+	<include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch"> 
+		<arg name="port" value="$(arg ros_bridge_port)"/>
+	</include>
+</launch>
+

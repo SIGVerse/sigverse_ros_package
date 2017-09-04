@@ -1,16 +1,11 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(sigverse_turtlebot3_open_manipulator)
+project(sigverse_turtlebot2)
 
 add_definitions(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(darknet_ros_msgs)
-
-if (NOT darknet_ros_msgs_FOUND)
-  message(STATUS "Can't find darknet_ros package.")
-endif()
 
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
@@ -18,16 +13,8 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   geometry_msgs
-  trajectory_msgs
   sensor_msgs
-  tf
 )
-
-if (darknet_ros_msgs_FOUND)
-  find_package(darknet_ros_msgs REQUIRED)
-endif()
-
-
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -121,13 +108,9 @@ endif()
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES sigverse_ros_bridge
-  CATKIN_DEPENDS geometry_msgs trajectory_msgs roscpp rospy std_msgs
+  CATKIN_DEPENDS geometry_msgs roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
-
-if (darknet_ros_msgs_FOUND)
-  catkin_package(CATKIN_DEPENDS darknet_ros_msgs)
-endif()
 
 ###########
 ## Build ##
@@ -139,10 +122,6 @@ endif()
 include_directories(
   ${catkin_INCLUDE_DIRS}
 )
-
-if (darknet_ros_msgs_FOUND)
-  include_directories(include ${darknet_ros_msgs_INCLUDE_DIRS})
-endif()
 
 ## Declare a C++ library
 # add_library(sigverse_ros_bridge
@@ -195,11 +174,20 @@ endif()
 # )
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
-# install(FILES
-#   # myfile1
-#   # myfile2
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
+
+#find_package(turtlebot_bringup)
+
+#if(NOT turtlebot_bringup_FOUND)
+#  message(SEND_ERROR "Couldn't find turtlebot_bringup package!")
+#endif()
+
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+)
+
+#install(FILES resources/asus_xtion_pro_sigverse.launch.xml
+#  DESTINATION /opt/ros/${ROS_DISTRO}/share/turtlebot_bringup/launch/includes/3dsensor
+#)
 
 #############
 ## Testing ##
@@ -217,13 +205,4 @@ endif()
 link_directories(/usr/local/lib)
 
 
-add_executable(grasping_teleop_key src/grasping_teleop_key.cpp)
-target_link_libraries(grasping_teleop_key ${catkin_LIBRARIES})
-
-#message(STATUS "catkin_INCLUDE_DIRS =${catkin_INCLUDE_DIRS}")
-
-if (darknet_ros_msgs_FOUND)
-  add_executable(grasping_auto src/grasping_auto.cpp)
-  target_link_libraries(grasping_auto ${catkin_LIBRARIES} ${darknet_ros_msgs_LIBRARIES})
-endif()
 
