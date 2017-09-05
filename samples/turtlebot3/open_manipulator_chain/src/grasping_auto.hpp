@@ -217,7 +217,7 @@ bool SIGVerseTb3OpenManipulatorGraspingAuto::get3dPositionFromScreenPosition(geo
 
   if(std::isnan(position3d.x) || std::isnan(position3d.y) || std::isnan(position3d.z))
   {
-    puts("Point cloud data is nan.");
+//    puts("Point cloud data is nan.");
     return false;
   }
 

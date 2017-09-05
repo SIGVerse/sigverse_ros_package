@@ -215,23 +215,46 @@ bool SIGVerseTb3OpenManipulatorGraspingAuto::findGraspingTarget(geometry_msgs::V
       int center_x = (bounding_boxes_data_.boundingBoxes[i].xmax + bounding_boxes_data_.boundingBoxes[i].xmin) / 2;
       int center_y = (bounding_boxes_data_.boundingBoxes[i].ymax + bounding_boxes_data_.boundingBoxes[i].ymin) / 2;
 
-      puts(("x=" + std::to_string(center_x) + ", y=" + std::to_string(center_y)).c_str());
+//      puts(("x=" + std::to_string(center_x) + ", y=" + std::to_string(center_y)).c_str());
 
       int point_cloud_screen_x = clamp<int>((int)((float)center_x * point_cloud_data_.width  / rgb_camera_width_),  0, point_cloud_data_.width-1);
       int point_cloud_screen_y = clamp<int>((int)((float)center_y * point_cloud_data_.height / rgb_camera_height_), 0, point_cloud_data_.height-1);
 
+      // the center
       bool is_succeeded = get3dPositionFromScreenPosition(point_cloud_pos, point_cloud_data_, point_cloud_screen_x, point_cloud_screen_y);
 
-      if(is_succeeded)
+//      puts(("x=" + std::to_string(point_cloud_pos.x) + ", y=" + std::to_string(point_cloud_pos.y) + ", z=" + std::to_string(point_cloud_pos.z)).c_str());
+
+      if(is_succeeded) { return true; }
+
+      // Around the center (1/4)
+      int play_x = (bounding_boxes_data_.boundingBoxes[i].xmax - center_x) / 4;
+      int play_y = (bounding_boxes_data_.boundingBoxes[i].ymax - center_y) / 4;
+
+      for(int yi=-play_y; yi<=+play_y; yi+=play_y)
       {
-        puts(("x=" + std::to_string(point_cloud_pos.x) + ", y=" + std::to_string(point_cloud_pos.y) + ", z=" + std::to_string(point_cloud_pos.z)).c_str());
-        return true;
+        for(int xi=-play_x; xi<=+play_x; xi+=play_x)
+        {
+          is_succeeded = get3dPositionFromScreenPosition(point_cloud_pos, point_cloud_data_, point_cloud_screen_x + xi, point_cloud_screen_y + yi);
+          if(is_succeeded) { return true; }
+        }
       }
-      else
+
+      // Around the center (1/2)
+      play_x = (bounding_boxes_data_.boundingBoxes[i].xmax - center_x) / 2;
+      play_y = (bounding_boxes_data_.boundingBoxes[i].ymax - center_y) / 2;
+
+      for(int yi=-play_y; yi<=+play_y; yi+=play_y)
       {
-        puts("Failed to get point cloud data.");
-        return false;
+        for(int xi=-play_x; xi<=+play_x; xi+=play_x)
+        {
+          is_succeeded = get3dPositionFromScreenPosition(point_cloud_pos, point_cloud_data_, point_cloud_screen_x + xi, point_cloud_screen_y + yi);
+          if(is_succeeded) { return true; }
+        }
       }
+
+      puts("Failed to get point cloud data.");
+      return false;
     }
   }
 
@@ -290,7 +313,7 @@ bool SIGVerseTb3OpenManipulatorGraspingAuto::moveArmTowardObject(tf::TransformBr
     return false;
   }
 
-  ROS_DEBUG("Grasp %s automatically", target_name.c_str());
+  ROS_DEBUG("Grasp %s", target_name.c_str());
 
   // Rotate joint1
   tf::Vector3 vec_link1_to_target = transform_link1_to_target.getOrigin();
@@ -373,11 +396,11 @@ void SIGVerseTb3OpenManipulatorGraspingAuto::showHelp()
   puts("d: Turn Right");
   puts("a: Turn Left");
   puts("---------------------------");
-  puts(("1: Grasp " + GRASPING_TARGET1_NAME + " automatically").c_str());
-  puts(("2: Grasp " + GRASPING_TARGET2_NAME + " automatically").c_str());
-  puts(("3: Grasp " + GRASPING_TARGET3_NAME + " automatically").c_str());
-  puts(("4: Grasp " + GRASPING_TARGET4_NAME + " automatically").c_str());
-  puts(("5: Grasp " + GRASPING_TARGET5_NAME + " automatically").c_str());
+  puts(("1: Grasp " + GRASPING_TARGET1_NAME).c_str());
+  puts(("2: Grasp " + GRASPING_TARGET2_NAME).c_str());
+  puts(("3: Grasp " + GRASPING_TARGET3_NAME).c_str());
+  puts(("4: Grasp " + GRASPING_TARGET4_NAME).c_str());
+  puts(("5: Grasp " + GRASPING_TARGET5_NAME).c_str());
   puts("---------------------------");
   puts("o: Hand Open");
   puts("---------------------------");
