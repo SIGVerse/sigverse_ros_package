@@ -30,5 +30,7 @@
 		<arg name="load_driver" value="false"/>
 	</include>
 
+	<node pkg="image_view" type="image_view" name="image_view" args="image:=$(arg camera)/rgb/image_raw"/>
+
 </launch>
 

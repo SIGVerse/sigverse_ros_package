@@ -68,7 +68,7 @@ private:
   const std::string GRIP_JOINT_SUB_NAME = "grip_joint_sub";
 
   const double LINEAR_VEL  = 0.2;
-  const double ANGULAR_VEL = 0.2;
+  const double ANGULAR_VEL = 0.4;
   const double JOINT_MIN = -2.83;
   const double JOINT_MAX = +2.83;
   const double GRIP_MIN = -0.01;
@@ -94,7 +94,7 @@ public:
 private:
 
   static void rosSigintHandler(int sig);
-  static int  canReceive( const int fd );
+  static int  canReceiveKey( const int fd );
 
   void jointStateCallback   (const sensor_msgs::JointState::ConstPtr& joint_state);
   void rgbCameraInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& camera_info);
@@ -156,7 +156,7 @@ void SIGVerseTb3OpenManipulatorGraspingAuto::rosSigintHandler(int sig)
   ros::shutdown();
 }
 
-int SIGVerseTb3OpenManipulatorGraspingAuto::canReceive( const int fd )
+int SIGVerseTb3OpenManipulatorGraspingAuto::canReceiveKey( const int fd )
 {
   fd_set fdset;
   int ret;
@@ -217,7 +217,7 @@ bool SIGVerseTb3OpenManipulatorGraspingAuto::get3dPositionFromScreenPosition(geo
 
   if(std::isnan(position3d.x) || std::isnan(position3d.y) || std::isnan(position3d.z))
   {
-    puts("Point cloud data is nan.");
+//    puts("Point cloud data is nan.");
     return false;
   }
 

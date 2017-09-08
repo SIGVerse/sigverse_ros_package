@@ -1,28 +1,41 @@
 <launch>
+	<arg name="camera"  default="camera_sr300" />
+
 	<arg name="sub_joint_state_topic_name"      default="/tb3omc/joint_state" />
 	<arg name="pub_twist_topic_name"            default="/tb3omc/cmd_vel" />
 	<arg name="pub_joint_trajectory_topic_name" default="/tb3omc/joint_trajectory" />
-	<arg name="sub_rgb_camera_info_topic_name"  default="/camera/rgb/camera_info" />
-	<arg name="sub_point_cloud_topic_name"      default="/camera/depth/points" />
+	<arg name="sub_rgb_camera_info_topic_name"  default="/$(arg camera)/rgb/camera_info" />
+	<arg name="sub_point_cloud_topic_name"      default="/$(arg camera)/depth/points" />
 	<arg name="sub_bounding_boxes_topic_name"   default="/darknet_ros/bounding_boxes" />
 	
 	<arg name="sigverse_ros_bridge_port"        default="50001" />
 	<arg name="ros_bridge_port"                 default="9090" />
 
-	<arg name="camera"  default="camera" />
+	<node name="grasping_auto" pkg="sigverse_turtlebot3_open_manipulator" type="grasping_auto" output="screen" launch-prefix="xterm -e">
 
-	<group ns="grasping_auto">
-		<node name="grasping_auto" pkg="sigverse_turtlebot3_open_manipulator" type="grasping_auto" output="screen">
+		<param name="sub_joint_state_topic_name"      type="string" value="$(arg sub_joint_state_topic_name)" />
+		<param name="pub_twist_topic_name"            type="string" value="$(arg pub_twist_topic_name)" />
+		<param name="pub_joint_trajectory_topic_name" type="string" value="$(arg pub_joint_trajectory_topic_name)" />
+		<param name="sub_rgb_camera_info_topic_name"  type="string" value="$(arg sub_rgb_camera_info_topic_name)" />
+		<param name="sub_point_cloud_topic_name"      type="string" value="$(arg sub_point_cloud_topic_name)" />
+		<param name="sub_bounding_boxes_topic_name"   type="string" value="$(arg sub_bounding_boxes_topic_name)" />
+	</node>
 
-			<param name="sub_joint_state_topic_name"      type="string" value="$(arg sub_joint_state_topic_name)" />
-			<param name="pub_twist_topic_name"            type="string" value="$(arg pub_twist_topic_name)" />
-			<param name="pub_joint_trajectory_topic_name" type="string" value="$(arg pub_joint_trajectory_topic_name)" />
-			<param name="sub_rgb_camera_info_topic_name"  type="string" value="$(arg sub_rgb_camera_info_topic_name)" />
-			<param name="sub_point_cloud_topic_name"      type="string" value="$(arg sub_point_cloud_topic_name)" />
-			<param name="sub_bounding_boxes_topic_name"   type="string" value="$(arg sub_bounding_boxes_topic_name)" />
-			
-		</node>
-	</group>
+	<!-- Config and weights folder. -->
+	<arg name="yolo_weights_path"          default="$(find darknet_ros)/yolo_network_config/weights"/>
+	<arg name="yolo_config_path"           default="$(find darknet_ros)/yolo_network_config/cfg"/>
+
+	<!-- Load parameters -->
+	<rosparam command="load" ns="darknet_ros" file="$(find darknet_ros)/config/ros.yaml"/>
+	<rosparam command="load" ns="darknet_ros" file="$(find darknet_ros)/config/yolo.yaml"/>
+
+	<!-- Start darknet and ros wrapper -->
+	<node pkg="darknet_ros" type="darknet_ros" name="darknet_ros" output="screen">
+		<param name="weights_path"          value="$(arg yolo_weights_path)" />
+		<param name="config_path"           value="$(arg yolo_config_path)" />
+		
+		<param name="subscribers/camera_reading/topic"  value="/$(arg camera)/rgb/image_raw" />
+	</node>
 
 	<group ns="sigverse_ros_bridge">
 		<node name="sigverse_ros_bridge" pkg="sigverse_ros_bridge" type="sigverse_ros_bridge" args="$(arg sigverse_ros_bridge_port)"/>
@@ -37,5 +50,6 @@
 		<arg name="load_driver" value="false"/>
 	</include>
 
+	<node pkg="image_view" type="image_view" name="image_view" args="image:=$(arg camera)/rgb/image_raw"/>
 </launch>
 

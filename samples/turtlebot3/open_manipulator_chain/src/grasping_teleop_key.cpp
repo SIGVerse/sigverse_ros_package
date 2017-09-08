@@ -38,7 +38,7 @@ private:
   const std::string GRIP_JOINT_SUB_NAME = "grip_joint_sub";
 
   const double LINEAR_VEL  = 0.2;
-  const double ANGULAR_VEL = 0.2;
+  const double ANGULAR_VEL = 0.4;
   const double JOINT_MIN = -2.83;
   const double JOINT_MAX = +2.83;
   const double GRIP_MIN = -0.01;
@@ -52,7 +52,7 @@ public:
 private:
 
   static void rosSigintHandler(int sig);
-  static int  canReceive( const int fd );
+  static int  canReceiveKey( const int fd );
 
   void jointStateCallback(const sensor_msgs::JointState::ConstPtr& joint_state);
   void moveBase(ros::Publisher &publisher, const double linear_x, const double angular_z);
@@ -85,7 +85,7 @@ void SIGVerseTb3OpenManipulatorGraspingTeleopKey::rosSigintHandler(int sig)
 }
 
 
-int SIGVerseTb3OpenManipulatorGraspingTeleopKey::canReceive( const int fd )
+int SIGVerseTb3OpenManipulatorGraspingTeleopKey::canReceiveKey( const int fd )
 {
   fd_set fdset;
   int ret;
@@ -307,7 +307,7 @@ void SIGVerseTb3OpenManipulatorGraspingTeleopKey::keyLoop(int argc, char** argv)
 
   while (ros::ok())
   {
-    if(canReceive(kfd))
+    if(canReceiveKey(kfd))
     {
       // get the next event from the keyboard
       if(read(kfd, &c, 1) < 0)
