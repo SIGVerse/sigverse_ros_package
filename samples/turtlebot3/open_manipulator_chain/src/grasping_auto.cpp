@@ -283,7 +283,7 @@ bool SIGVerseTb3OpenManipulatorGraspingAuto::moveArmTowardObject(tf::TransformBr
 
   try
   {
-    tf_listener.waitForTransform(LINK1_NAME, TARGET_NAME, ros::Time(0), ros::Duration(5.0) );
+    tf_listener.waitForTransform(LINK1_NAME, TARGET_NAME, ros::Time(0), ros::Duration(0.3) );
 
     tf_listener.lookupTransform (LINK1_NAME, TARGET_NAME, ros::Time(0), transform_link1_to_target);
     tf_listener.lookupTransform (LINK3_NAME, TARGET_NAME, ros::Time(0), transform_link3_to_target);

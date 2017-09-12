@@ -83,6 +83,7 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 	}
 
 
+	bool isRosTimeInitialized = false;
 	long int totalReceivedSize;
 
 	std::map<std::string, ros::Publisher> publisherMap;
@@ -173,7 +174,7 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 
 		bsoncxx::builder::basic::sub_document bsonSubdocument(&bsonCore);
 
-		std::string opValue	   = bsonView["op"]   .get_utf8().value.to_string();
+		std::string opValue    = bsonView["op"]   .get_utf8().value.to_string();
 		std::string topicValue = bsonView["topic"].get_utf8().value.to_string();
 		std::string typeValue  = bsonView["type"] .get_utf8().value.to_string();
 //		std::cout << "op:" << opValue << std::endl;
@@ -335,6 +336,19 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 				if(timestamp.sec == 0)
 				{
 					timestamp = ros::Time::now();
+				}
+				else if(!isRosTimeInitialized)
+				{
+					ros::Time now = ros::Time::now();
+
+					int gapSec  = timestamp.sec  - now.sec;
+					int gapMsec = (timestamp.nsec - now.nsec) /1000 /1000;
+
+					std::string timeGap = "time_gap," + std::to_string(gapSec) + "," + std::to_string(gapMsec);
+
+					write(dstSocket, timeGap.c_str(), std::strlen(timeGap.c_str()));
+
+					isRosTimeInitialized = true;
 				}
 
 				tf::Vector3 position = tf::Vector3
