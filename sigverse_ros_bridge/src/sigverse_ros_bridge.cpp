@@ -271,7 +271,7 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 			image.height            = (uint32_t)bsonView["msg"]["height"]      .get_int32();
 			image.width             = (uint32_t)bsonView["msg"]["width"]       .get_int32();
 			image.encoding          =           bsonView["msg"]["encoding"]    .get_utf8().value.to_string();
-			image.is_bigendian      =           bsonView["msg"]["is_bigendian"].raw()[0];
+			image.is_bigendian      = (uint8_t) bsonView["msg"]["is_bigendian"].get_int32(); //.raw()[0];
 			image.step              = (uint32_t)bsonView["msg"]["step"]        .get_int32();
 
 			size_t sizet = (image.step * image.height);
@@ -341,8 +341,8 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 				{
 					ros::Time now = ros::Time::now();
 
-					int gapSec  = timestamp.sec  - now.sec;
-					int gapMsec = (timestamp.nsec - now.nsec) /1000 /1000;
+					int gapSec  = (int)timestamp.sec  - (int)now.sec;
+					int gapMsec = ((int)timestamp.nsec - (int)now.nsec) /1000 /1000;
 
 					std::string timeGap = "time_gap," + std::to_string(gapSec) + "," + std::to_string(gapMsec);
 
