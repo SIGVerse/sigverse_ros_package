@@ -227,7 +227,7 @@ if (darknet_ros_msgs_FOUND)
   target_link_libraries(grasping_auto ${catkin_LIBRARIES} ${darknet_ros_msgs_LIBRARIES})
 endif()
 
-add_executable(rotate_arm src/rotate_arm.cpp)
-target_link_libraries(rotate_arm ${catkin_LIBRARIES})
+add_executable(recognize_pointed_direction src/recognize_pointed_direction.cpp)
+target_link_libraries(recognize_pointed_direction ${catkin_LIBRARIES})
 
 

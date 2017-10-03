@@ -8,8 +8,8 @@
 
 	<arg name="camera"  default="camera" />
 
-	<group ns="rotate_arm">
-		<node name="rotate_arm" pkg="sigverse_turtlebot3_open_manipulator" type="rotate_arm" output="screen">
+	<group ns="recognize_pointed_direction">
+		<node name="recognize_pointed_direction" pkg="sigverse_turtlebot3_open_manipulator" type="recognize_pointed_direction" output="screen">
 
 			<param name="sub_instruction_topic_name"      type="string" value="$(arg sub_instruction_topic_name)" />
 			<param name="sub_depth_image_topic_name"      type="string" value="$(arg sub_depth_image_topic_name)" />

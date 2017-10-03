@@ -8,7 +8,7 @@
 #include <sensor_msgs/Image.h>
 #include <trajectory_msgs/JointTrajectory.h>
 
-class SIGVerseTb3RotateArm
+class SIGVerseTb3RecognizePointedDirection
 {
 private:
   const std::string JOINT1_NAME = "joint1";
@@ -16,7 +16,7 @@ private:
   const std::string INSTRUCTION_MESSAGE = "Rotate the arm to this side";
 
 public:
-  SIGVerseTb3RotateArm();
+  SIGVerseTb3RecognizePointedDirection();
 
   void run(int argc, char** argv);
 
@@ -39,7 +39,7 @@ private:
 };
 
 
-SIGVerseTb3RotateArm::SIGVerseTb3RotateArm()
+SIGVerseTb3RecognizePointedDirection::SIGVerseTb3RecognizePointedDirection()
 {
   depth_width_  = 0;
   depth_height_ = 0;
@@ -47,13 +47,13 @@ SIGVerseTb3RotateArm::SIGVerseTb3RotateArm()
 }
 
 
-void SIGVerseTb3RotateArm::rosSigintHandler(int sig)
+void SIGVerseTb3RecognizePointedDirection::rosSigintHandler(int sig)
 {
   ros::shutdown();
 }
 
 
-void SIGVerseTb3RotateArm::instructionCallback(const std_msgs::String::ConstPtr& instruction_message)
+void SIGVerseTb3RecognizePointedDirection::instructionCallback(const std_msgs::String::ConstPtr& instruction_message)
 {
   if(instruction_message->data==INSTRUCTION_MESSAGE)
   {
@@ -62,7 +62,7 @@ void SIGVerseTb3RotateArm::instructionCallback(const std_msgs::String::ConstPtr&
 }
 
 
-void SIGVerseTb3RotateArm::depthImageCallback(const sensor_msgs::Image::ConstPtr& image)
+void SIGVerseTb3RecognizePointedDirection::depthImageCallback(const sensor_msgs::Image::ConstPtr& image)
 {
   depth_width_  = image->width;
   depth_height_ = image->height;
@@ -78,7 +78,7 @@ void SIGVerseTb3RotateArm::depthImageCallback(const sensor_msgs::Image::ConstPtr
 }
 
 
-void SIGVerseTb3RotateArm::rotateArm()
+void SIGVerseTb3RecognizePointedDirection::rotateArm()
 {
   if(depth_width_==0){ return; }
 
@@ -152,7 +152,7 @@ void SIGVerseTb3RotateArm::rotateArm()
 
   float slope = calcSlope(x_list, y_list);
 
-  puts(("slope=" + std::to_string(slope)).c_str());
+//  puts(("slope=" + std::to_string(slope)).c_str());
 
   // Rotate the arm
   if(slope < 0.0f)
@@ -166,7 +166,7 @@ void SIGVerseTb3RotateArm::rotateArm()
 }
 
 
-float SIGVerseTb3RotateArm::calcSlope(const std::vector<float> &x, const std::vector<float> &y)
+float SIGVerseTb3RecognizePointedDirection::calcSlope(const std::vector<float> &x, const std::vector<float> &y)
 {
   // Calc a slope using the least squares method
 
@@ -187,7 +187,7 @@ float SIGVerseTb3RotateArm::calcSlope(const std::vector<float> &x, const std::ve
 }
 
 
-void SIGVerseTb3RotateArm::moveArm(ros::Publisher &publisher, const std::string &name, const double position)
+void SIGVerseTb3RecognizePointedDirection::moveArm(ros::Publisher &publisher, const std::string &name, const double position)
 {
   std::vector<std::string> names;
   names.push_back(name);
@@ -212,9 +212,9 @@ void SIGVerseTb3RotateArm::moveArm(ros::Publisher &publisher, const std::string 
 }
 
 
-void SIGVerseTb3RotateArm::run(int argc, char** argv)
+void SIGVerseTb3RecognizePointedDirection::run(int argc, char** argv)
 {
-  ros::init(argc, argv, "tb3_omc_rotate_arm", ros::init_options::NoSigintHandler);
+  ros::init(argc, argv, "tb3_omc_recognize_pointed_direction", ros::init_options::NoSigintHandler);
 
   ros::NodeHandle node_handle;
 
@@ -232,8 +232,8 @@ void SIGVerseTb3RotateArm::run(int argc, char** argv)
   node_handle.param<std::string>("sub_depth_image_topic_name",      sub_depth_image_topic_name,      "/camera/depth/image_raw");
   node_handle.param<std::string>("pub_joint_trajectory_topic_name", pub_joint_trajectory_topic_name, "/tb3omc/joint_trajectory");
 
-  ros::Subscriber sub_instruction = node_handle.subscribe<std_msgs::String>(sub_instruction_topic_name, 10, &SIGVerseTb3RotateArm::instructionCallback, this);
-  ros::Subscriber sub_depth_image = node_handle.subscribe                  (sub_depth_image_topic_name, 10, &SIGVerseTb3RotateArm::depthImageCallback, this);
+  ros::Subscriber sub_instruction = node_handle.subscribe<std_msgs::String>(sub_instruction_topic_name, 10, &SIGVerseTb3RecognizePointedDirection::instructionCallback, this);
+  ros::Subscriber sub_depth_image = node_handle.subscribe                  (sub_depth_image_topic_name, 10, &SIGVerseTb3RecognizePointedDirection::depthImageCallback, this);
 
   pub_joint_traj_ = node_handle.advertise<trajectory_msgs::JointTrajectory>(pub_joint_trajectory_topic_name, 10);
 
@@ -247,9 +247,9 @@ void SIGVerseTb3RotateArm::run(int argc, char** argv)
 
 int main(int argc, char** argv)
 {
-  SIGVerseTb3RotateArm rotate_arm;
+  SIGVerseTb3RecognizePointedDirection recognize_pointed_direction;
 
-  rotate_arm.run(argc, argv);
+  recognize_pointed_direction.run(argc, argv);
 
   return(EXIT_SUCCESS);
 }
