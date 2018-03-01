@@ -225,6 +225,7 @@ target_link_libraries(grasping_teleop_key ${catkin_LIBRARIES})
 if (darknet_ros_msgs_FOUND)
   add_executable(grasping_auto src/grasping_auto.cpp)
   target_link_libraries(grasping_auto ${catkin_LIBRARIES} ${darknet_ros_msgs_LIBRARIES})
+  add_dependencies(grasping_auto darknet_ros_msgs_generate_messages_cpp)
 endif()
 
 add_executable(recognize_pointed_direction src/recognize_pointed_direction.cpp)
