@@ -7,7 +7,7 @@
 	<include file="$(find sigverse_turtlebot2)/launch/includes/follower.launch.xml" /> 
 
 	<group ns="sigverse_ros_bridge">
-		<node name="sigverse_ros_bridge" pkg="sigverse_ros_bridge" type="sigverse_ros_bridge" args="$(arg sigverse_ros_bridge_port)"/>
+		<node name="sigverse_ros_bridge" pkg="sigverse_ros_bridge" type="sigverse_ros_bridge" args="$(arg sigverse_ros_bridge_port)" output="screen"/>
 	</group>
 	
 	<include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch"> 

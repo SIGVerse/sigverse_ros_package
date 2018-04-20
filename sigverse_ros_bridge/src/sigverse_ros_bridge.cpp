@@ -66,6 +66,7 @@ void SIGVerseROSBridge::setArrayDouble(boost::array<double, ArrayNum> &destArray
 
 
 
+
 void * SIGVerseROSBridge::receivingThread(void *param)
 {
 	int dstSocket = *((int *)param);
@@ -83,7 +84,6 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 	}
 
 
-	bool isRosTimeInitialized = false;
 	long int totalReceivedSize;
 
 	std::map<std::string, ros::Publisher> publisherMap;
@@ -181,7 +181,7 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 //		std::cout << "tp:" << topicValue << std::endl;
 
 		// Advertise
-		if(publisherMap.count(topicValue)==0 && typeValue!=TYPE_TF_LIST)
+		if(publisherMap.count(topicValue)==0 && typeValue!=TYPE_TIME_SYNC && typeValue!=TYPE_TF_LIST)
 		{
 			ros::Publisher publisher;
 
@@ -313,7 +313,26 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 
 			publisherMap[topicValue].publish(laserScan);
 		}
-		// Tf list data (sigverse original type)
+		// Time Synchronization (SIGVerse Original Type)
+		else if(typeValue==TYPE_TIME_SYNC)
+		{
+			ros::Time timestamp;
+
+			timestamp.sec  = (uint32_t)bsonView["msg"]["data"]["secs"] .get_int32();
+			timestamp.nsec = (uint32_t)bsonView["msg"]["data"]["nsecs"].get_int32();
+
+			ros::Time now = ros::Time::now();
+
+			int gapSec  = ((int)timestamp.sec  - (int)now.sec);
+			int gapMsec = ((int)timestamp.nsec - (int)now.nsec) /1000 /1000;
+
+			std::string timeGap = "time_gap," + std::to_string(gapSec) + "," + std::to_string(gapMsec);
+
+			ssize_t size = write(dstSocket, timeGap.c_str(), std::strlen(timeGap.c_str()));
+
+			std::cout << "TYPE_TIME_SYNC " << timeGap.c_str() << std::endl;
+		}
+		// Tf list data (SIGVerse Original Type)
 		else if(typeValue==TYPE_TF_LIST)
 		{
 			static tf::TransformBroadcaster transformBroadcaster;
@@ -336,19 +355,6 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 				if(timestamp.sec == 0)
 				{
 					timestamp = ros::Time::now();
-				}
-				else if(!isRosTimeInitialized)
-				{
-					ros::Time now = ros::Time::now();
-
-					int gapSec  = (int)timestamp.sec  - (int)now.sec;
-					int gapMsec = ((int)timestamp.nsec - (int)now.nsec) /1000 /1000;
-
-					std::string timeGap = "time_gap," + std::to_string(gapSec) + "," + std::to_string(gapMsec);
-
-					write(dstSocket, timeGap.c_str(), std::strlen(timeGap.c_str()));
-
-					isRosTimeInitialized = true;
 				}
 
 				tf::Vector3 position = tf::Vector3

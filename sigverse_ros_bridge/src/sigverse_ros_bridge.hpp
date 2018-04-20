@@ -44,6 +44,7 @@
 #define TYPE_CAMERA_INFO  "sensor_msgs/CameraInfo"
 #define TYPE_IMAGE        "sensor_msgs/Image"
 #define TYPE_LASER_SCAN   "sensor_msgs/LaserScan"
+#define TYPE_TIME_SYNC    "sigverse/TimeSync"
 #define TYPE_TF_LIST      "sigverse/TfList"
 
 #define BUFFER_SIZE 25*1024*1024 //100MB
