@@ -41,6 +41,11 @@ private:
   static const char KEY_4 = 0x34;
   static const char KEY_5 = 0x35;
 
+  static const char KEYCODE_UP    = 0x41;
+  static const char KEYCODE_DOWN  = 0x42;
+  static const char KEYCODE_RIGHT = 0x43;
+  static const char KEYCODE_LEFT  = 0x44;
+
   static const char KEY_A = 0x61;
   static const char KEY_D = 0x64;
   static const char KEY_H = 0x68;

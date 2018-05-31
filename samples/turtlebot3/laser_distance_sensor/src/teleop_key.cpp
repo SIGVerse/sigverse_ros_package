@@ -9,6 +9,11 @@ class SIGVerseTb3LaserDistanceSensorTeleopKey
 {
 private:
 
+  static const char KEYCODE_UP    = 0x41;
+  static const char KEYCODE_DOWN  = 0x42;
+  static const char KEYCODE_RIGHT = 0x43;
+  static const char KEYCODE_LEFT  = 0x44;
+
   static const char KEY_A = 0x61;
   static const char KEY_D = 0x64;
   static const char KEY_H = 0x68;
@@ -82,6 +87,8 @@ void SIGVerseTb3LaserDistanceSensorTeleopKey::showHelp()
   puts("---------------------------");
   puts("Operate from keyboard");
   puts("---------------------------");
+  puts("arrow keys : Move");
+  puts("---------------------------");
   puts("s: Stop");
   puts("---------------------------");
   puts("w: Go Forward");
@@ -151,24 +158,28 @@ void SIGVerseTb3LaserDistanceSensorTeleopKey::keyLoop(int argc, char** argv)
           break;
         }
         case KEY_W:
+        case KEYCODE_UP:
         {
           ROS_DEBUG("Go Forward");
           moveBase(pub_base_twist, +LINEAR_VEL, 0.0);
           break;
         }
         case KEY_X:
+        case KEYCODE_DOWN:
         {
           ROS_DEBUG("Go Back");
           moveBase(pub_base_twist, -LINEAR_VEL, 0.0);
           break;
         }
         case KEY_D:
+        case KEYCODE_RIGHT:
         {
           ROS_DEBUG("Turn Right");
           moveBase(pub_base_twist, 0.0, -ANGULAR_VEL);
           break;
         }
         case KEY_A:
+        case KEYCODE_LEFT:
         {
           ROS_DEBUG("Turn Left");
           moveBase(pub_base_twist, 0.0, +ANGULAR_VEL);

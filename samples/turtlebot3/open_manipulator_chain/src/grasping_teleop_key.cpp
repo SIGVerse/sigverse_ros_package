@@ -20,12 +20,20 @@ private:
   static const char KEY_7 = 0x37;
   static const char KEY_8 = 0x38;
 
+  static const char KEYCODE_UP    = 0x41;
+  static const char KEYCODE_DOWN  = 0x42;
+  static const char KEYCODE_RIGHT = 0x43;
+  static const char KEYCODE_LEFT  = 0x44;
+
   static const char KEY_A = 0x61;
   static const char KEY_C = 0x63;
   static const char KEY_D = 0x64;
   static const char KEY_H = 0x68;
+  static const char KEY_J = 0x6a;
+  static const char KEY_M = 0x6d;
   static const char KEY_O = 0x6f;
   static const char KEY_S = 0x73;
+  static const char KEY_U = 0x75;
   static const char KEY_W = 0x77;
   static const char KEY_X = 0x78;
 
@@ -65,17 +73,18 @@ private:
   void showHelp();
 
   // Current positions that is updated by JointState
-  double joint1_pos_, joint2_pos_, joint3_pos_, joint4_pos_, grip_joint_pos_;
+  double joint1_pos1_, joint2_pos1_, joint3_pos1_, joint4_pos1_, grip_joint_pos1_;
+  double joint1_pos2_, joint2_pos2_, joint3_pos2_, joint4_pos2_;
+//  clock_t joint_state_time1_, joint_state_time2_;
 };
 
 
 SIGVerseTb3OpenManipulatorGraspingTeleopKey::SIGVerseTb3OpenManipulatorGraspingTeleopKey()
 {
-  joint1_pos_ = 0.0;
-  joint2_pos_ = 0.0;
-  joint3_pos_ = 0.0;
-  joint4_pos_ = 0.0;
-  grip_joint_pos_ = 0.0;
+  joint1_pos1_ = 0.0; joint2_pos1_ = 0.0; joint3_pos1_ = 0.0; joint4_pos1_ = 0.0; grip_joint_pos1_ = 0.0;
+  joint1_pos2_ = 0.0; joint2_pos2_ = 0.0; joint3_pos2_ = 0.0; joint4_pos2_ = 0.0;
+//  joint_state_time2_ = clock();
+//  joint_state_time1_ = clock();
 }
 
 
@@ -103,32 +112,34 @@ void SIGVerseTb3OpenManipulatorGraspingTeleopKey::jointStateCallback(const senso
 {
 //  ROS_INFO("jointStateCallback size=%d", (int)joint_state->name.size());
 
+//  joint_state_time2_ = joint_state_time1_;
+//  joint_state_time1_ = clock();
+
   for(int i=0; i<joint_state->name.size(); i++)
   {
     if(joint_state->name[i]==JOINT1_NAME)
     {
-      joint1_pos_ = joint_state->position[i];
-      continue;
+      joint1_pos2_ = joint1_pos1_;
+      joint1_pos1_ = joint_state->position[i];
     }
-    if(joint_state->name[i]==JOINT2_NAME)
+    else if(joint_state->name[i]==JOINT2_NAME)
     {
-      joint2_pos_ = joint_state->position[i];
-      continue;
+      joint2_pos2_ = joint2_pos1_;
+      joint2_pos1_ = joint_state->position[i];
     }
-    if(joint_state->name[i]==JOINT3_NAME)
+    else if(joint_state->name[i]==JOINT3_NAME)
     {
-      joint3_pos_ = joint_state->position[i];
-      continue;
+      joint3_pos2_ = joint3_pos1_;
+      joint3_pos1_ = joint_state->position[i];
     }
-    if(joint_state->name[i]==JOINT4_NAME)
+    else if(joint_state->name[i]==JOINT4_NAME)
     {
-      joint4_pos_ = joint_state->position[i];
-      continue;
+      joint4_pos2_ = joint4_pos1_;
+      joint4_pos1_ = joint_state->position[i];
     }
-    if(joint_state->name[i]==GRIP_JOINT_NAME)
+    else if(joint_state->name[i]==GRIP_JOINT_NAME)
     {
-      grip_joint_pos_ = joint_state->position[i];
-      continue;
+      grip_joint_pos1_ = joint_state->position[i];
     }
   }
 }
@@ -201,11 +212,17 @@ void SIGVerseTb3OpenManipulatorGraspingTeleopKey::stopJoints(ros::Publisher &pub
 //  std::vector<std::string> names {JOINT1_NAME, JOINT2_NAME, JOINT3_NAME, JOINT4_NAME, GRIP_JOINT_NAME, GRIP_JOINT_SUB_NAME};
   std::vector<std::string> names {JOINT1_NAME, JOINT2_NAME, JOINT3_NAME, JOINT4_NAME};
 
+//  double coef = (double)(clock()-joint_state_time2_)/(joint_state_time1_-joint_state_time2_);
+
   std::vector<double> positions;
-  positions.push_back(joint1_pos_);
-  positions.push_back(joint2_pos_);
-  positions.push_back(joint3_pos_);
-  positions.push_back(joint4_pos_);
+//  positions.push_back(coef*(joint1_pos1_-joint1_pos2_)+joint1_pos2_);
+//  positions.push_back(coef*(joint2_pos1_-joint2_pos2_)+joint2_pos2_);
+//  positions.push_back(coef*(joint3_pos1_-joint3_pos2_)+joint3_pos2_);
+//  positions.push_back(coef*(joint4_pos1_-joint4_pos2_)+joint4_pos2_);
+  positions.push_back(2.0*joint1_pos1_-joint1_pos2_);
+  positions.push_back(2.0*joint2_pos1_-joint2_pos2_);
+  positions.push_back(2.0*joint3_pos1_-joint3_pos2_);
+  positions.push_back(2.0*joint4_pos1_-joint4_pos2_);
 //  positions.push_back(grip_joint_pos_);
 //  positions.push_back(grip_joint_pos_); // grip_joint_sub is same as grip_joint
 
@@ -238,12 +255,18 @@ void SIGVerseTb3OpenManipulatorGraspingTeleopKey::showHelp()
   puts("---------------------------");
   puts("Operate from keyboard");
   puts("---------------------------");
-  puts("s: Stop all movements");
+  puts("arrow keys : Move");
+  puts("---------------------------");
+  puts("s: Stop");
   puts("---------------------------");
   puts("w: Go Forward");
   puts("x: Go Back");
   puts("d: Turn Right");
   puts("a: Turn Left");
+  puts("---------------------------");
+  puts("u: Rotate Arm - Upward");
+  puts("j: Rotate Arm - Horizontal");
+  puts("m: Rotate Arm - Downward");
   puts("---------------------------");
   puts("1: Joint1 Right");
   puts("2: Joint1 Left");
@@ -322,91 +345,119 @@ void SIGVerseTb3OpenManipulatorGraspingTeleopKey::keyLoop(int argc, char** argv)
         {
           ROS_DEBUG("Stop");
           moveBase(pub_base_twist, 0.0, 0.0);
-          stopJoints(pub_joint_traj, 1);
+          stopJoints(pub_joint_traj, 1.0);
           break;
         }
         case KEY_W:
+        case KEYCODE_UP:
         {
           ROS_DEBUG("Go Forward");
           moveBase(pub_base_twist, +LINEAR_VEL, 0.0);
           break;
         }
         case KEY_X:
+        case KEYCODE_DOWN:
         {
           ROS_DEBUG("Go Back");
           moveBase(pub_base_twist, -LINEAR_VEL, 0.0);
           break;
         }
         case KEY_D:
+        case KEYCODE_RIGHT:
         {
           ROS_DEBUG("Turn Right");
           moveBase(pub_base_twist, 0.0, -ANGULAR_VEL);
           break;
         }
         case KEY_A:
+        case KEYCODE_LEFT:
         {
           ROS_DEBUG("Turn Left");
           moveBase(pub_base_twist, 0.0, +ANGULAR_VEL);
           break;
         }
+        case KEY_U:
+        {
+          ROS_DEBUG("Rotate Arm - Upward");
+          moveArm(pub_joint_traj, JOINT2_NAME, 0.0, joint2_pos1_);
+          moveArm(pub_joint_traj, JOINT3_NAME, 0.0, joint3_pos1_);
+          moveArm(pub_joint_traj, JOINT4_NAME, 0.0, joint4_pos1_);
+          break;
+        }
+        case KEY_J:
+        {
+          ROS_DEBUG("Rotate Arm - Horizontal");
+          moveArm(pub_joint_traj, JOINT2_NAME, +1.57, joint2_pos1_);
+          moveArm(pub_joint_traj, JOINT3_NAME, -1.57, joint3_pos1_);
+          moveArm(pub_joint_traj, JOINT4_NAME, +0.26, joint4_pos1_);
+          break;
+        }
+        case KEY_M:
+        {
+          ROS_DEBUG("Rotate Arm - Downward");
+          moveArm(pub_joint_traj, JOINT2_NAME, +1.75, joint2_pos1_);
+          moveArm(pub_joint_traj, JOINT3_NAME, -1.57, joint3_pos1_);
+          moveArm(pub_joint_traj, JOINT4_NAME, +0.26, joint4_pos1_);
+          break;
+        }
         case KEY_1:
         {
           ROS_DEBUG("Joint1 Right");
-          moveArm(pub_joint_traj, JOINT1_NAME, JOINT_MIN, joint1_pos_);
+          moveArm(pub_joint_traj, JOINT1_NAME, JOINT_MIN, joint1_pos1_);
           break;
         }
         case KEY_2:
         {
           ROS_DEBUG("Joint1 Left");
-          moveArm(pub_joint_traj, JOINT1_NAME, JOINT_MAX, joint1_pos_);
+          moveArm(pub_joint_traj, JOINT1_NAME, JOINT_MAX, joint1_pos1_);
           break;
         }
         case KEY_3:
         {
           ROS_DEBUG("Joint2 Up");
-          moveArm(pub_joint_traj, JOINT2_NAME, JOINT_MIN, joint2_pos_);
+          moveArm(pub_joint_traj, JOINT2_NAME, JOINT_MIN, joint2_pos1_);
           break;
         }
         case KEY_4:
         {
           ROS_DEBUG("Joint2 Down");
-          moveArm(pub_joint_traj, JOINT2_NAME, JOINT_MAX, joint2_pos_);
+          moveArm(pub_joint_traj, JOINT2_NAME, JOINT_MAX, joint2_pos1_);
           break;
         }
         case KEY_5:
         {
           ROS_DEBUG("Joint3 Up");
-          moveArm(pub_joint_traj, JOINT3_NAME, JOINT_MIN, joint3_pos_);
+          moveArm(pub_joint_traj, JOINT3_NAME, JOINT_MIN, joint3_pos1_);
           break;
         }
         case KEY_6:
         {
           ROS_DEBUG("Joint3 Down");
-          moveArm(pub_joint_traj, JOINT3_NAME, JOINT_MAX, joint3_pos_);
+          moveArm(pub_joint_traj, JOINT3_NAME, JOINT_MAX, joint3_pos1_);
           break;
         }
         case KEY_7:
         {
           ROS_DEBUG("Joint4 Up");
-          moveArm(pub_joint_traj, JOINT4_NAME, JOINT_MIN, joint4_pos_);
+          moveArm(pub_joint_traj, JOINT4_NAME, JOINT_MIN, joint4_pos1_);
           break;
         }
         case KEY_8:
         {
           ROS_DEBUG("Joint4 Down");
-          moveArm(pub_joint_traj, JOINT4_NAME, JOINT_MAX, joint4_pos_);
+          moveArm(pub_joint_traj, JOINT4_NAME, JOINT_MAX, joint4_pos1_);
           break;
         }
         case KEY_O:
         {
           ROS_DEBUG("Hand Open");
-          moveHand(pub_joint_traj, GRIP_MIN, grip_joint_pos_);
+          moveHand(pub_joint_traj, GRIP_MIN, grip_joint_pos1_);
           break;
         }
         case KEY_C:
         {
           ROS_DEBUG("Hand Close");
-          moveHand(pub_joint_traj, GRIP_MAX, grip_joint_pos_);
+          moveHand(pub_joint_traj, GRIP_MAX, grip_joint_pos1_);
           break;
         }
         case KEY_H:

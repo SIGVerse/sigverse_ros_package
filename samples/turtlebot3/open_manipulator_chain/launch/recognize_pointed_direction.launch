@@ -32,7 +32,7 @@
 	</include>
 
 
-	<node pkg="image_view" type="image_view" name="image_view" args="image:=$(arg camera)/depth/image"/>
+	<node pkg="image_view" type="image_view" name="image_view" args="image:=$(arg camera)/depth/image_raw"/>
 
 </launch>
 

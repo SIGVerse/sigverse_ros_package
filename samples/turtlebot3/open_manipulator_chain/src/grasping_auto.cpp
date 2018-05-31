@@ -389,7 +389,9 @@ void SIGVerseTb3OpenManipulatorGraspingAuto::showHelp()
   puts("---------------------------");
   puts("Operate from keyboard");
   puts("---------------------------");
-  puts("s: Stop all movements");
+  puts("arrow keys : Move");
+  puts("---------------------------");
+  puts("s: Stop");
   puts("---------------------------");
   puts("w: Go Forward");
   puts("x: Go Back");
@@ -495,24 +497,28 @@ void SIGVerseTb3OpenManipulatorGraspingAuto::keyLoop(int argc, char** argv)
               break;
             }
             case KEY_W:
+            case KEYCODE_UP:
             {
               ROS_DEBUG("Go Forward");
               moveBase(pub_base_twist, +LINEAR_VEL, 0.0);
               break;
             }
             case KEY_X:
+            case KEYCODE_DOWN:
             {
               ROS_DEBUG("Go Back");
               moveBase(pub_base_twist, -LINEAR_VEL, 0.0);
               break;
             }
             case KEY_D:
+            case KEYCODE_RIGHT:
             {
               ROS_DEBUG("Turn Right");
               moveBase(pub_base_twist, 0.0, -ANGULAR_VEL);
               break;
             }
             case KEY_A:
+            case KEYCODE_LEFT:
             {
               ROS_DEBUG("Turn Left");
               moveBase(pub_base_twist, 0.0, +ANGULAR_VEL);
