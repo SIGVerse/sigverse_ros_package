@@ -140,9 +140,6 @@ void SIGVerseHsrTeleopKey::moveBase(ros::Publisher &publisher, double linear_x, 
 
 void SIGVerseHsrTeleopKey::moveArm(ros::Publisher &publisher, const std::string &name, const double position, const int duration_sec)
 {
-  std::vector<std::string> names;
-  names.push_back(name);
-
   std::vector<double> positions;
   positions.push_back(position);
 
@@ -150,35 +147,39 @@ void SIGVerseHsrTeleopKey::moveArm(ros::Publisher &publisher, const std::string 
   duration.sec = duration_sec;
 
   trajectory_msgs::JointTrajectory joint_trajectory;
+  joint_trajectory.joint_names.push_back("arm_lift_joint");
+  joint_trajectory.joint_names.push_back("arm_flex_joint");
+  joint_trajectory.joint_names.push_back("arm_roll_joint");
+  joint_trajectory.joint_names.push_back("wrist_flex_joint");
+  joint_trajectory.joint_names.push_back("wrist_roll_joint");
 
   trajectory_msgs::JointTrajectoryPoint arm_joint_point;
-
+  if(name == "arm_lift_joint"){        arm_joint_point.positions = {position, 0.0f, 0.0f, 0.0f, 0.0f}; }
+  else if(name == "arm_flex_joint"){   arm_joint_point.positions = {0.0f, position, 0.0f, 0.0f, 0.0f}; }
+  else if(name == "arm_roll_joint"){   arm_joint_point.positions = {0.0f, 0.0f, position, 0.0f, 0.0f}; }
+  else if(name == "wrist_flex_joint"){ arm_joint_point.positions = {0.0f, 0.0f, 0.0f, position, 0.0f}; }
+  else if(name == "wrist_roll_joint"){ arm_joint_point.positions = {0.0f, 0.0f, 0.0f, 0.0f, position}; }
+  arm_joint_point.time_from_start = duration;
   joint_trajectory.points.push_back(arm_joint_point);
-
-  joint_trajectory.joint_names = names;
-  joint_trajectory.points[0].positions = positions;
-  joint_trajectory.points[0].time_from_start = duration;
 
   publisher.publish(joint_trajectory);
 }
 
 void SIGVerseHsrTeleopKey::moveHand(ros::Publisher &publisher, bool is_hand_open)
 {
-  std::vector<std::string> joint_names {"hand_l_proximal_joint", "hand_r_proximal_joint"};
+  std::vector<std::string> joint_names {"hand_motor_joint"};
 
   std::vector<double> positions;
 
   if(is_hand_open)
   {
     ROS_DEBUG("Grasp");
-    positions.push_back(-0.05);
-    positions.push_back(+0.05);
+    positions.push_back(-0.105);
   }
   else
   {
     ROS_DEBUG("Open hand");
-    positions.push_back(+0.611);
-    positions.push_back(-0.611);
+    positions.push_back(+1.239);
   }
 
   ros::Duration duration;
@@ -269,7 +270,7 @@ int SIGVerseHsrTeleopKey::run(int argc, char **argv)
   node_handle.param<std::string>("sub_joint_state_topic_name",        sub_joint_state_topic_name,        "/hsrb/joint_states");
   node_handle.param<std::string>("pub_base_twist_topic_name",         pub_base_twist_topic_name,         "/hsrb/command_velocity");
   node_handle.param<std::string>("pub_arm_trajectory_topic_name",     pub_arm_trajectory_topic_name,     "/hsrb/arm_trajectory_controller/command");
-  node_handle.param<std::string>("pub_gripper_trajectory_topic_name", pub_gripper_trajectory_topic_name, "/hsrb/gripper_trajectory_controller/command");
+  node_handle.param<std::string>("pub_gripper_trajectory_topic_name", pub_gripper_trajectory_topic_name, "/hsrb/gripper_controller/command");
 
   ros::Subscriber sub_msg                = node_handle.subscribe<std_msgs::String>(sub_msg_to_robot_topic_name, 100, &SIGVerseHsrTeleopKey::messageCallback, this);
   ros::Publisher  pub_msg                = node_handle.advertise<std_msgs::String>(pub_msg_to_human_topic_name, 10);
@@ -486,6 +487,3 @@ int main(int argc, char** argv)
   SIGVerseHsrTeleopKey hsr_teleop_key;
   return hsr_teleop_key.run(argc, argv);
 }
-
-
-
