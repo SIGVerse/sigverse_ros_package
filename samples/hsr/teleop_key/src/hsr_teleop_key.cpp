@@ -253,7 +253,7 @@ void SIGVerseHsrTeleopKey::showHelp()
   puts("space      : Stop HSR");
   puts("r/f : Increase/Decrease Moving Speed");
   puts("---------------------------");
-  puts("Move HSR Linearly:");
+  puts("Move HSR Linearly (1m):");
   puts("  u   i   o  ");
   puts("  j   k   l  ");
   puts("  m   ,   .  ");
