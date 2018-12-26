@@ -130,10 +130,12 @@ void SIGVerseHsrTeleopKey::jointStateCallback(const sensor_msgs::JointState::Con
       arm_lift_joint_pos2_ = arm_lift_joint_pos1_;
       arm_lift_joint_pos1_ = joint_state->position[i];
     }
-    if(joint_state->name[i] == "arm_flex_joint"){
+    if(joint_state->name[i] == "arm_flex_joint")
+    {
       arm_flex_joint_pos_ = joint_state->position[i];
     }
-    if(joint_state->name[i] == "wrist_flex_joint"){
+    if(joint_state->name[i] == "wrist_flex_joint")
+    {
       wrist_flex_joint_pos_ = joint_state->position[i];
     }
   }
@@ -160,7 +162,8 @@ void SIGVerseHsrTeleopKey::moveBaseTwist(double linear_x, double linear_y, doubl
 
 void SIGVerseHsrTeleopKey::moveBaseJointTrajectory(double linear_x, double linear_y){
 
-  if(listener_.canTransform("/odom", "/base_footprint", ros::Time(0)) == false){
+  if(listener_.canTransform("/odom", "/base_footprint", ros::Time(0)) == false)
+  {
     return;
   }
 
@@ -203,13 +206,16 @@ void SIGVerseHsrTeleopKey::moveArm(const std::string &name, const double positio
   joint_trajectory.joint_names.push_back("wrist_roll_joint");
 
   trajectory_msgs::JointTrajectoryPoint arm_joint_point;
-  if(name == "arm_lift_joint"){
+  if(name == "arm_lift_joint")
+  {
     arm_joint_point.positions = {position, arm_flex_joint_pos_, 0.0f, wrist_flex_joint_pos_, 0.0f};
   }
-  else if(name == "arm_flex_joint"){
+  else if(name == "arm_flex_joint")
+  {
     arm_joint_point.positions = {2.0*arm_lift_joint_pos1_-arm_lift_joint_pos2_, position, 0.0f, wrist_flex_joint_pos_, 0.0f};
   }
-  else if(name == "wrist_flex_joint"){
+  else if(name == "wrist_flex_joint")
+  {
     arm_joint_point.positions = {2.0*arm_lift_joint_pos1_-arm_lift_joint_pos2_, arm_flex_joint_pos_, 0.0f, position, 0.0f};
   }
 
@@ -271,7 +277,8 @@ void SIGVerseHsrTeleopKey::showHelp()
 }
 
 
-int SIGVerseHsrTeleopKey::run(){
+int SIGVerseHsrTeleopKey::run()
+{
   char c;
 
   /////////////////////////////////////////////
@@ -320,9 +327,8 @@ int SIGVerseHsrTeleopKey::run(){
   pub_arm_trajectory_     = node_handle_.advertise<trajectory_msgs::JointTrajectory>(pub_arm_trajectory_topic_name, 10);
   pub_gripper_trajectory_ = node_handle_.advertise<trajectory_msgs::JointTrajectory>(pub_gripper_trajectory_topic_name, 10);
 
-  const float linear_coef         = 0.2f;
-  const float linear_oblique_coef = 0.141f;
-  const float angular_coef        = 0.5f;
+  const float linear_coef  = 0.2f;
+  const float angular_coef = 0.5f;
 
   float move_speed = 1.0f;
   bool is_hand_open = false;
@@ -532,7 +538,6 @@ int SIGVerseHsrTeleopKey::run(){
 
 int main(int argc, char** argv)
 {
-
   ros::init(argc, argv, "hsr_teleop_key");
   SIGVerseHsrTeleopKey hsr_teleop_key;
   return hsr_teleop_key.run();
