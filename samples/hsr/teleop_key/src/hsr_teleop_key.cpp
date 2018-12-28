@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <cmath>
 #include <signal.h>
 #include <termios.h>
 #include <ros/ros.h>
@@ -59,7 +60,7 @@ public:
   void jointStateCallback(const sensor_msgs::JointState::ConstPtr& joint_state);
   void sendMessage(const std::string &message);
   void moveBaseTwist(double linear_x, double linear_y, double angular_z);
-  void moveBaseJointTrajectory(double linear_x, double linear_y, double duration_sec);
+  void moveBaseJointTrajectory(double linear_x, double linear_y, double theta, double duration_sec);
   void moveArm(const std::string &name, const double position, const int duration_sec);
   void moveHand(bool grasp);
 
@@ -160,7 +161,7 @@ void SIGVerseHsrTeleopKey::moveBaseTwist(double linear_x, double linear_y, doubl
   pub_base_twist_.publish(twist);
 }
 
-void SIGVerseHsrTeleopKey::moveBaseJointTrajectory(double linear_x, double linear_y, double duration_sec)
+void SIGVerseHsrTeleopKey::moveBaseJointTrajectory(double linear_x, double linear_y, double theta, double duration_sec)
 {
   if(listener_.canTransform("/odom", "/base_footprint", ros::Time(0)) == false)
   {
@@ -188,7 +189,7 @@ void SIGVerseHsrTeleopKey::moveBaseJointTrajectory(double linear_x, double linea
   joint_trajectory.joint_names.push_back("odom_t");
 
   trajectory_msgs::JointTrajectoryPoint omni_joint_point;
-  omni_joint_point.positions = {odom_2_target.point.x, odom_2_target.point.y, yaw};
+  omni_joint_point.positions = {odom_2_target.point.x, odom_2_target.point.y, yaw + theta};
   omni_joint_point.time_from_start = ros::Duration(duration_sec);
 
   joint_trajectory.points.push_back(omni_joint_point);
@@ -392,55 +393,55 @@ int SIGVerseHsrTeleopKey::run()
         case KEYCODE_U:
         {
           ROS_DEBUG("Move Left Forward");
-          moveBaseJointTrajectory(1.0, 1.0, 10);
+          moveBaseJointTrajectory(+1.0, +1.0, +M_PI_4, 10);
           break;
         }
         case KEYCODE_I:
         {
           ROS_DEBUG("Move Forward");
-          moveBaseJointTrajectory(1.0, 0.0, 10);
+          moveBaseJointTrajectory(+1.0, 0.0, 0.0, 10);
           break;
         }
         case KEYCODE_O:
         {
           ROS_DEBUG("Move Right Forward");
-          moveBaseJointTrajectory(1.0, -1.0, 10);
+          moveBaseJointTrajectory(+1.0, -1.0, -M_PI_4, 10);
           break;
         }
         case KEYCODE_J:
         {
           ROS_DEBUG("Move Left");
-          moveBaseJointTrajectory(0.0, 1.0, 10);
+          moveBaseJointTrajectory(0.0, +1.0, +M_PI_2, 10);
           break;
         }
         case KEYCODE_K:
         {
           ROS_DEBUG("Stop");
-          moveBaseJointTrajectory(0.0, 0.0, 0.5);
+          moveBaseJointTrajectory(0.0, 0.0, 0.0, 0.5);
           break;
         }
         case KEYCODE_L:
         {
           ROS_DEBUG("Move Right");
-          moveBaseJointTrajectory(0.0, -1.0, 10);
+          moveBaseJointTrajectory(0.0, -1.0, -M_PI_2, 10);
           break;
         }
         case KEYCODE_M:
         {
           ROS_DEBUG("Move Left Backward");
-          moveBaseJointTrajectory(-1.0, 1.0, 10);
+          moveBaseJointTrajectory(-1.0, +1.0, +M_PI_2+M_PI_4, 10);
           break;
         }
         case KEYCODE_COMMA:
         {
           ROS_DEBUG("Move Backward");
-          moveBaseJointTrajectory(-1.0, 0.0, 10);
+          moveBaseJointTrajectory(-1.0, 0.0, +M_PI, 10);
           break;
         }
         case KEYCODE_PERIOD:
         {
           ROS_DEBUG("Move Right Backward");
-          moveBaseJointTrajectory(-1.0, -1.0, 10);
+          moveBaseJointTrajectory(-1.0, -1.0, -M_PI_2-M_PI_4, 10);
           break;
         }
         case KEYCODE_R:
