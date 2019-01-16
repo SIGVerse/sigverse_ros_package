@@ -159,7 +159,7 @@ double SIGVersePr2TeleopKey::getDurationPos(const double next_pos, const double 
 
 double SIGVersePr2TeleopKey::getDurationRot(const double next_pos, const double current_pos)
 {
-  return std::max<double>((std::abs(next_pos - current_pos) * 3), 1.0);
+  return std::max<double>((std::abs(next_pos - current_pos) * 5), 1.0);
 }
 
 int SIGVersePr2TeleopKey::run()
@@ -206,7 +206,7 @@ int SIGVersePr2TeleopKey::run()
 
   sub_joint_state_      = node_handle_.subscribe<sensor_msgs::JointState>(sub_joint_state_topic_name, 10, &SIGVersePr2TeleopKey::jointStateCallback, this);
   pub_base_twist_       = node_handle_.advertise<geometry_msgs::Twist>(pub_base_twist_topic_name, 10);
-  pub_head_trajectory_  = node_handle_.advertise<trajectory_msgs::JointTrajectory>(pub_head_trajectory_topic_name, 10);
+  pub_head_trajectory_  = node_handle_.advertise<trajectory_msgs::JointTrajectory>(pub_head_trajectory_topic_name,  10);
   pub_torso_trajectory_ = node_handle_.advertise<trajectory_msgs::JointTrajectory>(pub_torso_trajectory_topic_name, 10);
   pub_l_arm_trajectory_ = node_handle_.advertise<trajectory_msgs::JointTrajectory>(pub_l_arm_trajectory_topic_name, 10);
   pub_r_arm_trajectory_ = node_handle_.advertise<trajectory_msgs::JointTrajectory>(pub_r_arm_trajectory_topic_name, 10);
@@ -216,7 +216,7 @@ int SIGVersePr2TeleopKey::run()
   const float linear_coef  = 0.2f;
   const float angular_coef = 0.5f;
 
-  float move_speed = 10.0f;
+  float move_speed = 1.0f;
 
   showHelp();
 
