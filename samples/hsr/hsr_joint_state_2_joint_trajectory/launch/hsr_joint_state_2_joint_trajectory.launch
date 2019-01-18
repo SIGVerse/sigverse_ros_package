@@ -1,0 +1,10 @@
+<launch>
+
+	<remap from = "/tf" to = "/sigverse_tf"/>
+
+	<include file="$(find sigverse_ros_bridge)/launch/sigverse_ros_bridge.launch" />
+	<include file="$(find hsr_description)/launch/display.launch"/>
+
+	<node pkg="hsr_joint_state_2_joint_trajectory" name="hsr_joint_state_2_joint_trajectory" type="hsr_joint_state_2_joint_trajectory"/>
+
+</launch>
