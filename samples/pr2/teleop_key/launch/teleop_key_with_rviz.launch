@@ -1,0 +1,37 @@
+<launch>
+	<arg name="sub_joint_state_topic_name"        default="/joint_states" />
+	<arg name="pub_base_twist_topic_name"         default="/base_controller/command" />
+	<arg name="pub_head_trajectory_topic_name"    default="/head_traj_controller/command" />
+	<arg name="pub_torso_trajectory_topic_name"   default="/torso_controller/command" />
+	<arg name="pub_l_arm_trajectory_topic_name"   default="/l_arm_controller/command" />
+	<arg name="pub_r_arm_trajectory_topic_name"   default="/r_arm_controller/command" />
+	<arg name="pub_l_gripper_command_topic_name"  default="/l_gripper_controller/command" />
+	<arg name="pub_r_gripper_command_topic_name"  default="/r_gripper_controller/command" />
+	
+	<arg name="sigverse_ros_bridge_port"        default="50001" />
+	<arg name="ros_bridge_port"                 default="9090" />
+
+	<node name="pr2_teleop_key" pkg="sigverse_pr2_teleop_key" type="pr2_teleop_key" output="screen" launch-prefix="xterm -e">
+
+		<param name="sub_joint_state_topic_name"        type="string" value="$(arg sub_joint_state_topic_name)" />
+		<param name="pub_base_twist_topic_name"         type="string" value="$(arg pub_base_twist_topic_name)" />
+		<param name="pub_head_trajectory_topic_name"    type="string" value="$(arg pub_head_trajectory_topic_name)" />
+		<param name="pub_torso_trajectory_topic_name"   type="string" value="$(arg pub_torso_trajectory_topic_name)" />
+		<param name="pub_l_arm_trajectory_topic_name"   type="string" value="$(arg pub_l_arm_trajectory_topic_name)" />
+		<param name="pub_r_arm_trajectory_topic_name"   type="string" value="$(arg pub_r_arm_trajectory_topic_name)" />
+		<param name="pub_l_gripper_command_topic_name"  type="string" value="$(arg pub_l_gripper_command_topic_name)" />
+		<param name="pub_r_gripper_command_topic_name"  type="string" value="$(arg pub_r_gripper_command_topic_name)" />
+	</node>
+
+	<group ns="sigverse_ros_bridge">
+		<node name="sigverse_ros_bridge" pkg="sigverse_ros_bridge" type="sigverse_ros_bridge" args="$(arg sigverse_ros_bridge_port)"/>
+	</group>
+	
+	<include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" > 
+		<arg name="port" value="$(arg ros_bridge_port)"/>
+	</include>
+	
+	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find sigverse_pr2_teleop_key)/launch/pr2.rviz"/>
+	
+</launch>
+
