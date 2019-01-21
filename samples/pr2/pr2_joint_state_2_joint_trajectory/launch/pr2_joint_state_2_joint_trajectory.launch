@@ -1,0 +1,11 @@
+<launch>
+
+	<include file="$(find sigverse_ros_bridge)/launch/sigverse_ros_bridge.launch"/>
+
+	<include file="$(find pr2_joint_state_2_joint_trajectory)/launch/display.launch"/>
+
+	<node pkg="pr2_joint_state_2_joint_trajectory" name="pr2_joint_state_2_joint_trajectory" type="pr2_joint_state_2_joint_trajectory">
+		<remap from = "/joint_states" to = "/sigverse_joint_states"/>
+	</node>
+
+</launch>

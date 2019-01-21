@@ -1,0 +1,25 @@
+<launch>
+	<!-- args -->
+	<arg name="gui" default="true" />
+	<arg name="robot" default="pr2" />
+	<arg name="KINECT1" default="$(optenv KINECT1 false)" />
+	<arg name="KINECT2" default="$(optenv KINECT2 false)" />
+	<param name="robot_description" command="$(find xacro)/xacro '$(find pr2_description)/robots/pr2.urdf.xacro' --inorder KINECT1:=$(arg KINECT1) KINECT2:=$(arg KINECT2)" />
+
+	<node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+		<remap from = "/joint_states" to = "/sigverse_joint_states"/>
+	</node>
+
+
+	<node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher">
+		<remap from = "/tf" to = "/sigverse_tf"/>
+		<remap from = "/joint_states" to = "/sigverse_joint_states"/>
+	</node>
+
+	<!-- load displays -->
+    <param name="use_gui" value="$(arg gui)"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find pr2_joint_state_2_joint_trajectory)/rviz/pr2.rviz">
+		<remap from = "/tf" to = "/sigverse_tf"/>
+	</node>
+
+</launch>
