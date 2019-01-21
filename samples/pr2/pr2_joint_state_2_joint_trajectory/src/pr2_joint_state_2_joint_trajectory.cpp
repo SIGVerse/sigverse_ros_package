@@ -130,7 +130,6 @@ void PR2JointState2JointTrajectory::moveLeftArm()
 
   std::vector<double> current_pos = current_joint_states_.position;
   std::vector<double> goal_position;
-  //std::copy(current_pos.begin()+32, current_pos.begin()+39, std::back_inserter(goal_position));
   goal_position.push_back(current_pos[31]);
   goal_position.push_back(current_pos[32]);
   goal_position.push_back(current_pos[33]);
@@ -163,7 +162,6 @@ void PR2JointState2JointTrajectory::moveRightArm()
 
   std::vector<double> current_pos = current_joint_states_.position;
   std::vector<double> goal_position;
-  //std::copy(current_pos.begin()+13, current_pos.begin()+20, std::back_inserter(goal_position));
 
   goal_position.push_back(current_pos[17]);
   goal_position.push_back(current_pos[18]);
@@ -214,7 +212,7 @@ void PR2JointState2JointTrajectory::moveRightHand()
 
   pr2_controllers_msgs::Pr2GripperCommand send_msg;
   send_msg.position = target_position;
-  
+
   pub_r_hand_command_.publish(send_msg);
 }
 
