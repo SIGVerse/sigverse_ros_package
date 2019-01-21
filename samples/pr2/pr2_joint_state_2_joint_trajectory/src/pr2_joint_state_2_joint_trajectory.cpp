@@ -195,8 +195,11 @@ void PR2JointState2JointTrajectory::moveLeftHand()
 {
   if(current_joint_states_.position.empty()){ return; }
 
+  float joint_angle     = current_joint_states_.position[40];
+  float target_position = (joint_angle / 0.55) * 0.086;
+
   pr2_controllers_msgs::Pr2GripperCommand send_msg;
-  send_msg.position = current_joint_states_.position[40];
+  send_msg.position = target_position;
 
   pub_l_hand_command_.publish(send_msg);
 }
@@ -206,8 +209,12 @@ void PR2JointState2JointTrajectory::moveRightHand()
 {
   if(current_joint_states_.position.empty()){ return; }
 
+  float joint_angle     = current_joint_states_.position[26];
+  float target_position = (joint_angle / 0.55) * 0.086;
+
   pr2_controllers_msgs::Pr2GripperCommand send_msg;
-  send_msg.position = current_joint_states_.position[26];
+  send_msg.position = target_position;
+  
   pub_r_hand_command_.publish(send_msg);
 }
 
