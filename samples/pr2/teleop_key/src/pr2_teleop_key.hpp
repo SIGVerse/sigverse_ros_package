@@ -123,17 +123,17 @@ SIGVersePr2TeleopKey::SIGVersePr2TeleopKey()
   joint_max_map_["l_shoulder_lift_joint"]  = +1.39;
   joint_max_map_["l_upper_arm_roll_joint"] = +3.90;
   joint_max_map_["l_elbow_flex_joint"]     = +0.0;
-  joint_max_map_["l_forearm_roll_joint"]   = +9.99;
+  joint_max_map_["l_forearm_roll_joint"]   = +999.99;
   joint_max_map_["l_wrist_flex_joint"]     = +0.0;
-  joint_max_map_["l_wrist_roll_joint"]     = +9.99;
+  joint_max_map_["l_wrist_roll_joint"]     = +999.99;
 
   joint_max_map_["r_shoulder_pan_joint"]   = +0.69;
   joint_max_map_["r_shoulder_lift_joint"]  = +1.39;
   joint_max_map_["r_upper_arm_roll_joint"] = +0.76;
   joint_max_map_["r_elbow_flex_joint"]     = +0.0;
-  joint_max_map_["r_forearm_roll_joint"]   = +9.99;
+  joint_max_map_["r_forearm_roll_joint"]   = +999.99;
   joint_max_map_["r_wrist_flex_joint"]     = +0.0;
-  joint_max_map_["r_wrist_roll_joint"]     = +9.99;
+  joint_max_map_["r_wrist_roll_joint"]     = +999.99;
 
   joint_min_map_["head_pan_joint"]         = -2.93;
   joint_min_map_["head_tilt_joint"]        = -0.52;
@@ -143,17 +143,17 @@ SIGVersePr2TeleopKey::SIGVersePr2TeleopKey()
   joint_min_map_["l_shoulder_lift_joint"]  = -0.52;
   joint_min_map_["l_upper_arm_roll_joint"] = -0.76;
   joint_min_map_["l_elbow_flex_joint"]     = -2.32;
-  joint_min_map_["l_forearm_roll_joint"]   = -9.99;
+  joint_min_map_["l_forearm_roll_joint"]   = -999.99;
   joint_min_map_["l_wrist_flex_joint"]     = -2.26;
-  joint_min_map_["l_wrist_roll_joint"]     = -9.99;
+  joint_min_map_["l_wrist_roll_joint"]     = -999.99;
 
   joint_min_map_["r_shoulder_pan_joint"]   = -2.26;
   joint_min_map_["r_shoulder_lift_joint"]  = -0.52;
   joint_min_map_["r_upper_arm_roll_joint"] = -3.90;
   joint_min_map_["r_elbow_flex_joint"]     = -2.32;
-  joint_min_map_["r_forearm_roll_joint"]   = -9.99;
+  joint_min_map_["r_forearm_roll_joint"]   = -999.99;
   joint_min_map_["r_wrist_flex_joint"]     = -2.26;
-  joint_min_map_["r_wrist_roll_joint"]     = -9.99;
+  joint_min_map_["r_wrist_roll_joint"]     = -999.99;
 }
 
 
