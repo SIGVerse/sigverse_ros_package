@@ -18,6 +18,7 @@ private:
 
   static void rosSigintHandler(int sig);
   void jointStateCallback(const sensor_msgs::JointState::ConstPtr& joint_state);
+  double getCurrentJointStatesAngle(std::string joint_name);
   void moveHead();
   void moveTorso();
   void moveLeftArm();
@@ -25,7 +26,7 @@ private:
   void moveLeftHand();
   void moveRightHand();
 
-  // old msg and current msg
+  std::map<std::string, double> default_joint_angle_;
   sensor_msgs::JointState current_joint_states_;
 
   ros::NodeHandle node_handle_;
@@ -44,6 +45,26 @@ PR2JointState2JointTrajectory::PR2JointState2JointTrajectory()
   // Override the default ros sigint handler.
   // This must be set after the first NodeHandle is created.
   signal(SIGINT, rosSigintHandler);
+
+  default_joint_angle_["head_pan_joint"]           = 0.0;
+  default_joint_angle_["head_tilt_joint"]          = 0.0;
+  default_joint_angle_["torso_lift_joint"]         = 0.17;
+  default_joint_angle_["l_shoulder_pan_joint"]     = 0.0;
+  default_joint_angle_["l_shoulder_lift_joint"]    = 0.0;
+  default_joint_angle_["l_upper_arm_roll_joint"]   = 0.0;
+  default_joint_angle_["l_elbow_flex_joint"]       = -1.14;
+  default_joint_angle_["l_forearm_roll_joint"]     = 0.0;
+  default_joint_angle_["l_wrist_flex_joint"]       = -1.05;
+  default_joint_angle_["l_wrist_roll_joint"]       = 0.0;
+  default_joint_angle_["r_shoulder_pan_joint"]     = 0.0;
+  default_joint_angle_["r_shoulder_lift_joint"]    = 0.0;
+  default_joint_angle_["r_upper_arm_roll_joint"]   = 0.0;
+  default_joint_angle_["r_elbow_flex_joint"]       = -1.14;
+  default_joint_angle_["r_forearm_roll_joint"]     = 0.0;
+  default_joint_angle_["r_wrist_flex_joint"]       = -1.05;
+  default_joint_angle_["r_wrist_roll_joint"]       = 0.0;
+  default_joint_angle_["l_gripper_l_finger_joint"] = 0.0;
+  default_joint_angle_["r_gripper_l_finger_joint"] = 0.0;
 
   std::string sub_joint_state_topic_name;
   std::string pub_head_trajectory_topic_name;
@@ -83,13 +104,30 @@ void PR2JointState2JointTrajectory::jointStateCallback(const sensor_msgs::JointS
 }
 
 
+double PR2JointState2JointTrajectory::getCurrentJointStatesAngle(std::string joint_name)
+{
+  if(current_joint_states_.position.empty()){
+    return default_joint_angle_[joint_name];
+  }
+
+  std::vector<std::string>::iterator it =std::find(current_joint_states_.name.begin(), current_joint_states_.name.end(), joint_name);
+  if (it != current_joint_states_.name.end())
+  {
+    int index = std::distance(current_joint_states_.name.begin(), it);
+    return current_joint_states_.position[index];
+  }
+  else
+  {
+    return default_joint_angle_[joint_name];
+  }
+}
+
+
 void PR2JointState2JointTrajectory::moveHead()
 {
-  if(current_joint_states_.position.empty()){ return; }
-
-  std::vector<double> current_pos = current_joint_states_.position;
   std::vector<double> goal_position;
-  std::copy(current_pos.begin()+14, current_pos.begin()+16, std::back_inserter(goal_position));
+  goal_position.push_back(getCurrentJointStatesAngle("head_pan_joint"));
+  goal_position.push_back(getCurrentJointStatesAngle("head_tilt_joint"));
 
   trajectory_msgs::JointTrajectoryPoint head_joint_point;
   head_joint_point.positions = goal_position;
@@ -106,11 +144,8 @@ void PR2JointState2JointTrajectory::moveHead()
 
 void PR2JointState2JointTrajectory::moveTorso()
 {
-  if(current_joint_states_.position.empty()){ return; }
-
-  std::vector<double> current_pos = current_joint_states_.position;
   std::vector<double> goal_position;
-  std::copy(current_pos.begin()+12, current_pos.begin()+13, std::back_inserter(goal_position));
+  goal_position.push_back(getCurrentJointStatesAngle("torso_lift_joint"));
 
   trajectory_msgs::JointTrajectoryPoint gripper_joint_point;
   gripper_joint_point.positions = goal_position;
@@ -126,17 +161,14 @@ void PR2JointState2JointTrajectory::moveTorso()
 
 void PR2JointState2JointTrajectory::moveLeftArm()
 {
-  if(current_joint_states_.position.empty()){ return; }
-
-  std::vector<double> current_pos = current_joint_states_.position;
   std::vector<double> goal_position;
-  goal_position.push_back(current_pos[31]);
-  goal_position.push_back(current_pos[32]);
-  goal_position.push_back(current_pos[33]);
-  goal_position.push_back(current_pos[35]);
-  goal_position.push_back(current_pos[34]);
-  goal_position.push_back(current_pos[36]);
-  goal_position.push_back(current_pos[37]);
+  goal_position.push_back(getCurrentJointStatesAngle("l_shoulder_pan_joint"));
+  goal_position.push_back(getCurrentJointStatesAngle("l_shoulder_lift_joint"));
+  goal_position.push_back(getCurrentJointStatesAngle("l_upper_arm_roll_joint"));
+  goal_position.push_back(getCurrentJointStatesAngle("l_elbow_flex_joint"));
+  goal_position.push_back(getCurrentJointStatesAngle("l_forearm_roll_joint"));
+  goal_position.push_back(getCurrentJointStatesAngle("l_wrist_flex_joint"));
+  goal_position.push_back(getCurrentJointStatesAngle("l_wrist_roll_joint"));
 
   trajectory_msgs::JointTrajectoryPoint arm_joint_point;
   arm_joint_point.positions = goal_position;
@@ -158,18 +190,14 @@ void PR2JointState2JointTrajectory::moveLeftArm()
 
 void PR2JointState2JointTrajectory::moveRightArm()
 {
-  if(current_joint_states_.position.empty()){ return; }
-
-  std::vector<double> current_pos = current_joint_states_.position;
   std::vector<double> goal_position;
-
-  goal_position.push_back(current_pos[17]);
-  goal_position.push_back(current_pos[18]);
-  goal_position.push_back(current_pos[19]);
-  goal_position.push_back(current_pos[21]);
-  goal_position.push_back(current_pos[20]);
-  goal_position.push_back(current_pos[22]);
-  goal_position.push_back(current_pos[23]);
+  goal_position.push_back(getCurrentJointStatesAngle("r_shoulder_pan_joint"));
+  goal_position.push_back(getCurrentJointStatesAngle("r_shoulder_lift_joint"));
+  goal_position.push_back(getCurrentJointStatesAngle("r_upper_arm_roll_joint"));
+  goal_position.push_back(getCurrentJointStatesAngle("r_elbow_flex_joint"));
+  goal_position.push_back(getCurrentJointStatesAngle("r_forearm_roll_joint"));
+  goal_position.push_back(getCurrentJointStatesAngle("r_wrist_flex_joint"));
+  goal_position.push_back(getCurrentJointStatesAngle("r_wrist_roll_joint"));
 
   trajectory_msgs::JointTrajectoryPoint arm_joint_point;
   arm_joint_point.positions = goal_position;
@@ -191,9 +219,7 @@ void PR2JointState2JointTrajectory::moveRightArm()
 
 void PR2JointState2JointTrajectory::moveLeftHand()
 {
-  if(current_joint_states_.position.empty()){ return; }
-
-  float joint_angle     = current_joint_states_.position[40];
+  float joint_angle     = getCurrentJointStatesAngle("l_gripper_l_finger_joint");
   float target_position = (joint_angle / 0.55) * 0.086;
 
   pr2_controllers_msgs::Pr2GripperCommand send_msg;
@@ -205,9 +231,7 @@ void PR2JointState2JointTrajectory::moveLeftHand()
 
 void PR2JointState2JointTrajectory::moveRightHand()
 {
-  if(current_joint_states_.position.empty()){ return; }
-
-  float joint_angle     = current_joint_states_.position[26];
+  float joint_angle     = getCurrentJointStatesAngle("r_gripper_l_finger_joint");
   float target_position = (joint_angle / 0.55) * 0.086;
 
   pr2_controllers_msgs::Pr2GripperCommand send_msg;
@@ -217,8 +241,8 @@ void PR2JointState2JointTrajectory::moveRightHand()
 }
 
 
-int PR2JointState2JointTrajectory::run(){
-
+int PR2JointState2JointTrajectory::run()
+{
   ros::Rate loop_rate(10);
 
   while (ros::ok())
@@ -240,7 +264,6 @@ int PR2JointState2JointTrajectory::run(){
 
 int main(int argc, char** argv)
 {
-
   ros::init(argc, argv, "pr2_joint_state_2_joint_trajectory");
   PR2JointState2JointTrajectory pr2_joint_state_2_joint_trajectory;
   return pr2_joint_state_2_joint_trajectory.run();
