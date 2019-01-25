@@ -17,11 +17,12 @@ private:
 
   static void rosSigintHandler(int sig);
   void jointStateCallback(const sensor_msgs::JointState::ConstPtr& joint_state);
+  double getCurrentJointStatesAngle(std::string joint_name);
   void moveArm();
   void moveHead();
   void moveGripper();
 
-  // old msg and current msg
+  std::map<std::string, double> default_joint_angle_;
   sensor_msgs::JointState current_joint_states_;
 
   ros::NodeHandle node_handle_;
@@ -37,6 +38,15 @@ HsrJointState2JointTrajectory::HsrJointState2JointTrajectory()
   // Override the default ros sigint handler.
   // This must be set after the first NodeHandle is created.
   signal(SIGINT, rosSigintHandler);
+
+  default_joint_angle_["arm_lift_joint"]   = 0.0;
+  default_joint_angle_["arm_flex_joint"]   = 0.0;
+  default_joint_angle_["arm_roll_joint"]   = 0.0;
+  default_joint_angle_["wrist_flex_joint"] = 0.0;
+  default_joint_angle_["wrist_roll_joint"] = 0.0;
+  default_joint_angle_["head_pan_joint"]   = 0.0;
+  default_joint_angle_["head_tilt_joint"]  = 0.0;
+  default_joint_angle_["hand_motor_joint"] = 0.0;
 
   std::string sub_joint_state_topic_name;
   std::string pub_arm_trajectory_topic_name;
@@ -67,6 +77,21 @@ void HsrJointState2JointTrajectory::jointStateCallback(const sensor_msgs::JointS
 }
 
 
+double HsrJointState2JointTrajectory::getCurrentJointStatesAngle(std::string joint_name)
+{
+  std::vector<std::string>::iterator it =std::find(current_joint_states_.name.begin(), current_joint_states_.name.end(), joint_name);
+  if (it != current_joint_states_.name.end())
+  {
+    int index = std::distance(current_joint_states_.name.begin(), it);
+    return current_joint_states_.position[index];
+  }
+  else
+  {
+    return default_joint_angle_[joint_name];
+  }
+}
+
+
 void HsrJointState2JointTrajectory::moveArm()
 {
   if(current_joint_states_.position.empty())
@@ -74,9 +99,12 @@ void HsrJointState2JointTrajectory::moveArm()
       return;
   }
 
-  std::vector<double> current_pos = current_joint_states_.position;
   std::vector<double> goal_position;
-  std::copy(current_pos.begin()+12, current_pos.begin()+17, std::back_inserter(goal_position));
+  goal_position.push_back(getCurrentJointStatesAngle("arm_lift_joint"));
+  goal_position.push_back(getCurrentJointStatesAngle("arm_flex_joint"));
+  goal_position.push_back(getCurrentJointStatesAngle("arm_roll_joint"));
+  goal_position.push_back(getCurrentJointStatesAngle("wrist_flex_joint"));
+  goal_position.push_back(getCurrentJointStatesAngle("wrist_roll_joint"));
 
   trajectory_msgs::JointTrajectoryPoint arm_joint_point;
   arm_joint_point.positions = goal_position;
@@ -96,15 +124,14 @@ void HsrJointState2JointTrajectory::moveArm()
 
 void HsrJointState2JointTrajectory::moveHead()
 {
-
   if(current_joint_states_.position.empty())
   {
       return;
   }
 
-  std::vector<double> current_pos = current_joint_states_.position;
   std::vector<double> goal_position;
-  std::copy(current_pos.begin()+10, current_pos.begin()+12, std::back_inserter(goal_position));
+  goal_position.push_back(getCurrentJointStatesAngle("head_pan_joint"));
+  goal_position.push_back(getCurrentJointStatesAngle("head_tilt_joint"));
 
   trajectory_msgs::JointTrajectoryPoint head_joint_point;
   head_joint_point.positions = goal_position;
@@ -121,15 +148,13 @@ void HsrJointState2JointTrajectory::moveHead()
 
 void HsrJointState2JointTrajectory::moveGripper()
 {
-
   if(current_joint_states_.position.empty())
   {
-      return;
+    return;
   }
 
-  std::vector<double> current_pos = current_joint_states_.position;
   std::vector<double> goal_position;
-  std::copy(current_pos.begin()+17, current_pos.begin()+18, std::back_inserter(goal_position));
+  goal_position.push_back(getCurrentJointStatesAngle("hand_motor_joint"));
 
   trajectory_msgs::JointTrajectoryPoint gripper_joint_point;
   gripper_joint_point.positions = goal_position;
@@ -143,8 +168,8 @@ void HsrJointState2JointTrajectory::moveGripper()
 }
 
 
-int HsrJointState2JointTrajectory::run(){
-
+int HsrJointState2JointTrajectory::run()
+{
   ros::Rate loop_rate(10);
 
   while (ros::ok())
@@ -163,7 +188,6 @@ int HsrJointState2JointTrajectory::run(){
 
 int main(int argc, char** argv)
 {
-
   ros::init(argc, argv, "hsr_joint_state_2_joint_trajectory");
   HsrJointState2JointTrajectory hsr_joint_state_2_joint_trajectory;
   return hsr_joint_state_2_joint_trajectory.run();
