@@ -1,0 +1,16 @@
+<launch>
+
+	<arg name="sub_joint_state_topic_name"        default="/hsrb/joint_states" />
+	<arg name="pub_arm_trajectory_topic_name"     default="/hsrb/arm_trajectory_controller/command" />
+	<arg name="pub_head_trajectory_topic_name"    default="/hsrb/head_trajectory_controller/command" />
+	<arg name="pub_gripper_trajectory_topic_name" default="/hsrb/gripper_trajectory_controller/command" />
+
+	<include file="$(find sigverse_ros_bridge)/launch/sigverse_ros_bridge.launch" />
+
+	<include file="$(find hsr_joint_state_2_joint_trajectory)/launch/display.launch"/>
+
+	<node pkg="hsr_joint_state_2_joint_trajectory" name="hsr_joint_state_2_joint_trajectory" type="hsr_joint_state_2_joint_trajectory">
+		<remap from = "/joint_states" to = "/sigverse_joint_states"/>
+	</node>
+
+</launch>
