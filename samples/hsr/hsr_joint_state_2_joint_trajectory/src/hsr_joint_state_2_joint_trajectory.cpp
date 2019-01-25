@@ -79,6 +79,11 @@ void HsrJointState2JointTrajectory::jointStateCallback(const sensor_msgs::JointS
 
 double HsrJointState2JointTrajectory::getCurrentJointStatesAngle(std::string joint_name)
 {
+  if(current_joint_states_.position.empty())
+  {
+    return default_joint_angle_[joint_name];
+  }
+
   std::vector<std::string>::iterator it =std::find(current_joint_states_.name.begin(), current_joint_states_.name.end(), joint_name);
   if (it != current_joint_states_.name.end())
   {
@@ -94,11 +99,6 @@ double HsrJointState2JointTrajectory::getCurrentJointStatesAngle(std::string joi
 
 void HsrJointState2JointTrajectory::moveArm()
 {
-  if(current_joint_states_.position.empty())
-  {
-      return;
-  }
-
   std::vector<double> goal_position;
   goal_position.push_back(getCurrentJointStatesAngle("arm_lift_joint"));
   goal_position.push_back(getCurrentJointStatesAngle("arm_flex_joint"));
@@ -124,11 +124,6 @@ void HsrJointState2JointTrajectory::moveArm()
 
 void HsrJointState2JointTrajectory::moveHead()
 {
-  if(current_joint_states_.position.empty())
-  {
-      return;
-  }
-
   std::vector<double> goal_position;
   goal_position.push_back(getCurrentJointStatesAngle("head_pan_joint"));
   goal_position.push_back(getCurrentJointStatesAngle("head_tilt_joint"));
@@ -148,11 +143,6 @@ void HsrJointState2JointTrajectory::moveHead()
 
 void HsrJointState2JointTrajectory::moveGripper()
 {
-  if(current_joint_states_.position.empty())
-  {
-    return;
-  }
-
   std::vector<double> goal_position;
   goal_position.push_back(getCurrentJointStatesAngle("hand_motor_joint"));
 
