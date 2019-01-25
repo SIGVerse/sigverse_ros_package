@@ -23,5 +23,8 @@
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>trajectory_msgs</exec_depend>
   <exec_depend>pr2_controllers_msgs</exec_depend>
+  <exec_depend>pr2_description</exec_depend>
+  <exec_depend>sigverse_ros_bridge</exec_depend>
+
 
 </package>
