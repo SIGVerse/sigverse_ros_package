@@ -29,11 +29,13 @@ private:
   static const char KEYCODE_E = 0x65;
   static const char KEYCODE_F = 0x66;
   static const char KEYCODE_G = 0x67;
+  static const char KEYCODE_H = 0x68;
   static const char KEYCODE_I = 0x69;
   static const char KEYCODE_J = 0x6a;
   static const char KEYCODE_K = 0x6b;
   static const char KEYCODE_L = 0x6c;
   static const char KEYCODE_M = 0x6d;
+  static const char KEYCODE_N = 0x6e;
   static const char KEYCODE_O = 0x6f;
   static const char KEYCODE_Q = 0x71;
   static const char KEYCODE_R = 0x72;
@@ -41,6 +43,7 @@ private:
   static const char KEYCODE_U = 0x75;
   static const char KEYCODE_W = 0x77;
   static const char KEYCODE_X = 0x78;
+  static const char KEYCODE_Y = 0x79;
   static const char KEYCODE_Z = 0x7a;
 
   static const char KEYCODE_COMMA  = 0x2c;
@@ -61,6 +64,7 @@ public:
   void sendMessage(const std::string &message);
   void moveBaseTwist(double linear_x, double linear_y, double angular_z);
   void moveBaseJointTrajectory(double linear_x, double linear_y, double theta, double duration_sec);
+  void moveArm(const double arm_lift_pos, const double arm_flex_pos, const double wrist_flex_pos, const int duration_sec);
   void moveArm(const std::string &name, const double position, const int duration_sec);
   void moveHand(bool grasp);
 
@@ -196,7 +200,7 @@ void SIGVerseHsrTeleopKey::moveBaseJointTrajectory(double linear_x, double linea
   pub_base_trajectory_.publish(joint_trajectory);
 }
 
-void SIGVerseHsrTeleopKey::moveArm(const std::string &name, const double position, const int duration_sec)
+void SIGVerseHsrTeleopKey::moveArm(const double arm_lift_pos, const double arm_flex_pos, const double wrist_flex_pos, const int duration_sec)
 {
   trajectory_msgs::JointTrajectory joint_trajectory;
   joint_trajectory.joint_names.push_back("arm_lift_joint");
@@ -206,22 +210,28 @@ void SIGVerseHsrTeleopKey::moveArm(const std::string &name, const double positio
   joint_trajectory.joint_names.push_back("wrist_roll_joint");
 
   trajectory_msgs::JointTrajectoryPoint arm_joint_point;
-  if(name == "arm_lift_joint")
-  {
-    arm_joint_point.positions = {position, arm_flex_joint_pos_, 0.0f, wrist_flex_joint_pos_, 0.0f};
-  }
-  else if(name == "arm_flex_joint")
-  {
-    arm_joint_point.positions = {2.0*arm_lift_joint_pos1_-arm_lift_joint_pos2_, position, 0.0f, wrist_flex_joint_pos_, 0.0f};
-  }
-  else if(name == "wrist_flex_joint")
-  {
-    arm_joint_point.positions = {2.0*arm_lift_joint_pos1_-arm_lift_joint_pos2_, arm_flex_joint_pos_, 0.0f, position, 0.0f};
-  }
+
+  arm_joint_point.positions = {arm_lift_pos, arm_flex_pos, 0.0f, wrist_flex_pos, 0.0f};
 
   arm_joint_point.time_from_start = ros::Duration(duration_sec);
   joint_trajectory.points.push_back(arm_joint_point);
   pub_arm_trajectory_.publish(joint_trajectory);
+}
+
+void SIGVerseHsrTeleopKey::moveArm(const std::string &name, const double position, const int duration_sec)
+{
+  if(name == "arm_lift_joint")
+  {
+    this->moveArm(position, arm_flex_joint_pos_, wrist_flex_joint_pos_, duration_sec);
+  }
+  else if(name == "arm_flex_joint")
+  {
+    this->moveArm(2.0*arm_lift_joint_pos1_-arm_lift_joint_pos2_, position, wrist_flex_joint_pos_, duration_sec);
+  }
+  else if(name == "wrist_flex_joint")
+  {
+    this->moveArm(2.0*arm_lift_joint_pos1_-arm_lift_joint_pos2_, arm_flex_joint_pos_, position, duration_sec);
+  }
 }
 
 void SIGVerseHsrTeleopKey::moveHand(bool is_hand_open)
@@ -263,6 +273,10 @@ void SIGVerseHsrTeleopKey::showHelp()
   puts("  u   i   o  ");
   puts("  j   k   l  ");
   puts("  m   ,   .  ");
+  puts("---------------------------");
+  puts("y : Rotate Arm - Vertical");
+  puts("h : Rotate Arm - Upward");
+  puts("n : Rotate Arm - Downward");
   puts("---------------------------");
   puts("q/a/z : Up/Stop/Down Torso Height");
   puts("---------------------------");
@@ -456,6 +470,24 @@ int SIGVerseHsrTeleopKey::run()
           ROS_DEBUG("Move Speed Down");
           move_speed /= 2;
           if(move_speed < 0.125){ move_speed=0.125; }
+          break;
+        }
+        case KEYCODE_Y:
+        {
+          ROS_DEBUG("Rotate Arm - Vertical");
+          moveArm(2.0*arm_lift_joint_pos1_-arm_lift_joint_pos2_, 0.0, -1.57, 1);
+          break;
+        }
+        case KEYCODE_H:
+        {
+          ROS_DEBUG("Rotate Arm - Upward");
+          moveArm(2.0*arm_lift_joint_pos1_-arm_lift_joint_pos2_, -1.0, -0.57, 1);
+          break;
+        }
+        case KEYCODE_N:
+        {
+          ROS_DEBUG("Rotate Arm - Downward");
+          moveArm(2.0*arm_lift_joint_pos1_-arm_lift_joint_pos2_, -2.2, 0.35, 1);
           break;
         }
         case KEYCODE_Q:
