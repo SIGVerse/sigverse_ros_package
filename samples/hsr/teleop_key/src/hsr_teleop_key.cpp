@@ -278,7 +278,7 @@ void SIGVerseHsrTeleopKey::showHelp()
   puts("h : Rotate Arm - Upward");
   puts("n : Rotate Arm - Downward");
   puts("---------------------------");
-  puts("q/a/z : Up/Stop/Down Torso Height");
+  puts("q/a/z : Up/Stop/Down Torso");
   puts("---------------------------");
   puts("w/s/x : Up/Stop/Down Arm Flex Angle");
   puts("---------------------------");
