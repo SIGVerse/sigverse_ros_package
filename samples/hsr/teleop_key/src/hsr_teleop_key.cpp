@@ -64,8 +64,10 @@ public:
   void sendMessage(const std::string &message);
   void moveBaseTwist(double linear_x, double linear_y, double angular_z);
   void moveBaseJointTrajectory(double linear_x, double linear_y, double theta, double duration_sec);
-  void moveArm(const double arm_lift_pos, const double arm_flex_pos, const double wrist_flex_pos, const int duration_sec);
-  void moveArm(const std::string &name, const double position, const int duration_sec);
+  void operateArm(const double arm_lift_pos, const double arm_flex_pos, const double wrist_flex_pos, const double duration_sec);
+  void operateArm(const std::string &name, const double position, const double duration_sec);
+  void operateArmFlex(const double arm_flex_pos, const double wrist_flex_pos);
+  double getDurationRot(const double next_pos, const double current_pos);
   void moveHand(bool grasp);
 
   void showHelp();
@@ -200,7 +202,7 @@ void SIGVerseHsrTeleopKey::moveBaseJointTrajectory(double linear_x, double linea
   pub_base_trajectory_.publish(joint_trajectory);
 }
 
-void SIGVerseHsrTeleopKey::moveArm(const double arm_lift_pos, const double arm_flex_pos, const double wrist_flex_pos, const int duration_sec)
+void SIGVerseHsrTeleopKey::operateArm(const double arm_lift_pos, const double arm_flex_pos, const double wrist_flex_pos, const double duration_sec)
 {
   trajectory_msgs::JointTrajectory joint_trajectory;
   joint_trajectory.joint_names.push_back("arm_lift_joint");
@@ -218,20 +220,32 @@ void SIGVerseHsrTeleopKey::moveArm(const double arm_lift_pos, const double arm_f
   pub_arm_trajectory_.publish(joint_trajectory);
 }
 
-void SIGVerseHsrTeleopKey::moveArm(const std::string &name, const double position, const int duration_sec)
+void SIGVerseHsrTeleopKey::operateArm(const std::string &name, const double position, const double duration_sec)
 {
   if(name == "arm_lift_joint")
   {
-    this->moveArm(position, arm_flex_joint_pos_, wrist_flex_joint_pos_, duration_sec);
+    this->operateArm(position, arm_flex_joint_pos_, wrist_flex_joint_pos_, duration_sec);
   }
   else if(name == "arm_flex_joint")
   {
-    this->moveArm(2.0*arm_lift_joint_pos1_-arm_lift_joint_pos2_, position, wrist_flex_joint_pos_, duration_sec);
+    this->operateArm(2.0*arm_lift_joint_pos1_-arm_lift_joint_pos2_, position, wrist_flex_joint_pos_, duration_sec);
   }
   else if(name == "wrist_flex_joint")
   {
-    this->moveArm(2.0*arm_lift_joint_pos1_-arm_lift_joint_pos2_, arm_flex_joint_pos_, position, duration_sec);
+    this->operateArm(2.0*arm_lift_joint_pos1_-arm_lift_joint_pos2_, arm_flex_joint_pos_, position, duration_sec);
   }
+}
+
+void SIGVerseHsrTeleopKey::operateArmFlex(const double arm_flex_pos, const double wrist_flex_pos)
+{
+  double duration = std::max(this->getDurationRot(arm_flex_pos, arm_flex_joint_pos_), this->getDurationRot(wrist_flex_pos, wrist_flex_joint_pos_));
+
+  this->operateArm(2.0*arm_lift_joint_pos1_-arm_lift_joint_pos2_, arm_flex_pos, wrist_flex_pos, duration);
+}
+
+double SIGVerseHsrTeleopKey::getDurationRot(const double next_pos, const double current_pos)
+{
+  return std::max<double>((std::abs(next_pos - current_pos) * 1.05), 1.0);
 }
 
 void SIGVerseHsrTeleopKey::moveHand(bool is_hand_open)
@@ -475,73 +489,73 @@ int SIGVerseHsrTeleopKey::run()
         case KEYCODE_Y:
         {
           ROS_DEBUG("Rotate Arm - Vertical");
-          moveArm(2.0*arm_lift_joint_pos1_-arm_lift_joint_pos2_, 0.0, -1.57, 1);
+          operateArmFlex(0.0, -1.57);
           break;
         }
         case KEYCODE_H:
         {
           ROS_DEBUG("Rotate Arm - Upward");
-          moveArm(2.0*arm_lift_joint_pos1_-arm_lift_joint_pos2_, -1.0, -0.57, 1);
+          operateArmFlex(-1.0, -0.57);
           break;
         }
         case KEYCODE_N:
         {
           ROS_DEBUG("Rotate Arm - Downward");
-          moveArm(2.0*arm_lift_joint_pos1_-arm_lift_joint_pos2_, -2.2, 0.35, 1);
+          operateArmFlex(-2.2, 0.35);
           break;
         }
         case KEYCODE_Q:
         {
           ROS_DEBUG("Torso Height - Up");
-          moveArm(arm_lift_joint_name, 0.69, std::max<int>((int)(std::abs(0.69 - arm_lift_joint_pos1_) / 0.05), 1));
+          operateArm(arm_lift_joint_name, 0.69, std::max<int>((int)(std::abs(0.69 - arm_lift_joint_pos1_) / 0.05), 1));
           break;
         }
         case KEYCODE_A:
         {
           ROS_DEBUG("Torso Height - Stop");
-          moveArm(arm_lift_joint_name, 2.0*arm_lift_joint_pos1_-arm_lift_joint_pos2_, 0.5);
+          operateArm(arm_lift_joint_name, 2.0*arm_lift_joint_pos1_-arm_lift_joint_pos2_, 0.5);
           break;
         }
         case KEYCODE_Z:
         {
           ROS_DEBUG("Torso Height - Down");
-          moveArm(arm_lift_joint_name, 0.0, std::max<int>((int)(std::abs(0.0 - arm_lift_joint_pos1_) / 0.05), 1));
+          operateArm(arm_lift_joint_name, 0.0, std::max<int>((int)(std::abs(0.0 - arm_lift_joint_pos1_) / 0.05), 1));
           break;
         }
         case KEYCODE_W:
         {
           ROS_DEBUG("Arm Flex Angle - Up");
-          moveArm(arm_flex_joint_name, 0.0, std::max((std::abs(0.0 - arm_flex_joint_pos_) * 4), 1.0));
+          operateArm(arm_flex_joint_name, 0.0, std::max((std::abs(0.0 - arm_flex_joint_pos_) * 2), 1.0));
           break;
         }
         case KEYCODE_S:
         {
           ROS_DEBUG("Arm Flex Angle - Stop");
-          moveArm(arm_flex_joint_name, arm_flex_joint_pos_, 1.0);
+          operateArm(arm_flex_joint_name, arm_flex_joint_pos_, 1.0);
           break;
         }
         case KEYCODE_X:
         {
           ROS_DEBUG("Arm Flex Angle - Down");
-          moveArm(arm_flex_joint_name, -2.62, std::max((std::abs(-2.62 - arm_flex_joint_pos_) * 4), 1.0));
+          operateArm(arm_flex_joint_name, -2.62, std::max((std::abs(-2.62 - arm_flex_joint_pos_) * 2), 1.0));
           break;
         }
         case KEYCODE_E:
         {
           ROS_DEBUG("Arm Wrist Angle - Up");
-          moveArm(wrist_flex_joint_name, 1.22, std::max((std::abs(1.22 - wrist_flex_joint_pos_) * 4), 1.0));
+          operateArm(wrist_flex_joint_name, 1.22, std::max((std::abs(1.22 - wrist_flex_joint_pos_) * 2), 1.0));
           break;
         }
         case KEYCODE_D:
         {
           ROS_DEBUG("Arm Wrist Angle - Stop");
-          moveArm(wrist_flex_joint_name, wrist_flex_joint_pos_, 1.0);
+          operateArm(wrist_flex_joint_name, wrist_flex_joint_pos_, 1.0);
           break;
         }
         case KEYCODE_C:
         {
           ROS_DEBUG("Arm Wrist Angle - Down");
-          moveArm(wrist_flex_joint_name, -1.92, std::max((std::abs(-1.92 - wrist_flex_joint_pos_) * 4), 1.0));
+          operateArm(wrist_flex_joint_name, -1.92, std::max((std::abs(-1.92 - wrist_flex_joint_pos_) * 2), 1.0));
           break;
         }
         case KEYCODE_G:
