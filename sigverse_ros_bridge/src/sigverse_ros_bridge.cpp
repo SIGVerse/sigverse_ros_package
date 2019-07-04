@@ -2,6 +2,7 @@
 #include "sigverse_ros_bridge.hpp"
 
 bool SIGVerseROSBridge::isRunning;
+int  SIGVerseROSBridge::syncTimeCnt;
 
 pid_t SIGVerseROSBridge::gettid(void)
 {
@@ -82,7 +83,6 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 		std::cout << "Cannot malloc!" << std::endl;
 		exit(EXIT_FAILURE);
 	}
-
 
 	long int totalReceivedSize;
 
@@ -316,21 +316,26 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 		// Time Synchronization (SIGVerse Original Type)
 		else if(typeValue==TYPE_TIME_SYNC)
 		{
-			ros::Time timestamp;
+			if(syncTimeCnt < SYNC_TIME_MAX_NUM)
+			{
+				ros::Time timestamp;
 
-			timestamp.sec  = (uint32_t)bsonView["msg"]["data"]["secs"] .get_int32();
-			timestamp.nsec = (uint32_t)bsonView["msg"]["data"]["nsecs"].get_int32();
+				timestamp.sec  = (uint32_t)bsonView["msg"]["data"]["secs"] .get_int32();
+				timestamp.nsec = (uint32_t)bsonView["msg"]["data"]["nsecs"].get_int32();
 
-			ros::Time now = ros::Time::now();
+				ros::Time now = ros::Time::now();
 
-			int gapSec  = ((int)timestamp.sec  - (int)now.sec);
-			int gapMsec = ((int)timestamp.nsec - (int)now.nsec) /1000 /1000;
+				int gapSec  = ((int)timestamp.sec  - (int)now.sec);
+				int gapMsec = ((int)timestamp.nsec - (int)now.nsec) /1000 /1000;
 
-			std::string timeGap = "time_gap," + std::to_string(gapSec) + "," + std::to_string(gapMsec);
+				std::string timeGap = "time_gap," + std::to_string(gapSec) + "," + std::to_string(gapMsec);
 
-			ssize_t size = write(dstSocket, timeGap.c_str(), std::strlen(timeGap.c_str()));
+				ssize_t size = write(dstSocket, timeGap.c_str(), std::strlen(timeGap.c_str()));
 
-			std::cout << "TYPE_TIME_SYNC " << timeGap.c_str() << std::endl;
+				std::cout << "TYPE_TIME_SYNC " << timeGap.c_str() << std::endl;
+
+				syncTimeCnt++;
+			}
 		}
 		// Tf list data (SIGVerse Original Type)
 		else if(typeValue==TYPE_TF_LIST)
@@ -410,6 +415,7 @@ int SIGVerseROSBridge::run(int argc, char **argv)
 	}
 
 	isRunning = true;
+	syncTimeCnt = 0;
 
 	int srcSocket;
 	struct sockaddr_in srcAddr;

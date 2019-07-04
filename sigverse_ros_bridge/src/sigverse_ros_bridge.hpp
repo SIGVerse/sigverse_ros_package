@@ -50,6 +50,7 @@
 #define BUFFER_SIZE 25*1024*1024 //100MB
 
 #define PORT 50001
+#define SYNC_TIME_MAX_NUM 1
 
 class SIGVerseROSBridge
 {
@@ -68,6 +69,7 @@ private:
 	static void *receivingThread(void *param);
 
 	static bool isRunning;
+	static int  syncTimeCnt;
 
 public:
 	int run(int argc, char **argv);
