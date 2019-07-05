@@ -3,6 +3,7 @@
 
 bool SIGVerseROSBridge::isRunning;
 int  SIGVerseROSBridge::syncTimeCnt;
+int  SIGVerseROSBridge::syncTimeMaxNum;
 
 pid_t SIGVerseROSBridge::gettid(void)
 {
@@ -316,7 +317,7 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 		// Time Synchronization (SIGVerse Original Type)
 		else if(typeValue==TYPE_TIME_SYNC)
 		{
-			if(syncTimeCnt < SYNC_TIME_MAX_NUM)
+			if(syncTimeCnt < syncTimeMaxNum)
 			{
 				ros::Time timestamp;
 
@@ -411,7 +412,16 @@ int SIGVerseROSBridge::run(int argc, char **argv)
 	}
 	else
 	{
-		portNumber = PORT;
+		portNumber = DEFAULT_PORT;
+	}
+
+	if(argc > 2)
+	{
+		syncTimeMaxNum = (uint16_t)std::atoi(argv[2]);
+	}
+	else
+	{
+		syncTimeMaxNum = DEFAULT_SYNC_TIME_MAX_NUM;
 	}
 
 	isRunning = true;
