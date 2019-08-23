@@ -52,18 +52,18 @@ void SIGVerseTb3OpenManipulatorGraspingAuto::boundingBoxesCallback(const darknet
 
 //  ROS_INFO("boundingBoxesCallback size=%d", (int)bounding_boxes->boundingBoxes.size());
 
-  int data_count = std::min<int>(bounding_boxes->boundingBoxes.size(), MAX_OBJECTS_NUM);
+  int data_count = std::min<int>(bounding_boxes->bounding_boxes.size(), MAX_OBJECTS_NUM);
 
-  bounding_boxes_data_.boundingBoxes.resize(data_count);
+  bounding_boxes_data_.bounding_boxes.resize(data_count);
 
   for(int i=0; i<data_count; i++)
   {
-    bounding_boxes_data_.boundingBoxes[i].Class       = bounding_boxes->boundingBoxes[i].Class;
-    bounding_boxes_data_.boundingBoxes[i].probability = bounding_boxes->boundingBoxes[i].probability;
-    bounding_boxes_data_.boundingBoxes[i].xmin        = bounding_boxes->boundingBoxes[i].xmin;
-    bounding_boxes_data_.boundingBoxes[i].ymin        = bounding_boxes->boundingBoxes[i].ymin;
-    bounding_boxes_data_.boundingBoxes[i].xmax        = bounding_boxes->boundingBoxes[i].xmax;
-    bounding_boxes_data_.boundingBoxes[i].ymax        = bounding_boxes->boundingBoxes[i].ymax;
+    bounding_boxes_data_.bounding_boxes[i].Class       = bounding_boxes->bounding_boxes[i].Class;
+    bounding_boxes_data_.bounding_boxes[i].probability = bounding_boxes->bounding_boxes[i].probability;
+    bounding_boxes_data_.bounding_boxes[i].xmin        = bounding_boxes->bounding_boxes[i].xmin;
+    bounding_boxes_data_.bounding_boxes[i].ymin        = bounding_boxes->bounding_boxes[i].ymin;
+    bounding_boxes_data_.bounding_boxes[i].xmax        = bounding_boxes->bounding_boxes[i].xmax;
+    bounding_boxes_data_.bounding_boxes[i].ymax        = bounding_boxes->bounding_boxes[i].ymax;
   }
 }
 
@@ -205,15 +205,15 @@ void SIGVerseTb3OpenManipulatorGraspingAuto::stopJoints(ros::Publisher &publishe
 
 bool SIGVerseTb3OpenManipulatorGraspingAuto::findGraspingTarget(geometry_msgs::Vector3 &point_cloud_pos, const std::string &target_name)
 {
-  for(int i=0; i<bounding_boxes_data_.boundingBoxes.size(); i++)
+  for(int i=0; i<bounding_boxes_data_.bounding_boxes.size(); i++)
   {
-    if(bounding_boxes_data_.boundingBoxes[i].Class == target_name &&
-       bounding_boxes_data_.boundingBoxes[i].probability > PROBABILITY_THRESHOLD)
+    if(bounding_boxes_data_.bounding_boxes[i].Class == target_name &&
+       bounding_boxes_data_.bounding_boxes[i].probability > PROBABILITY_THRESHOLD)
     {
       puts(("Found the target. name= " + target_name).c_str());
 
-      int center_x = (bounding_boxes_data_.boundingBoxes[i].xmax + bounding_boxes_data_.boundingBoxes[i].xmin) / 2;
-      int center_y = (bounding_boxes_data_.boundingBoxes[i].ymax + bounding_boxes_data_.boundingBoxes[i].ymin) / 2;
+      int center_x = (bounding_boxes_data_.bounding_boxes[i].xmax + bounding_boxes_data_.bounding_boxes[i].xmin) / 2;
+      int center_y = (bounding_boxes_data_.bounding_boxes[i].ymax + bounding_boxes_data_.bounding_boxes[i].ymin) / 2;
 
 //      puts(("x=" + std::to_string(center_x) + ", y=" + std::to_string(center_y)).c_str());
 
@@ -228,8 +228,8 @@ bool SIGVerseTb3OpenManipulatorGraspingAuto::findGraspingTarget(geometry_msgs::V
       if(is_succeeded) { return true; }
 
       // Around the center (1/4)
-      int play_x = (bounding_boxes_data_.boundingBoxes[i].xmax - center_x) / 4;
-      int play_y = (bounding_boxes_data_.boundingBoxes[i].ymax - center_y) / 4;
+      int play_x = (bounding_boxes_data_.bounding_boxes[i].xmax - center_x) / 4;
+      int play_y = (bounding_boxes_data_.bounding_boxes[i].ymax - center_y) / 4;
 
       for(int yi=-play_y; yi<=+play_y; yi+=play_y)
       {
@@ -241,8 +241,8 @@ bool SIGVerseTb3OpenManipulatorGraspingAuto::findGraspingTarget(geometry_msgs::V
       }
 
       // Around the center (1/2)
-      play_x = (bounding_boxes_data_.boundingBoxes[i].xmax - center_x) / 2;
-      play_y = (bounding_boxes_data_.boundingBoxes[i].ymax - center_y) / 2;
+      play_x = (bounding_boxes_data_.bounding_boxes[i].xmax - center_x) / 2;
+      play_y = (bounding_boxes_data_.bounding_boxes[i].ymax - center_y) / 2;
 
       for(int yi=-play_y; yi<=+play_y; yi+=play_y)
       {
@@ -363,11 +363,11 @@ std::string SIGVerseTb3OpenManipulatorGraspingAuto::getDetectedObjectsList()
 {
   std::string detected_objects_ = "";
 
-  for(int i=0; i<bounding_boxes_data_.boundingBoxes.size(); i++)
+  for(int i=0; i<bounding_boxes_data_.bounding_boxes.size(); i++)
   {
     detected_objects_
-      += bounding_boxes_data_.boundingBoxes[i].Class + ": "
-      + std::to_string((int)std::floor(bounding_boxes_data_.boundingBoxes[i].probability * 100)) + "%   ";
+      += bounding_boxes_data_.bounding_boxes[i].Class + ": "
+      + std::to_string((int)std::floor(bounding_boxes_data_.bounding_boxes[i].probability * 100)) + "%   ";
   }
 
   return detected_objects_;

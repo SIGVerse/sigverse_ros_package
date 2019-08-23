@@ -14,10 +14,12 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
   sensor_msgs
-  pr2_controllers_msgs
   tf
 )
 
+if (pr2_controllers_msgs_FOUND)
+  find_package(pr2_controllers_msgs REQUIRED)
+endif()
 
 
 ## System dependencies are found with CMake's conventions
@@ -201,7 +203,9 @@ include_directories(
 
 link_directories(/usr/local/lib)
 
-add_executable(pr2_teleop_key src/pr2_teleop_key.cpp)
-target_link_libraries(pr2_teleop_key ${catkin_LIBRARIES})
 
+if (pr2_controllers_msgs_FOUND)
+  add_executable(pr2_teleop_key src/pr2_teleop_key.cpp)
+  target_link_libraries(pr2_teleop_key ${catkin_LIBRARIES})
+endif()
 

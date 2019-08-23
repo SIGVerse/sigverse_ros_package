@@ -152,7 +152,7 @@ SIGVerseTb3OpenManipulatorGraspingAuto::SIGVerseTb3OpenManipulatorGraspingAuto()
   latest_time_of_bounding_boxes_ = system_clock::now();
   latest_time_of_point_cloud_    = system_clock::now();
 
-  bounding_boxes_data_.boundingBoxes.reserve(MAX_OBJECTS_NUM);
+  bounding_boxes_data_.bounding_boxes.reserve(MAX_OBJECTS_NUM);
 }
 
 
