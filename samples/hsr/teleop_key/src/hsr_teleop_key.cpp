@@ -308,6 +308,8 @@ void SIGVerseHsrTeleopKey::showHelp()
 int SIGVerseHsrTeleopKey::run()
 {
   char c;
+  int  ret;
+  char buf[1024];
 
   /////////////////////////////////////////////
   // get the console in raw mode
@@ -370,12 +372,14 @@ int SIGVerseHsrTeleopKey::run()
     if(canReceive(kfd))
     {
       // get the next event from the keyboard
-      if(read(kfd, &c, 1) < 0)
+      if((ret = read(kfd, &buf, sizeof(buf))) < 0)
       {
         perror("read():");
         exit(EXIT_FAILURE);
       }
 
+      c = buf[ret-1];
+          
       switch(c)
       {
         case KEYCODE_1:
