@@ -53,7 +53,8 @@ private:
   static const char KEY_O = 0x6f;
   static const char KEY_S = 0x73;
   static const char KEY_W = 0x77;
-  static const char KEY_X = 0x78;
+
+  static const char KEYCODE_SPACE  = 0x20;
 
 
   const std::string LINK1_NAME = "link1";

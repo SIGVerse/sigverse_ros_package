@@ -19,7 +19,8 @@ private:
   static const char KEY_H = 0x68;
   static const char KEY_S = 0x73;
   static const char KEY_W = 0x77;
-  static const char KEY_X = 0x78;
+
+  static const char KEYCODE_SPACE  = 0x20;
 
   const double LINEAR_VEL  = 0.2;
   const double ANGULAR_VEL = 0.4;
@@ -89,10 +90,10 @@ void SIGVerseTb3LaserDistanceSensorTeleopKey::showHelp()
   puts("---------------------------");
   puts("arrow keys : Move");
   puts("---------------------------");
-  puts("s: Stop");
+  puts("Space: Stop");
   puts("---------------------------");
   puts("w: Go Forward");
-  puts("x: Go Back");
+  puts("s: Go Back");
   puts("d: Turn Right");
   puts("a: Turn Left");
   puts("---------------------------");
@@ -103,6 +104,8 @@ void SIGVerseTb3LaserDistanceSensorTeleopKey::showHelp()
 void SIGVerseTb3LaserDistanceSensorTeleopKey::keyLoop(int argc, char** argv)
 {
   char c;
+  int  ret;
+  char buf[1024];
 
   /////////////////////////////////////////////
   // get the console in raw mode
@@ -143,15 +146,17 @@ void SIGVerseTb3LaserDistanceSensorTeleopKey::keyLoop(int argc, char** argv)
     if(canReceiveKey(kfd))
     {
       // get the next event from the keyboard
-      if(read(kfd, &c, 1) < 0)
+      if((ret = read(kfd, &buf, sizeof(buf))) < 0)
       {
         perror("read():");
         exit(EXIT_FAILURE);
       }
 
+      c = buf[ret-1];
+
       switch(c)
       {
-        case KEY_S:
+        case KEYCODE_SPACE:
         {
           ROS_DEBUG("Stop");
           moveBase(pub_base_twist, 0.0, 0.0);
@@ -164,7 +169,7 @@ void SIGVerseTb3LaserDistanceSensorTeleopKey::keyLoop(int argc, char** argv)
           moveBase(pub_base_twist, +LINEAR_VEL, 0.0);
           break;
         }
-        case KEY_X:
+        case KEY_S:
         case KEYCODE_DOWN:
         {
           ROS_DEBUG("Go Back");
