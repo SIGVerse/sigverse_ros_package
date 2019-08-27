@@ -74,6 +74,8 @@ public:
   int run();
 
 private:
+  bool  use_simple_command_;
+  
   // Last position and previous position of arm_lift_joint
   double arm_lift_joint_pos1_;
   double arm_lift_joint_pos2_;
@@ -96,6 +98,7 @@ private:
 
 SIGVerseHsrTeleopKey::SIGVerseHsrTeleopKey()
 {
+  use_simple_command_ = true;
   arm_lift_joint_pos1_   = 0.0;
   arm_lift_joint_pos2_   = 0.0;
   arm_flex_joint_pos_    = 0.0;
@@ -282,20 +285,23 @@ void SIGVerseHsrTeleopKey::showHelp()
   puts("arrow keys : Move HSR");
   puts("space      : Stop HSR");
   puts("r/f : Increase/Decrease Moving Speed");
-  puts("---------------------------");
-  puts("Move HSR Linearly (1m):");
-  puts("  u   i   o  ");
-  puts("  j   k   l  ");
-  puts("  m   ,   .  ");
+
+  if(!use_simple_command_)
+  {
+    puts("---------------------------");
+    puts("Move HSR Linearly (1m):");
+    puts("  u   i   o  ");
+    puts("  j   k   l  ");
+    puts("  m   ,   .  ");
+  }
+  
   puts("---------------------------");
   puts("y : Rotate Arm - Vertical");
   puts("h : Rotate Arm - Upward");
   puts("n : Rotate Arm - Downward");
   puts("---------------------------");
   puts("q/a/z : Up/Stop/Down Torso");
-  puts("---------------------------");
   puts("w/s/x : Up/Stop/Down Arm Flex Angle");
-  puts("---------------------------");
   puts("e/d/c : Up/Stop/Down Arm Wrist Angle");
   puts("---------------------------");
   puts("g : Grasp/Open Hand");
@@ -325,6 +331,8 @@ int SIGVerseHsrTeleopKey::run()
   tcsetattr(kfd, TCSANOW, &raw);
   /////////////////////////////////////////////
 
+  node_handle_.param<bool>("hsr_teleop_key/use_simple_command", use_simple_command_, true);
+  
   showHelp();
 
   // Override the default ros sigint handler.
@@ -341,13 +349,13 @@ int SIGVerseHsrTeleopKey::run()
   std::string pub_arm_trajectory_topic_name;
   std::string pub_gripper_trajectory_topic_name;
 
-  node_handle_.param<std::string>("sub_msg_to_robot_topic_name",       sub_msg_to_robot_topic_name,       "/hsrb/message/to_robot");
-  node_handle_.param<std::string>("pub_msg_to_human_topic_name",       pub_msg_to_human_topic_name,       "/hsrb/message/to_human");
-  node_handle_.param<std::string>("sub_joint_state_topic_name",        sub_joint_state_topic_name,        "/hsrb/joint_states");
-  node_handle_.param<std::string>("pub_base_twist_topic_name",         pub_base_twist_topic_name,         "/hsrb/command_velocity");
-  node_handle_.param<std::string>("pub_base_trajectory_topic_name",    pub_base_trajectory_topic_name,    "/hsrb/omni_base_controller/command");
-  node_handle_.param<std::string>("pub_arm_trajectory_topic_name",     pub_arm_trajectory_topic_name,     "/hsrb/arm_trajectory_controller/command");
-  node_handle_.param<std::string>("pub_gripper_trajectory_topic_name", pub_gripper_trajectory_topic_name, "/hsrb/gripper_controller/command");
+  node_handle_.param<std::string>("hsr_teleop_key/sub_msg_to_robot_topic_name",       sub_msg_to_robot_topic_name,       "/hsrb/message/to_robot");
+  node_handle_.param<std::string>("hsr_teleop_key/pub_msg_to_human_topic_name",       pub_msg_to_human_topic_name,       "/hsrb/message/to_human");
+  node_handle_.param<std::string>("hsr_teleop_key/sub_joint_state_topic_name",        sub_joint_state_topic_name,        "/hsrb/joint_states");
+  node_handle_.param<std::string>("hsr_teleop_key/pub_base_twist_topic_name",         pub_base_twist_topic_name,         "/hsrb/command_velocity");
+  node_handle_.param<std::string>("hsr_teleop_key/pub_base_trajectory_topic_name",    pub_base_trajectory_topic_name,    "/hsrb/omni_base_controller/command");
+  node_handle_.param<std::string>("hsr_teleop_key/pub_arm_trajectory_topic_name",     pub_arm_trajectory_topic_name,     "/hsrb/arm_trajectory_controller/command");
+  node_handle_.param<std::string>("hsr_teleop_key/pub_gripper_trajectory_topic_name", pub_gripper_trajectory_topic_name, "/hsrb/gripper_controller/command");
 
   sub_msg_                = node_handle_.subscribe<std_msgs::String>(sub_msg_to_robot_topic_name, 100, &SIGVerseHsrTeleopKey::messageCallback, this);
   pub_msg_                = node_handle_.advertise<std_msgs::String>(pub_msg_to_human_topic_name, 10);
@@ -424,54 +432,72 @@ int SIGVerseHsrTeleopKey::run()
         }
         case KEYCODE_U:
         {
+          if(use_simple_command_){ break; }
+
           ROS_DEBUG("Move Left Forward");
           moveBaseJointTrajectory(+1.0, +1.0, +M_PI_4, 10);
           break;
         }
         case KEYCODE_I:
         {
+          if(use_simple_command_){ break; }
+
           ROS_DEBUG("Move Forward");
           moveBaseJointTrajectory(+1.0, 0.0, 0.0, 10);
           break;
         }
         case KEYCODE_O:
         {
+          if(use_simple_command_){ break; }
+
           ROS_DEBUG("Move Right Forward");
           moveBaseJointTrajectory(+1.0, -1.0, -M_PI_4, 10);
           break;
         }
         case KEYCODE_J:
         {
+          if(use_simple_command_){ break; }
+
           ROS_DEBUG("Move Left");
           moveBaseJointTrajectory(0.0, +1.0, +M_PI_2, 10);
           break;
         }
         case KEYCODE_K:
         {
+          if(use_simple_command_){ break; }
+
           ROS_DEBUG("Stop");
           moveBaseJointTrajectory(0.0, 0.0, 0.0, 0.5);
           break;
         }
         case KEYCODE_L:
         {
+          if(use_simple_command_){ break; }
+
           ROS_DEBUG("Move Right");
           moveBaseJointTrajectory(0.0, -1.0, -M_PI_2, 10);
           break;
         }
         case KEYCODE_M:
         {
+          if(use_simple_command_){ break; }
+
           ROS_DEBUG("Move Left Backward");
           moveBaseJointTrajectory(-1.0, +1.0, +M_PI_2+M_PI_4, 10);
           break;
         }
         case KEYCODE_COMMA:
         {
+          if(use_simple_command_){ break; }
+
           ROS_DEBUG("Move Backward");
           moveBaseJointTrajectory(-1.0, 0.0, +M_PI, 10);
           break;
         }
         case KEYCODE_PERIOD:
         {
+          if(use_simple_command_){ break; }
+
           ROS_DEBUG("Move Right Backward");
           moveBaseJointTrajectory(-1.0, -1.0, -M_PI_2-M_PI_4, 10);
           break;
@@ -499,7 +525,7 @@ int SIGVerseHsrTeleopKey::run()
         case KEYCODE_H:
         {
           ROS_DEBUG("Rotate Arm - Upward");
-          operateArmFlex(-1.0, -0.57);
+          operateArmFlex(-0.8, -0.77);
           break;
         }
         case KEYCODE_N:

@@ -7,7 +7,7 @@
 	<arg name="pub_arm_trajectory_topic_name"     default="/hsrb/arm_trajectory_controller/command" />
 	<arg name="pub_gripper_trajectory_topic_name" default="/hsrb/gripper_trajectory_controller/command" />
 	
-	<arg name="use_simple_command"  default="true" />
+	<arg name="use_simple_command"  default="false" />
 
 	<arg name="sigverse_ros_bridge_port"        default="50001" />
 	<arg name="ros_bridge_port"                 default="9090" />
