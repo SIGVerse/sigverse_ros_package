@@ -133,7 +133,7 @@ void SIGVerseTb3LaserDistanceSensorTeleopKey::keyLoop(int argc, char** argv)
 
   std::string pub_base_twist_topic_name;
 
-  node_handle.param<std::string>("pub_twist_topic_name",  pub_base_twist_topic_name, "/tb3/cmd_vel");
+  node_handle.param<std::string>("teleop_key/pub_twist_topic_name",  pub_base_twist_topic_name, "/tb3/cmd_vel");
 
   ros::Publisher pub_base_twist = node_handle.advertise<geometry_msgs::Twist>            (pub_base_twist_topic_name, 10);
 

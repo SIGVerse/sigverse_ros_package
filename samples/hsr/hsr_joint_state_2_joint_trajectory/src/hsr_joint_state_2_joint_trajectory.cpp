@@ -57,10 +57,10 @@ HsrJointState2JointTrajectory::HsrJointState2JointTrajectory()
   std::string pub_head_trajectory_topic_name;
   std::string pub_gripper_trajectory_topic_name;
 
-  node_handle_.param<std::string>("sub_joint_state_topic_name",        sub_joint_state_topic_name,        "/joint_states");
-  node_handle_.param<std::string>("pub_arm_trajectory_topic_name",     pub_arm_trajectory_topic_name,     "/hsrb/arm_trajectory_controller/command");
-  node_handle_.param<std::string>("pub_head_trajectory_topic_name",    pub_head_trajectory_topic_name,    "/hsrb/head_trajectory_controller/command");
-  node_handle_.param<std::string>("pub_gripper_trajectory_topic_name", pub_gripper_trajectory_topic_name, "/hsrb/gripper_controller/command");
+  node_handle_.param<std::string>("hsr_joint_state_2_joint_trajectory/sub_joint_state_topic_name",        sub_joint_state_topic_name,        "/joint_states");
+  node_handle_.param<std::string>("hsr_joint_state_2_joint_trajectory/pub_arm_trajectory_topic_name",     pub_arm_trajectory_topic_name,     "/hsrb/arm_trajectory_controller/command");
+  node_handle_.param<std::string>("hsr_joint_state_2_joint_trajectory/pub_head_trajectory_topic_name",    pub_head_trajectory_topic_name,    "/hsrb/head_trajectory_controller/command");
+  node_handle_.param<std::string>("hsr_joint_state_2_joint_trajectory/pub_gripper_trajectory_topic_name", pub_gripper_trajectory_topic_name, "/hsrb/gripper_controller/command");
 
   sub_joint_state_        = node_handle_.subscribe<sensor_msgs::JointState>(sub_joint_state_topic_name, 10, &HsrJointState2JointTrajectory::jointStateCallback, this);
   pub_arm_trajectory_     = node_handle_.advertise<trajectory_msgs::JointTrajectory>(pub_arm_trajectory_topic_name, 10);

@@ -228,9 +228,9 @@ void SIGVerseTb3RecognizePointedDirection::run(int argc, char** argv)
   std::string sub_depth_image_topic_name;
   std::string pub_joint_trajectory_topic_name;
 
-  node_handle.param<std::string>("sub_instruction_topic_name",      sub_instruction_topic_name,      "/tb3omc/instruction");
-  node_handle.param<std::string>("sub_depth_image_topic_name",      sub_depth_image_topic_name,      "/camera/depth/image_raw");
-  node_handle.param<std::string>("pub_joint_trajectory_topic_name", pub_joint_trajectory_topic_name, "/tb3omc/joint_trajectory");
+  node_handle.param<std::string>("recognize_pointed_direction/sub_instruction_topic_name",      sub_instruction_topic_name,      "/tb3omc/instruction");
+  node_handle.param<std::string>("recognize_pointed_direction/sub_depth_image_topic_name",      sub_depth_image_topic_name,      "/camera/depth/image_raw");
+  node_handle.param<std::string>("recognize_pointed_direction/pub_joint_trajectory_topic_name", pub_joint_trajectory_topic_name, "/tb3omc/joint_trajectory");
 
   ros::Subscriber sub_instruction = node_handle.subscribe<std_msgs::String>(sub_instruction_topic_name, 10, &SIGVerseTb3RecognizePointedDirection::instructionCallback, this);
   ros::Subscriber sub_depth_image = node_handle.subscribe                  (sub_depth_image_topic_name, 10, &SIGVerseTb3RecognizePointedDirection::depthImageCallback, this);
