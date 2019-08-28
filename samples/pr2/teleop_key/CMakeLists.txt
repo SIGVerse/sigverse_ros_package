@@ -7,6 +7,12 @@ add_definitions(-std=c++11)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 
+find_package(pr2_controllers_msgs)
+
+if (NOT pr2_controllers_msgs_FOUND)
+  message(STATUS "Can't find pr2_controllers_msgs package.")
+endif()
+
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   roscpp
