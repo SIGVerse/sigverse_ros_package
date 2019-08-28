@@ -3,7 +3,7 @@
 	<arg name="sub_joint_state_topic_name"        default="/hsrb/joint_states" />
 	<arg name="pub_arm_trajectory_topic_name"     default="/hsrb/arm_trajectory_controller/command" />
 	<arg name="pub_head_trajectory_topic_name"    default="/hsrb/head_trajectory_controller/command" />
-	<arg name="pub_gripper_trajectory_topic_name" default="/hsrb/gripper_trajectory_controller/command" />
+	<arg name="pub_gripper_trajectory_topic_name" default="/hsrb/gripper_controller/command" />
 
 	<include file="$(find sigverse_ros_bridge)/launch/sigverse_ros_bridge.launch" />
 
