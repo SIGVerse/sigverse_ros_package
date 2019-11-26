@@ -73,7 +73,7 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 {
 	int dstSocket = *((int *)param);
 
-	int dummyArgc;
+	int dummyArgc = 0;
 	char **dummyArgv;
 
 	char *buf;
