@@ -478,13 +478,13 @@ int SIGVerseTiagoTeleopKey::run()
         case KEYCODE_Y:
         {
           ROS_DEBUG("Rotate Arm - Upward");
-          operateArm({ 1.57, -0.5, -3.14, 2.2, 1.57, 0.0, 0.0 }, 3.0);
+          operateArm({ 1.57, -1.4, -3.14, 2.2, 1.57, 0.0, 0.0 }, 3.0);
           break;
         }
         case KEYCODE_H:
         {
           ROS_DEBUG("Rotate Arm - Horizontal");
-          operateArm({ 1.57, -0.5, -3.14, 0.5, 1.57, 0.0, 0.0 }, 3.0);
+          operateArm({ 1.57, -1.4, -3.14, 2.0, 1.57, 0.6, 0.0 }, 3.0);
           break;
         }
         case KEYCODE_N:

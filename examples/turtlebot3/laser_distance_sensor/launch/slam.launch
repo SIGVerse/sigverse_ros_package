@@ -4,7 +4,7 @@
 	
 	<arg name="pub_twist_topic_name"      default="/tb3/cmd_vel" />
 
-	<node name="teleop_key" pkg="sigverse_turtlebot3_laser_distance_sensor" type="teleop_key" output="screen" launch-prefix="xterm -e">
+	<node name="teleop_key" pkg="sigverse_turtlebot3_laser_distance_sensor" type="teleop_key" output="screen" launch-prefix="gnome-terminal -t 'TurtleBot3 teleop key' -e">
 
 		<param name="pub_twist_topic_name"  type="string" value="$(arg pub_twist_topic_name)" />
 			
@@ -46,7 +46,7 @@
 	</node>
 
 	<group ns="sigverse_ros_bridge">
-		<node name="sigverse_ros_bridge" pkg="sigverse_ros_bridge" type="sigverse_ros_bridge" args="$(arg sigverse_ros_bridge_port)" output="screen" launch-prefix="xterm -e"/>
+		<node name="sigverse_ros_bridge" pkg="sigverse_ros_bridge" type="sigverse_ros_bridge" args="$(arg sigverse_ros_bridge_port)" output="screen"/>
 	</group>
 	
 	<include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" > 

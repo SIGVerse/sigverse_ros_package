@@ -11,7 +11,7 @@
 	<arg name="sigverse_ros_bridge_port"        default="50001" />
 	<arg name="ros_bridge_port"                 default="9090" />
 
-	<node name="tiago_teleop_key" pkg="sigverse_tiago_teleop_key" type="tiago_teleop_key" output="screen" launch-prefix="xterm -e">
+	<node name="tiago_teleop_key" pkg="sigverse_tiago_teleop_key" type="tiago_teleop_key" output="screen" launch-prefix="gnome-terminal -t 'TIAGo teleop key' -e">
 
 		<param name="sub_msg_to_robot_topic_name"       type="string" value="$(arg sub_msg_to_robot_topic_name)" />
 		<param name="pub_msg_to_human_topic_name"       type="string" value="$(arg pub_msg_to_human_topic_name)" />

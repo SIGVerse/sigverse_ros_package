@@ -9,7 +9,7 @@
 	<arg name="camera"  default="camera" />
 
 	<group ns="grasping_teleop_key">
-		<node name="grasping_teleop_key" pkg="sigverse_turtlebot3_open_manipulator" type="grasping_teleop_key" output="screen" launch-prefix="xterm -e">
+		<node name="grasping_teleop_key" pkg="sigverse_turtlebot3_open_manipulator" type="grasping_teleop_key" output="screen" launch-prefix="gnome-terminal -t 'TurtleBot3 teleop key' -e">
 
 			<param name="sub_joint_state_topic_name"      type="string" value="$(arg sub_joint_state_topic_name)" />
 			<param name="pub_twist_topic_name"            type="string" value="$(arg pub_twist_topic_name)" />

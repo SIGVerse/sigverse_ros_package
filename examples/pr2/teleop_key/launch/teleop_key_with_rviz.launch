@@ -11,7 +11,7 @@
 	<arg name="sigverse_ros_bridge_port"        default="50001" />
 	<arg name="ros_bridge_port"                 default="9090" />
 
-	<node name="pr2_teleop_key" pkg="sigverse_pr2_teleop_key" type="pr2_teleop_key" output="screen" launch-prefix="xterm -e">
+	<node name="pr2_teleop_key" pkg="sigverse_pr2_teleop_key" type="pr2_teleop_key" output="screen" launch-prefix="gnome-terminal -t 'PR2 teleop key' -e">
 
 		<param name="sub_joint_state_topic_name"        type="string" value="$(arg sub_joint_state_topic_name)" />
 		<param name="pub_base_twist_topic_name"         type="string" value="$(arg pub_base_twist_topic_name)" />
