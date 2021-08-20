@@ -1,17 +1,5 @@
 ## Setup
 
-### Install CMake 3.2 or later
-
-```bash:
-$ cd ~/Downloads
-$ wget https://cmake.org/files/v3.7/cmake-3.7.2.tar.gz
-$ tar zxvf cmake-3.7.2.tar.gz
-$ cd cmake-3.7.2
-$ ./configure
-$ make
-$ sudo make install
-```
-
 ### Install Mongo C Driver
 
 ```bash:
