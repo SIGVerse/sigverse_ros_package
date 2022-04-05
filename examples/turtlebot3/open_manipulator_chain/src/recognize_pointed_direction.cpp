@@ -83,31 +83,43 @@ void SIGVerseTb3RecognizePointedDirection::rotateArm()
   if(depth_width_==0){ return; }
 
   // Get depth data
-  uint16_t depth_data[depth_height_][depth_width_];
+  float depth_data[depth_height_][depth_width_];
 
   for(int j=0; j<depth_height_; j++)
   {
     for(int i=0; i<depth_width_; i++)
     {
-      int index = 2 * (depth_width_ * j + i);
+      int idx = 4 * (depth_width_ * j + i);
 
       if(is_bigendian_==0)
       {
-        depth_data[j][i] = ((uint16_t)depth_data_[index]) | ((uint16_t)depth_data_[index+1] << 8);
+        uint32_t tmp = ((uint32_t)depth_data_[idx]) | ((uint32_t)depth_data_[idx+1]<<8) | ((uint32_t)depth_data_[idx+2]<<16) | ((uint32_t)depth_data_[idx+3]<<24);
+        memcpy(&depth_data[j][i], &tmp, 4);
       }
       else
       {
-        depth_data[j][i] = ((uint16_t)depth_data_[index] << 8) | ((uint16_t)depth_data_[index+1]);
+        uint32_t tmp = ((uint32_t)depth_data_[idx]<<24) | ((uint32_t)depth_data_[idx+1]<<16) | ((uint32_t)depth_data_[idx+2]<<8) | ((uint32_t)depth_data_[idx+3]);
+        memcpy(&depth_data[j][i], &tmp, 4);
       }
     }
   }
+  
+//  puts(("data[504000]=" + std::to_string(depth_data_[504000])).c_str());
+//  puts(("data[504001]=" + std::to_string(depth_data_[504001])).c_str());
+//  puts(("data[504002]=" + std::to_string(depth_data_[504002])).c_str());
+//  puts(("data[504003]=" + std::to_string(depth_data_[504003])).c_str());
+//  
+//  uint32_t center = ((uint32_t)depth_data_[504000]) | ((uint32_t)depth_data_[504001]<<8) | ((uint32_t)depth_data_[504002]<<16) | ((uint32_t)depth_data_[504003]<<24);
+//  float depth;
+//  memcpy(&depth, &center, 4);
+//  puts(("depth=" + std::to_string(depth)).c_str());
 
   // Intermediate calculation for the calculation of the arm slope of avatar
   float depth_total[depth_width_];
   float row_position[depth_width_];
 
-  int height_max = depth_height_ * 2 / 3; // Exclude the lower third
-  float depth_max = 750; // 750[mm]
+  int height_max = depth_height_ * 0.4; // Exclude the lower side.
+  float depth_max = 0.75; // 0.75[m]
 
   for(int j=0; j<depth_width_; j++)
   {

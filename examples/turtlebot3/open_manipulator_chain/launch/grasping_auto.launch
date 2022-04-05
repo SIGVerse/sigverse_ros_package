@@ -1,5 +1,5 @@
 <launch>
-	<arg name="camera"  default="camera_sr300" />
+	<arg name="camera"  default="camera" />
 
 	<arg name="sub_joint_state_topic_name"      default="/tb3omc/joint_state" />
 	<arg name="pub_twist_topic_name"            default="/tb3omc/cmd_vel" />
@@ -45,11 +45,14 @@
 		<arg name="port" value="$(arg ros_bridge_port)"/>
 	</include>
 
-	<include file="$(find realsense_camera)/launch/sr300_nodelet_rgbd.launch">
-		<arg name="camera"      value="$(arg camera)"/>
-		<arg name="load_driver" value="false"/>
-	</include>
+	<node pkg="nodelet" type="nodelet" name="nodelet_manager" args="manager" />
 
+	<node pkg="nodelet" type="nodelet" name="nodelet1" args="load depth_image_proc/point_cloud_xyz nodelet_manager">
+		<remap from="camera_info" to="/$(arg camera)/depth/camera_info" />
+		<remap from="image_rect"  to="/$(arg camera)/depth/image_raw" />
+		<remap from="points"      to="/$(arg camera)/depth/points" />
+	</node>
+  
 	<node pkg="image_view" type="image_view" name="image_view" args="image:=$(arg camera)/rgb/image_raw"/>
 </launch>
 

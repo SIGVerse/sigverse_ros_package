@@ -61,7 +61,7 @@ private:
   const std::string LINK3_NAME = "link3";
   const std::string LINK4_NAME = "link4";
   const std::string LINK5_NAME = "link5";
-  const std::string CAMERA_DEPTH_OPTICAL_FRAME_NAME = "camera_depth_optical_frame";
+  const std::string CAMERA_DEPTH_OPTICAL_FRAME_NAME = "zedm_left_camera_optical_frame";
 
   const std::string TARGET_NAME = "target";
 

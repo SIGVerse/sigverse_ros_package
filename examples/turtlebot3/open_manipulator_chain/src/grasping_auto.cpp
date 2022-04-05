@@ -453,8 +453,8 @@ void SIGVerseTb3OpenManipulatorGraspingAuto::keyLoop(int argc, char** argv)
     node_handle.param<std::string>("grasping_auto/sub_joint_state_topic_name",      sub_joint_state_topic_name,      "/tb3omc/joint_state");
     node_handle.param<std::string>("grasping_auto/pub_twist_topic_name",            pub_base_twist_topic_name,       "/tb3omc/cmd_vel");
     node_handle.param<std::string>("grasping_auto/pub_joint_trajectory_topic_name", pub_joint_trajectory_topic_name, "/tb3omc/joint_trajectory");
-    node_handle.param<std::string>("grasping_auto/sub_rgb_camera_info_topic_name",  sub_rgb_camera_info_topic_name,  "/camera_sr300/rgb/camera_info");
-    node_handle.param<std::string>("grasping_auto/sub_point_cloud_topic_name",      sub_point_cloud_topic_name,      "/camera_sr300/depth/points");
+    node_handle.param<std::string>("grasping_auto/sub_rgb_camera_info_topic_name",  sub_rgb_camera_info_topic_name,  "/camera/rgb/camera_info");
+    node_handle.param<std::string>("grasping_auto/sub_point_cloud_topic_name",      sub_point_cloud_topic_name,      "/camera/depth/points");
     node_handle.param<std::string>("grasping_auto/sub_bounding_boxes_topic_name",   sub_bounding_boxes_topic_name,   "/darknet_ros/bounding_boxes");
 
     tf::TransformBroadcaster tf_broadcaster;

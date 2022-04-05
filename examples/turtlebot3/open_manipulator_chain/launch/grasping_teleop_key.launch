@@ -26,11 +26,6 @@
 		<arg name="port" value="$(arg ros_bridge_port)"/>
 	</include>
 
-	<include file="$(find realsense_camera)/launch/r200_nodelet_rgbd.launch">
-		<arg name="camera"      value="$(arg camera)"/>
-		<arg name="load_driver" value="false"/>
-	</include>
-
 	<node pkg="image_view" type="image_view" name="image_view" args="image:=$(arg camera)/rgb/image_raw"/>
 
 </launch>
