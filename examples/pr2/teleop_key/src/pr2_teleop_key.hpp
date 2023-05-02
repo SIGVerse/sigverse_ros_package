@@ -163,8 +163,8 @@ void SIGVersePr2TeleopKey::showHelp()
   puts("---------------------------");
   puts("Operate by Keyboard");
   puts("---------------------------");
-  puts("arrow keys : Move HSR");
-  puts("space      : Stop HSR");
+  puts("arrow keys : Move PR2");
+  puts("space      : Stop PR2");
   puts("q/z : Increase/Decrease Moving Speed");
   puts("---------------------------");
   puts("h : Operate Head");
