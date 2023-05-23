@@ -1,22 +1,16 @@
 <launch>
-	<arg name="sub_joint_state_topic_name"        default="/joint_states" />
-	<arg name="pub_base_twist_topic_name"         default="/base_controller/command" />
-	<arg name="pub_torso_trajectory_topic_name"   default="/torso_controller/command" />
-	<arg name="pub_head_trajectory_topic_name"    default="/head_controller/command" />
-	<arg name="pub_arm_trajectory_topic_name"     default="/arm_controller/command" />
-	<arg name="pub_gripper_trajectory_topic_name" default="/gripper_controller/command" />
-	
 	<arg name="sigverse_ros_bridge_port"        default="50001" />
 	<arg name="ros_bridge_port"                 default="9090" />
 
-	<node name="fetch_teleop_key" pkg="sigverse_fetch_teleop_key" type="fetch_teleop_key" output="screen" launch-prefix="gnome-terminal -t 'Fetch teleop key' -e">
-
-		<param name="sub_joint_state_topic_name"        type="string" value="$(arg sub_joint_state_topic_name)" />
-		<param name="pub_base_twist_topic_name"         type="string" value="$(arg pub_base_twist_topic_name)" />
-		<param name="pub_torso_trajectory_topic_name"   type="string" value="$(arg pub_torso_trajectory_topic_name)" />
-		<param name="pub_head_trajectory_topic_name"    type="string" value="$(arg pub_head_trajectory_topic_name)" />
-		<param name="pub_arm_trajectory_topic_name"     type="string" value="$(arg pub_arm_trajectory_topic_name)" />
-		<param name="pub_gripper_trajectory_topic_name" type="string" value="$(arg pub_gripper_trajectory_topic_name)" />
+	<node name="fetch_teleop_key" pkg="sigverse_fetch_teleop_key" type="fetch_teleop_key" output="screen" launch-prefix="gnome-terminal -t 'Fetch teleop key' -- ">
+		<!--
+		<remap from="/joint_states"               to="/joint_states" />
+		<remap from="/base_controller/command"    to="/base_controller/command" />
+		<remap from="/torso_controller/command"   to="/torso_controller/command" />
+		<remap from="/head_controller/command"    to="/head_controller/command" />
+		<remap from="/arm_controller/command"     to="/arm_controller/command" />
+		<remap from="/gripper_controller/command" to="/gripper_controller/command" />
+		-->
 	</node>
 
 	<group ns="sigverse_ros_bridge">

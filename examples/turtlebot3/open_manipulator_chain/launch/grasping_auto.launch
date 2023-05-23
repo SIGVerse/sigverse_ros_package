@@ -1,24 +1,18 @@
 <launch>
 	<arg name="camera"  default="camera" />
-
-	<arg name="sub_joint_state_topic_name"      default="/tb3omc/joint_state" />
-	<arg name="pub_twist_topic_name"            default="/tb3omc/cmd_vel" />
-	<arg name="pub_joint_trajectory_topic_name" default="/tb3omc/joint_trajectory" />
-	<arg name="sub_rgb_camera_info_topic_name"  default="/$(arg camera)/rgb/camera_info" />
-	<arg name="sub_point_cloud_topic_name"      default="/$(arg camera)/depth/points" />
-	<arg name="sub_bounding_boxes_topic_name"   default="/darknet_ros/bounding_boxes" />
 	
 	<arg name="sigverse_ros_bridge_port"        default="50001" />
 	<arg name="ros_bridge_port"                 default="9090" />
 
-	<node name="grasping_auto" pkg="sigverse_turtlebot3_open_manipulator" type="grasping_auto" output="screen" launch-prefix="gnome-terminal -t 'TurtleBot3 teleop key' -e">
-
-		<param name="sub_joint_state_topic_name"      type="string" value="$(arg sub_joint_state_topic_name)" />
-		<param name="pub_twist_topic_name"            type="string" value="$(arg pub_twist_topic_name)" />
-		<param name="pub_joint_trajectory_topic_name" type="string" value="$(arg pub_joint_trajectory_topic_name)" />
-		<param name="sub_rgb_camera_info_topic_name"  type="string" value="$(arg sub_rgb_camera_info_topic_name)" />
-		<param name="sub_point_cloud_topic_name"      type="string" value="$(arg sub_point_cloud_topic_name)" />
-		<param name="sub_bounding_boxes_topic_name"   type="string" value="$(arg sub_bounding_boxes_topic_name)" />
+	<node name="grasping_auto" pkg="sigverse_turtlebot3_open_manipulator" type="grasping_auto" output="screen" launch-prefix="gnome-terminal -t 'TurtleBot3 teleop key' -- ">
+		<!--
+		<remap from="/tb3omc/joint_state"         to="/tb3omc/joint_state" />
+		<remap from="/tb3omc/cmd_vel"             to="/tb3omc/cmd_vel" />
+		<remap from="/tb3omc/joint_trajectory"    to="/tb3omc/joint_trajectory" />
+		<remap from="/camera/rgb/camera_info"     to="/camera/rgb/camera_info" />
+		<remap from="/camera/depth/points"        to="/camera/depth/points" />
+		<remap from="/darknet_ros/bounding_boxes" to="/darknet_ros/bounding_boxes" />
+		-->
 	</node>
 
 	<!-- Config and weights folder. -->

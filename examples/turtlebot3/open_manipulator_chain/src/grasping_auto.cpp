@@ -443,30 +443,16 @@ void SIGVerseTb3OpenManipulatorGraspingAuto::keyLoop(int argc, char** argv)
 
     ros::Rate loop_rate(10);
 
-    std::string sub_joint_state_topic_name;
-    std::string pub_base_twist_topic_name;
-    std::string pub_joint_trajectory_topic_name;
-    std::string sub_rgb_camera_info_topic_name;
-    std::string sub_point_cloud_topic_name;
-    std::string sub_bounding_boxes_topic_name;
-
-    node_handle.param<std::string>("grasping_auto/sub_joint_state_topic_name",      sub_joint_state_topic_name,      "/tb3omc/joint_state");
-    node_handle.param<std::string>("grasping_auto/pub_twist_topic_name",            pub_base_twist_topic_name,       "/tb3omc/cmd_vel");
-    node_handle.param<std::string>("grasping_auto/pub_joint_trajectory_topic_name", pub_joint_trajectory_topic_name, "/tb3omc/joint_trajectory");
-    node_handle.param<std::string>("grasping_auto/sub_rgb_camera_info_topic_name",  sub_rgb_camera_info_topic_name,  "/camera/rgb/camera_info");
-    node_handle.param<std::string>("grasping_auto/sub_point_cloud_topic_name",      sub_point_cloud_topic_name,      "/camera/depth/points");
-    node_handle.param<std::string>("grasping_auto/sub_bounding_boxes_topic_name",   sub_bounding_boxes_topic_name,   "/darknet_ros/bounding_boxes");
-
     tf::TransformBroadcaster tf_broadcaster;
     tf::TransformListener tf_listener;
 
-    ros::Subscriber sub_joint_state = node_handle.subscribe(sub_joint_state_topic_name, 10, &SIGVerseTb3OpenManipulatorGraspingAuto::jointStateCallback, this);
-    ros::Publisher pub_base_twist = node_handle.advertise<geometry_msgs::Twist>            (pub_base_twist_topic_name, 10);
-    ros::Publisher pub_joint_traj = node_handle.advertise<trajectory_msgs::JointTrajectory>(pub_joint_trajectory_topic_name, 10);
+    ros::Subscriber sub_joint_state = node_handle.subscribe("/tb3omc/joint_state", 10, &SIGVerseTb3OpenManipulatorGraspingAuto::jointStateCallback, this);
+    ros::Publisher pub_base_twist   = node_handle.advertise<geometry_msgs::Twist>            ("/tb3omc/cmd_vel", 10);
+    ros::Publisher pub_joint_traj   = node_handle.advertise<trajectory_msgs::JointTrajectory>("/tb3omc/joint_trajectory", 10);
 
-    ros::Subscriber sub_rgb_camera_info = node_handle.subscribe(sub_rgb_camera_info_topic_name, 10, &SIGVerseTb3OpenManipulatorGraspingAuto::rgbCameraInfoCallback, this);
-    ros::Subscriber sub_point_cloud     = node_handle.subscribe(sub_point_cloud_topic_name,     10, &SIGVerseTb3OpenManipulatorGraspingAuto::pointCloudCallback, this);
-    ros::Subscriber sub_bounding_boxes  = node_handle.subscribe(sub_bounding_boxes_topic_name,  10, &SIGVerseTb3OpenManipulatorGraspingAuto::boundingBoxesCallback, this);
+    ros::Subscriber sub_rgb_camera_info = node_handle.subscribe("/camera/rgb/camera_info", 10, &SIGVerseTb3OpenManipulatorGraspingAuto::rgbCameraInfoCallback, this);
+    ros::Subscriber sub_point_cloud     = node_handle.subscribe("/camera/depth/points",     10, &SIGVerseTb3OpenManipulatorGraspingAuto::pointCloudCallback, this);
+    ros::Subscriber sub_bounding_boxes  = node_handle.subscribe("/darknet_ros/bounding_boxes",  10, &SIGVerseTb3OpenManipulatorGraspingAuto::boundingBoxesCallback, this);
 
     sleep(2);
 

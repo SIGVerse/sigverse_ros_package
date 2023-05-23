@@ -1,18 +1,14 @@
 <launch>
-	<arg name="sub_joint_state_topic_name"     default="/joint_states" />
-	<arg name="pub_base_twist_topic_name"      default="/command_velocity" />
-	<arg name="pub_trajectory_topic_name"      default="/controller/command" />
-	<arg name="pub_hand_trajectory_topic_name" default="/hand_controller/command" />
-
 	<arg name="sigverse_ros_bridge_port"        default="50001" />
 	<arg name="ros_bridge_port"                 default="9090" />
 
-	<node name="ai_agent_teleop_key" pkg="sigverse_ai_agent_teleop_key" type="ai_agent_teleop_key" output="screen" launch-prefix="gnome-terminal -t 'AI Agent teleop key' -e">
-
-		<param name="sub_joint_state_topic_name"     type="string" value="$(arg sub_joint_state_topic_name)" />
-		<param name="pub_base_twist_topic_name"      type="string" value="$(arg pub_base_twist_topic_name)" />
-		<param name="pub_trajectory_topic_name"      type="string" value="$(arg pub_trajectory_topic_name)" />
-		<param name="pub_hand_trajectory_topic_name" type="string" value="$(arg pub_hand_trajectory_topic_name)" />
+	<node name="ai_agent_teleop_key" pkg="sigverse_ai_agent_teleop_key" type="ai_agent_teleop_key" output="screen" launch-prefix="gnome-terminal -t 'AI Agent teleop key' -- ">
+		<!--
+		<remap from="/joint_states"             to="/joint_states" />
+		<remap from="/command_velocity"         to="/command_velocity" />
+		<remap from="/controller/command"       to="/controller/command" />
+		<remap from="/hand_controller/command"  to="/hand_controller/command" />
+		-->
 	</node>
 
 	<group ns="sigverse_ros_bridge">

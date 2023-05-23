@@ -369,32 +369,14 @@ int SIGVerseTiagoTeleopKey::run()
 
   ros::Rate loop_rate(40);
 
-  std::string sub_msg_to_robot_topic_name;
-  std::string pub_msg_to_human_topic_name;
-  std::string sub_joint_state_topic_name;
-  std::string pub_base_twist_topic_name;
-  std::string pub_torso_trajectory_topic_name;
-  std::string pub_head_trajectory_topic_name;
-  std::string pub_arm_trajectory_topic_name;
-  std::string pub_gripper_trajectory_topic_name;
-
-  node_handle_.param<std::string>("tiago_teleop_key/sub_msg_to_robot_topic_name",       sub_msg_to_robot_topic_name,       "/tiago/message/to_robot");
-  node_handle_.param<std::string>("tiago_teleop_key/pub_msg_to_human_topic_name",       pub_msg_to_human_topic_name,       "/tiago/message/to_human");
-  node_handle_.param<std::string>("tiago_teleop_key/sub_joint_state_topic_name",        sub_joint_state_topic_name,        "/joint_states");
-  node_handle_.param<std::string>("tiago_teleop_key/pub_base_twist_topic_name",         pub_base_twist_topic_name,         "/mobile_base_controller/cmd_vel");
-  node_handle_.param<std::string>("tiago_teleop_key/pub_torso_trajectory_topic_name",   pub_torso_trajectory_topic_name,   "/torso_controller/command");
-  node_handle_.param<std::string>("tiago_teleop_key/pub_head_trajectory_topic_name",    pub_head_trajectory_topic_name,    "/head_controller/command");
-  node_handle_.param<std::string>("tiago_teleop_key/pub_arm_trajectory_topic_name",     pub_arm_trajectory_topic_name,     "/arm_controller/command");
-  node_handle_.param<std::string>("tiago_teleop_key/pub_gripper_trajectory_topic_name", pub_gripper_trajectory_topic_name, "/gripper_controller/command");
-
-  sub_msg_                = node_handle_.subscribe<std_msgs::String>(sub_msg_to_robot_topic_name, 100, &SIGVerseTiagoTeleopKey::messageCallback, this);
-  pub_msg_                = node_handle_.advertise<std_msgs::String>(pub_msg_to_human_topic_name, 10);
-  sub_joint_state_        = node_handle_.subscribe<sensor_msgs::JointState>(sub_joint_state_topic_name, 10, &SIGVerseTiagoTeleopKey::jointStateCallback, this);
-  pub_base_twist_         = node_handle_.advertise<geometry_msgs::Twist>(pub_base_twist_topic_name, 10);
-  pub_torso_trajectory_   = node_handle_.advertise<trajectory_msgs::JointTrajectory>(pub_torso_trajectory_topic_name, 10);
-  pub_head_trajectory_    = node_handle_.advertise<trajectory_msgs::JointTrajectory>(pub_head_trajectory_topic_name, 10);
-  pub_arm_trajectory_     = node_handle_.advertise<trajectory_msgs::JointTrajectory>(pub_arm_trajectory_topic_name, 10);
-  pub_gripper_trajectory_ = node_handle_.advertise<trajectory_msgs::JointTrajectory>(pub_gripper_trajectory_topic_name, 10);
+  sub_msg_                = node_handle_.subscribe<std_msgs::String>       ("/tiago/message/to_robot", 100, &SIGVerseTiagoTeleopKey::messageCallback, this);
+  pub_msg_                = node_handle_.advertise<std_msgs::String>       ("/tiago/message/to_human", 10);
+  sub_joint_state_        = node_handle_.subscribe<sensor_msgs::JointState>("/joint_states", 10, &SIGVerseTiagoTeleopKey::jointStateCallback, this);
+  pub_base_twist_         = node_handle_.advertise<geometry_msgs::Twist>   ("/mobile_base_controller/cmd_vel", 10);
+  pub_torso_trajectory_   = node_handle_.advertise<trajectory_msgs::JointTrajectory>("/torso_controller/command", 10);
+  pub_head_trajectory_    = node_handle_.advertise<trajectory_msgs::JointTrajectory>("/head_controller/command", 10);
+  pub_arm_trajectory_     = node_handle_.advertise<trajectory_msgs::JointTrajectory>("/arm_controller/command", 10);
+  pub_gripper_trajectory_ = node_handle_.advertise<trajectory_msgs::JointTrajectory>("/gripper_controller/command", 10);
 
   const float linear_coef  = 0.2f;
   const float angular_coef = 0.5f;

@@ -379,20 +379,10 @@ int SIGVerseAiAgentTeleopKey::run()
 
   ros::Rate loop_rate(40);
 
-  std::string sub_joint_state_topic_name;
-  std::string pub_base_twist_topic_name;
-  std::string pub_trajectory_topic_name;
-  std::string pub_hand_trajectory_topic_name;
-  
-  node_handle_.param<std::string>("ai_agent_teleop_key/sub_joint_state_topic_name",     sub_joint_state_topic_name,     "/joint_states");
-  node_handle_.param<std::string>("ai_agent_teleop_key/pub_base_twist_topic_name",      pub_base_twist_topic_name,      "/command_velocity");
-  node_handle_.param<std::string>("ai_agent_teleop_key/pub_trajectory_topic_name",      pub_trajectory_topic_name,      "/controller/command");
-  node_handle_.param<std::string>("ai_agent_teleop_key/pub_hand_trajectory_topic_name", pub_hand_trajectory_topic_name, "/hand_controller/command");
-
-  sub_joint_state_     = node_handle_.subscribe<sensor_msgs::JointState>(sub_joint_state_topic_name, 10, &SIGVerseAiAgentTeleopKey::jointStateCallback, this);
-  pub_base_twist_      = node_handle_.advertise<geometry_msgs::Twist>(pub_base_twist_topic_name, 10);
-  pub_trajectory_      = node_handle_.advertise<trajectory_msgs::JointTrajectory>(pub_trajectory_topic_name, 10);
-  pub_hand_trajectory_ = node_handle_.advertise<trajectory_msgs::JointTrajectory>(pub_hand_trajectory_topic_name, 10);
+  sub_joint_state_     = node_handle_.subscribe<sensor_msgs::JointState>         ("/joint_states", 10, &SIGVerseAiAgentTeleopKey::jointStateCallback, this);
+  pub_base_twist_      = node_handle_.advertise<geometry_msgs::Twist>            ("/command_velocity", 10);
+  pub_trajectory_      = node_handle_.advertise<trajectory_msgs::JointTrajectory>("/controller/command", 10);
+  pub_hand_trajectory_ = node_handle_.advertise<trajectory_msgs::JointTrajectory>("/hand_controller/command", 10);
 
   const float linear_coef  = 1.0f;
   const float angular_coef = 1.0f;

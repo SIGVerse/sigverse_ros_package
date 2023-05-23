@@ -12,12 +12,12 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  actionlib_msgs
   geometry_msgs
   sensor_msgs
   tf
+  tmc_suction
 )
-
-
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -111,7 +111,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES sigverse_ros_bridge
-  CATKIN_DEPENDS geometry_msgs roscpp rospy std_msgs
+  CATKIN_DEPENDS geometry_msgs roscpp rospy std_msgs actionlib_msgs
 #  DEPENDS system_lib
 )
 
@@ -125,6 +125,7 @@ catkin_package(
 # include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
+  include
 )
 
 
@@ -202,5 +203,4 @@ link_directories(/usr/local/lib)
 
 add_executable(hsr_teleop_key src/hsr_teleop_key.cpp)
 target_link_libraries(hsr_teleop_key ${catkin_LIBRARIES})
-
 

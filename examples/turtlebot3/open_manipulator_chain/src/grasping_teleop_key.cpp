@@ -317,17 +317,9 @@ void SIGVerseTb3OpenManipulatorGraspingTeleopKey::keyLoop(int argc, char** argv)
 
   ros::Rate loop_rate(10);
 
-  std::string sub_joint_state_topic_name;
-  std::string pub_base_twist_topic_name;
-  std::string pub_joint_trajectory_topic_name;
-
-  node_handle.param<std::string>("grasping_teleop_key/sub_joint_state_topic_name",      sub_joint_state_topic_name,      "/tb3omc/joint_state");
-  node_handle.param<std::string>("grasping_teleop_key/pub_twist_topic_name",            pub_base_twist_topic_name,       "/tb3omc/cmd_vel");
-  node_handle.param<std::string>("grasping_teleop_key/pub_joint_trajectory_topic_name", pub_joint_trajectory_topic_name, "/tb3omc/joint_trajectory");
-
-  ros::Subscriber sub_joint_state = node_handle.subscribe<sensor_msgs::JointState>(sub_joint_state_topic_name, 10, &SIGVerseTb3OpenManipulatorGraspingTeleopKey::jointStateCallback, this);
-  ros::Publisher pub_base_twist = node_handle.advertise<geometry_msgs::Twist>            (pub_base_twist_topic_name, 10);
-  ros::Publisher pub_joint_traj = node_handle.advertise<trajectory_msgs::JointTrajectory>(pub_joint_trajectory_topic_name, 10);
+  ros::Subscriber sub_joint_state = node_handle.subscribe<sensor_msgs::JointState>       ("/tb3omc/joint_state", 10, &SIGVerseTb3OpenManipulatorGraspingTeleopKey::jointStateCallback, this);
+  ros::Publisher pub_base_twist = node_handle.advertise<geometry_msgs::Twist>            ("/tb3omc/cmd_vel", 10);
+  ros::Publisher pub_joint_traj = node_handle.advertise<trajectory_msgs::JointTrajectory>("/tb3omc/joint_trajectory", 10);
 
   sleep(2);
 

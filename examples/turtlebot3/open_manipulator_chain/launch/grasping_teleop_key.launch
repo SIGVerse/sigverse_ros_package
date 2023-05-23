@@ -1,20 +1,16 @@
 <launch>
-	<arg name="sub_joint_state_topic_name"      default="/tb3omc/joint_state" />
-	<arg name="pub_twist_topic_name"            default="/tb3omc/cmd_vel" />
-	<arg name="pub_joint_trajectory_topic_name" default="/tb3omc/joint_trajectory" />
-	
 	<arg name="sigverse_ros_bridge_port"        default="50001" />
 	<arg name="ros_bridge_port"                 default="9090" />
 
 	<arg name="camera"  default="camera" />
 
 	<group ns="grasping_teleop_key">
-		<node name="grasping_teleop_key" pkg="sigverse_turtlebot3_open_manipulator" type="grasping_teleop_key" output="screen" launch-prefix="gnome-terminal -t 'TurtleBot3 teleop key' -e">
-
-			<param name="sub_joint_state_topic_name"      type="string" value="$(arg sub_joint_state_topic_name)" />
-			<param name="pub_twist_topic_name"            type="string" value="$(arg pub_twist_topic_name)" />
-			<param name="pub_joint_trajectory_topic_name" type="string" value="$(arg pub_joint_trajectory_topic_name)" />
-
+		<node name="grasping_teleop_key" pkg="sigverse_turtlebot3_open_manipulator" type="grasping_teleop_key" output="screen" launch-prefix="gnome-terminal -t 'TurtleBot3 teleop key' -- ">
+		<!--
+		<remap from="/tb3omc/joint_state"         to="/tb3omc/joint_state" />
+		<remap from="/tb3omc/cmd_vel"             to="/tb3omc/cmd_vel" />
+		<remap from="/tb3omc/joint_trajectory"    to="/tb3omc/joint_trajectory" />
+		-->
 		</node>
 	</group>
 

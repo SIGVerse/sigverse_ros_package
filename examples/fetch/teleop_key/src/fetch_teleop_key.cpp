@@ -372,26 +372,12 @@ int SIGVerseFetchTeleopKey::run()
 
   ros::Rate loop_rate(40);
 
-  std::string sub_joint_state_topic_name;
-  std::string pub_base_twist_topic_name;
-  std::string pub_torso_trajectory_topic_name;
-  std::string pub_head_trajectory_topic_name;
-  std::string pub_arm_trajectory_topic_name;
-  std::string pub_gripper_trajectory_topic_name;
-
-  node_handle_.param<std::string>("fetch_teleop_key/sub_joint_state_topic_name",        sub_joint_state_topic_name,        "/joint_states");
-  node_handle_.param<std::string>("fetch_teleop_key/pub_base_twist_topic_name",         pub_base_twist_topic_name,         "/base_controller/command");
-  node_handle_.param<std::string>("fetch_teleop_key/pub_torso_trajectory_topic_name",   pub_torso_trajectory_topic_name,   "/torso_controller/command");
-  node_handle_.param<std::string>("fetch_teleop_key/pub_head_trajectory_topic_name",    pub_head_trajectory_topic_name,    "/head_controller/command");
-  node_handle_.param<std::string>("fetch_teleop_key/pub_arm_trajectory_topic_name",     pub_arm_trajectory_topic_name,     "/arm_controller/command");
-  node_handle_.param<std::string>("fetch_teleop_key/pub_gripper_trajectory_topic_name", pub_gripper_trajectory_topic_name, "/gripper_controller/command");
-
-  sub_joint_state_        = node_handle_.subscribe<sensor_msgs::JointState>(sub_joint_state_topic_name, 10, &SIGVerseFetchTeleopKey::jointStateCallback, this);
-  pub_base_twist_         = node_handle_.advertise<geometry_msgs::Twist>(pub_base_twist_topic_name, 10);
-  pub_torso_trajectory_   = node_handle_.advertise<trajectory_msgs::JointTrajectory>(pub_torso_trajectory_topic_name, 10);
-  pub_head_trajectory_    = node_handle_.advertise<trajectory_msgs::JointTrajectory>(pub_head_trajectory_topic_name, 10);
-  pub_arm_trajectory_     = node_handle_.advertise<trajectory_msgs::JointTrajectory>(pub_arm_trajectory_topic_name, 10);
-  pub_gripper_trajectory_ = node_handle_.advertise<trajectory_msgs::JointTrajectory>(pub_gripper_trajectory_topic_name, 10);
+  sub_joint_state_        = node_handle_.subscribe<sensor_msgs::JointState>         ("/joint_states", 10, &SIGVerseFetchTeleopKey::jointStateCallback, this);
+  pub_base_twist_         = node_handle_.advertise<geometry_msgs::Twist>            ("/base_controller/command", 10);
+  pub_torso_trajectory_   = node_handle_.advertise<trajectory_msgs::JointTrajectory>("/torso_controller/command", 10);
+  pub_head_trajectory_    = node_handle_.advertise<trajectory_msgs::JointTrajectory>("/head_controller/command", 10);
+  pub_arm_trajectory_     = node_handle_.advertise<trajectory_msgs::JointTrajectory>("/arm_controller/command", 10);
+  pub_gripper_trajectory_ = node_handle_.advertise<trajectory_msgs::JointTrajectory>("/gripper_controller/command", 10);
 
   const float linear_coef  = 0.3f;
   const float angular_coef = 0.5f;

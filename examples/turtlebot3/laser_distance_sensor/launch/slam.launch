@@ -2,12 +2,10 @@
 	<arg name="sigverse_ros_bridge_port"  default="50001" />
 	<arg name="ros_bridge_port"           default="9090" />
 	
-	<arg name="pub_twist_topic_name"      default="/tb3/cmd_vel" />
-
-	<node name="teleop_key" pkg="sigverse_turtlebot3_laser_distance_sensor" type="teleop_key" output="screen" launch-prefix="gnome-terminal -t 'TurtleBot3 teleop key' -e">
-
-		<param name="pub_twist_topic_name"  type="string" value="$(arg pub_twist_topic_name)" />
-			
+	<node name="teleop_key" pkg="sigverse_turtlebot3_laser_distance_sensor" type="teleop_key" output="screen" launch-prefix="gnome-terminal -t 'TurtleBot3 teleop key' -- ">
+		<!--
+		<remap from="/tb3/cmd_vel"      to="/tb3/cmd_vel" />
+		-->
 	</node>
 		
 	<!-- Gmapping -->

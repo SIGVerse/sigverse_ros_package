@@ -186,32 +186,14 @@ int SIGVersePr2TeleopKey::run()
 
   ros::Rate loop_rate(50);
 
-  std::string sub_joint_state_topic_name;
-  std::string pub_base_twist_topic_name;
-  std::string pub_head_trajectory_topic_name;
-  std::string pub_torso_trajectory_topic_name;
-  std::string pub_l_arm_trajectory_topic_name;
-  std::string pub_r_arm_trajectory_topic_name;
-  std::string pub_l_gripper_command_topic_name;
-  std::string pub_r_gripper_command_topic_name;
-
-  node_handle_.param<std::string>("pr2_teleop_key/sub_joint_state_topic_name",      sub_joint_state_topic_name,      "/joint_states");
-  node_handle_.param<std::string>("pr2_teleop_key/pub_base_twist_topic_name",       pub_base_twist_topic_name,       "/base_controller/command");
-  node_handle_.param<std::string>("pr2_teleop_key/pub_head_trajectory_topic_name",  pub_head_trajectory_topic_name,  "/head_traj_controller/command");
-  node_handle_.param<std::string>("pr2_teleop_key/pub_torso_trajectory_topic_name", pub_torso_trajectory_topic_name, "/torso_controller/command");
-  node_handle_.param<std::string>("pr2_teleop_key/pub_l_arm_trajectory_topic_name", pub_l_arm_trajectory_topic_name, "/l_arm_controller/command");
-  node_handle_.param<std::string>("pr2_teleop_key/pub_r_arm_trajectory_topic_name", pub_r_arm_trajectory_topic_name, "/r_arm_controller/command");
-  node_handle_.param<std::string>("pr2_teleop_key/pub_l_gripper_command_topic_name",pub_l_gripper_command_topic_name,"/l_gripper_controller/command");
-  node_handle_.param<std::string>("pr2_teleop_key/pub_r_gripper_command_topic_name",pub_r_gripper_command_topic_name,"/r_gripper_controller/command");
-
-  sub_joint_state_      = node_handle_.subscribe<sensor_msgs::JointState>(sub_joint_state_topic_name, 10, &SIGVersePr2TeleopKey::jointStateCallback, this);
-  pub_base_twist_       = node_handle_.advertise<geometry_msgs::Twist>(pub_base_twist_topic_name, 10);
-  pub_head_trajectory_  = node_handle_.advertise<trajectory_msgs::JointTrajectory>(pub_head_trajectory_topic_name,  10);
-  pub_torso_trajectory_ = node_handle_.advertise<trajectory_msgs::JointTrajectory>(pub_torso_trajectory_topic_name, 10);
-  pub_l_arm_trajectory_ = node_handle_.advertise<trajectory_msgs::JointTrajectory>(pub_l_arm_trajectory_topic_name, 10);
-  pub_r_arm_trajectory_ = node_handle_.advertise<trajectory_msgs::JointTrajectory>(pub_r_arm_trajectory_topic_name, 10);
-  pub_l_gripper_command_= node_handle_.advertise<pr2_controllers_msgs::Pr2GripperCommand>(pub_l_gripper_command_topic_name, 10);
-  pub_r_gripper_command_= node_handle_.advertise<pr2_controllers_msgs::Pr2GripperCommand>(pub_r_gripper_command_topic_name, 10);
+  sub_joint_state_      = node_handle_.subscribe<sensor_msgs::JointState>                ("/joint_states", 10, &SIGVersePr2TeleopKey::jointStateCallback, this);
+  pub_base_twist_       = node_handle_.advertise<geometry_msgs::Twist>                   ("/base_controller/command", 10);
+  pub_head_trajectory_  = node_handle_.advertise<trajectory_msgs::JointTrajectory>       ("/head_traj_controller/command",  10);
+  pub_torso_trajectory_ = node_handle_.advertise<trajectory_msgs::JointTrajectory>       ("/torso_controller/command", 10);
+  pub_l_arm_trajectory_ = node_handle_.advertise<trajectory_msgs::JointTrajectory>       ("/l_arm_controller/command", 10);
+  pub_r_arm_trajectory_ = node_handle_.advertise<trajectory_msgs::JointTrajectory>       ("/r_arm_controller/command", 10);
+  pub_l_gripper_command_= node_handle_.advertise<pr2_controllers_msgs::Pr2GripperCommand>("/l_gripper_controller/command", 10);
+  pub_r_gripper_command_= node_handle_.advertise<pr2_controllers_msgs::Pr2GripperCommand>("/r_gripper_controller/command", 10);
 
   const float linear_coef  = 0.2f;
   const float angular_coef = 0.5f;
