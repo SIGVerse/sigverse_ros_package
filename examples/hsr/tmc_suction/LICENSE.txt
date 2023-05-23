@@ -1,6 +1,3 @@
-https://github.com/hsr-project/tmc_suction/
-
-------------------------
 The Clear BSD License
 
 Copyright (c) 2020 TOYOTA MOTOR CORPORATION

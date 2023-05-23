@@ -24,7 +24,7 @@
 		<arg name="port" value="$(arg ros_bridge_port)"/>
 	</include>
 	
-	<node name="suction_server" pkg="sigverse_hsr_teleop_key" type="suction_server">
+	<node name="suction_server" pkg="tmc_suction" type="suction_server">
 		<remap from="/pressure_sensor_on" to="/hsrb/pressure_sensor_on" />
 		<remap from="/suction_on"         to="/hsrb/suction_on" />
 		<remap from="/suction_control"    to="/hsrb/suction_control" />

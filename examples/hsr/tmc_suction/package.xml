@@ -1,0 +1,27 @@
+<package>
+  <name>tmc_suction</name>
+  <version>1.0.0</version>
+  <description>Action server for suction</description>
+  <maintainer email="xr-hsr-support@mail.toyota.co.jp">HSR Support</maintainer>
+
+  <license>BSD 3-clause Clear License</license>
+
+  <author>Kazuto Murase</author>
+
+  <url type="website">None</url>
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>message_generation</build_depend>
+  <build_depend>actionlib</build_depend>
+  <build_depend>actionlib_msgs</build_depend>
+  <build_depend>rostest</build_depend>
+
+  <run_depend>roscpp</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>message_runtime</run_depend>
+  <run_depend>actionlib</run_depend>
+  <run_depend>actionlib_msgs</run_depend>
+  <run_depend>rostest</run_depend>
+</package>

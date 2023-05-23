@@ -8,11 +8,9 @@ add_definitions(-std=c++11)
 ## is used, also find other catkin packages
 
 find_package(catkin REQUIRED COMPONENTS
-  geometry_msgs
   roscpp
   rospy
   std_msgs
-  actionlib_msgs
   geometry_msgs
   sensor_msgs
   tf
@@ -111,7 +109,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES sigverse_ros_bridge
-  CATKIN_DEPENDS geometry_msgs roscpp rospy std_msgs actionlib_msgs
+  CATKIN_DEPENDS geometry_msgs roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
 
@@ -125,9 +123,9 @@ catkin_package(
 # include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
+  ${tmc_suction_INCLUDE_DIRS}
   include
 )
-
 
 ## Declare a C++ library
 # add_library(sigverse_ros_bridge
@@ -138,6 +136,7 @@ include_directories(
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
 # add_dependencies(sigverse_ros_bridge ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 
 ## Declare a C++ executable
 # add_executable(sigverse_ros_bridge_node src/sigverse_ros_bridge_node.cpp)
@@ -203,4 +202,4 @@ link_directories(/usr/local/lib)
 
 add_executable(hsr_teleop_key src/hsr_teleop_key.cpp)
 target_link_libraries(hsr_teleop_key ${catkin_LIBRARIES})
-
+add_dependencies(hsr_teleop_key ${tmc_suction_EXPORTED_TARGETS})
