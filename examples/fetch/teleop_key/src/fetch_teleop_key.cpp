@@ -31,9 +31,9 @@ private:
   static const char KEYCODE_LEFT  = 0x44;
 
   static const char KEYCODE_A = 0x61;
+  static const char KEYCODE_B = 0x62;
   static const char KEYCODE_C = 0x63;
   static const char KEYCODE_D = 0x64;
-  static const char KEYCODE_E = 0x65;
   static const char KEYCODE_F = 0x66;
   static const char KEYCODE_G = 0x67;
   static const char KEYCODE_H = 0x68;
@@ -46,10 +46,7 @@ private:
   static const char KEYCODE_O = 0x6f;
   static const char KEYCODE_Q = 0x71;
   static const char KEYCODE_R = 0x72;
-  static const char KEYCODE_S = 0x73;
   static const char KEYCODE_U = 0x75;
-  static const char KEYCODE_W = 0x77;
-  static const char KEYCODE_X = 0x78;
   static const char KEYCODE_Y = 0x79;
   static const char KEYCODE_Z = 0x7a;
 
@@ -57,9 +54,9 @@ private:
   static const char KEYCODE_PERIOD = 0x2e;
   static const char KEYCODE_SPACE  = 0x20;
 
-  std::map<std::string, double> arm_joint_state_map_;
-  std::map<std::string, double> arm_joint_max_map_;
-  std::map<std::string, double> arm_joint_min_map_;
+  std::map<std::string, double> joint_state_map_;
+  std::map<std::string, double> joint_max_map_;
+  std::map<std::string, double> joint_min_map_;
 
 public:
   SIGVerseFetchTeleopKey();
@@ -73,13 +70,14 @@ public:
   void moveBaseTwist(double linear_x, double linear_y, double angular_z);
   void operateTorso(const double torso_lift_pos, const double duration_sec);
   void operateHead(const double head_1_pos, const double head_2_pos, const double duration_sec);
+  void operateHead(const std::string &joint_name, const double add_pos, const double duration_sec);
   void operateArm(const std::vector<double> & positions, const double duration_sec);
   void operateArm(const int joint_number, const double arm_pos, const double duration_sec);
 //  double getDurationRot(const double next_pos, const double current_pos);
   void operateHand(bool grasp);
 
   void showHelp();
-  void showHelpArm(const std::string &arm_name);
+  void showHelpJoint(const std::string &joint_name);
   int run();
 
 private:
@@ -105,29 +103,35 @@ SIGVerseFetchTeleopKey::SIGVerseFetchTeleopKey()
   torso_lift_joint_pos1_ = 0.0;
   torso_lift_joint_pos2_ = 0.0;
 
-  arm_joint_state_map_["shoulder_pan_joint"]  = 0.0;
-  arm_joint_state_map_["shoulder_lift_joint"] = 0.0;
-  arm_joint_state_map_["upperarm_roll_joint"] = 0.0;
-  arm_joint_state_map_["elbow_flex_joint"]    = 0.0;
-  arm_joint_state_map_["forearm_roll_joint"]  = 0.0;
-  arm_joint_state_map_["wrist_flex_joint"]    = 0.0;
-  arm_joint_state_map_["wrist_roll_joint"]    = 0.0;
+  joint_state_map_["head_pan_joint"]      = 0.0;
+  joint_state_map_["head_tilt_joint"]     = 0.0;
+  joint_state_map_["shoulder_pan_joint"]  = 0.0;
+  joint_state_map_["shoulder_lift_joint"] = 0.0;
+  joint_state_map_["upperarm_roll_joint"] = 0.0;
+  joint_state_map_["elbow_flex_joint"]    = 0.0;
+  joint_state_map_["forearm_roll_joint"]  = 0.0;
+  joint_state_map_["wrist_flex_joint"]    = 0.0;
+  joint_state_map_["wrist_roll_joint"]    = 0.0;
 
-  arm_joint_max_map_["shoulder_pan_joint"]  = +1.605;
-  arm_joint_max_map_["shoulder_lift_joint"] = +1.518;
-  arm_joint_max_map_["upperarm_roll_joint"] = +9999.9;
-  arm_joint_max_map_["elbow_flex_joint"]    = +2.251;
-  arm_joint_max_map_["forearm_roll_joint"]  = +9999.9;
-  arm_joint_max_map_["wrist_flex_joint"]    = +2.181f;
-  arm_joint_max_map_["wrist_roll_joint"]    = +9999.9;
+  joint_max_map_["head_pan_joint"]      = +1.57;
+  joint_max_map_["head_tilt_joint"]     = +1.57;
+  joint_max_map_["shoulder_pan_joint"]  = +1.605;
+  joint_max_map_["shoulder_lift_joint"] = +1.518;
+  joint_max_map_["upperarm_roll_joint"] = +9999.9;
+  joint_max_map_["elbow_flex_joint"]    = +2.251;
+  joint_max_map_["forearm_roll_joint"]  = +9999.9;
+  joint_max_map_["wrist_flex_joint"]    = +2.181f;
+  joint_max_map_["wrist_roll_joint"]    = +9999.9;
 
-  arm_joint_min_map_["shoulder_pan_joint"]  = -1.605;
-  arm_joint_min_map_["shoulder_lift_joint"] = -1.221;
-  arm_joint_min_map_["upperarm_roll_joint"] = -9999.9;
-  arm_joint_min_map_["elbow_flex_joint"]    = -2.251;
-  arm_joint_min_map_["forearm_roll_joint"]  = -9999.9;
-  arm_joint_min_map_["wrist_flex_joint"]    = -2.181f;
-  arm_joint_min_map_["wrist_roll_joint"]    = -9999.9;
+  joint_min_map_["head_pan_joint"]      = -1.57;
+  joint_min_map_["head_tilt_joint"]     = -0.785;
+  joint_min_map_["shoulder_pan_joint"]  = -1.605;
+  joint_min_map_["shoulder_lift_joint"] = -1.221;
+  joint_min_map_["upperarm_roll_joint"] = -9999.9;
+  joint_min_map_["elbow_flex_joint"]    = -2.251;
+  joint_min_map_["forearm_roll_joint"]  = -9999.9;
+  joint_min_map_["wrist_flex_joint"]    = -2.181f;
+  joint_min_map_["wrist_roll_joint"]    = -9999.9;
 }
 
 
@@ -170,13 +174,15 @@ void SIGVerseFetchTeleopKey::jointStateCallback(const sensor_msgs::JointState::C
       torso_lift_joint_pos2_ = torso_lift_joint_pos1_;
       torso_lift_joint_pos1_ = joint_state->position[i];
     }
-    if(joint_state->name[i] == "shoulder_pan_joint") { arm_joint_state_map_["shoulder_pan_joint"]  = joint_state->position[i]; }
-    if(joint_state->name[i] == "shoulder_lift_joint"){ arm_joint_state_map_["shoulder_lift_joint"] = joint_state->position[i]; }
-    if(joint_state->name[i] == "upperarm_roll_joint"){ arm_joint_state_map_["upperarm_roll_joint"] = joint_state->position[i]; }
-    if(joint_state->name[i] == "elbow_flex_joint")   { arm_joint_state_map_["elbow_flex_joint"]    = joint_state->position[i]; }
-    if(joint_state->name[i] == "forearm_roll_joint") { arm_joint_state_map_["forearm_roll_joint"]  = joint_state->position[i]; }
-    if(joint_state->name[i] == "wrist_flex_joint")   { arm_joint_state_map_["wrist_flex_joint"]    = joint_state->position[i]; }
-    if(joint_state->name[i] == "wrist_roll_joint")   { arm_joint_state_map_["wrist_roll_joint"]    = joint_state->position[i]; }
+    if(joint_state->name[i] == "head_pan_joint")     { joint_state_map_["head_pan_joint"]      = joint_state->position[i]; }
+    if(joint_state->name[i] == "head_tilt_joint")    { joint_state_map_["head_tilt_joint"]     = joint_state->position[i]; }
+    if(joint_state->name[i] == "shoulder_pan_joint") { joint_state_map_["shoulder_pan_joint"]  = joint_state->position[i]; }
+    if(joint_state->name[i] == "shoulder_lift_joint"){ joint_state_map_["shoulder_lift_joint"] = joint_state->position[i]; }
+    if(joint_state->name[i] == "upperarm_roll_joint"){ joint_state_map_["upperarm_roll_joint"] = joint_state->position[i]; }
+    if(joint_state->name[i] == "elbow_flex_joint")   { joint_state_map_["elbow_flex_joint"]    = joint_state->position[i]; }
+    if(joint_state->name[i] == "forearm_roll_joint") { joint_state_map_["forearm_roll_joint"]  = joint_state->position[i]; }
+    if(joint_state->name[i] == "wrist_flex_joint")   { joint_state_map_["wrist_flex_joint"]    = joint_state->position[i]; }
+    if(joint_state->name[i] == "wrist_roll_joint")   { joint_state_map_["wrist_roll_joint"]    = joint_state->position[i]; }
   }
 }
 
@@ -228,6 +234,26 @@ void SIGVerseFetchTeleopKey::operateHead(const double head_1_pos, const double h
   pub_torso_trajectory_.publish(joint_trajectory);
 }
 
+void SIGVerseFetchTeleopKey::operateHead(const std::string &joint_name, const double add_pos, const double duration_sec)
+{
+  double head_1_pos = joint_state_map_["head_pan_joint"];
+  double head_2_pos = joint_state_map_["head_tilt_joint"];
+  
+  // Clamp
+  double clamped_next_pos = std::min(std::max(joint_min_map_[joint_name], joint_state_map_[joint_name]+add_pos), joint_max_map_[joint_name]);
+
+  if(joint_name=="head_pan_joint")
+  {
+    head_1_pos = clamped_next_pos;
+  }
+  else if(joint_name=="head_tilt_joint")
+  {
+    head_2_pos = clamped_next_pos;
+  }
+
+  this->operateHead(head_1_pos, head_2_pos, duration_sec);
+}
+
 void SIGVerseFetchTeleopKey::operateArm(const std::vector<double> & positions, const double duration_sec)
 {
   trajectory_msgs::JointTrajectory joint_trajectory;
@@ -252,9 +278,9 @@ void SIGVerseFetchTeleopKey::operateArm(const int joint_number, const double add
 {
   std::vector<double> positions =
   {
-    arm_joint_state_map_["shoulder_pan_joint"],  arm_joint_state_map_["shoulder_lift_joint"], 
-    arm_joint_state_map_["upperarm_roll_joint"], arm_joint_state_map_["elbow_flex_joint"], arm_joint_state_map_["forearm_roll_joint"], 
-    arm_joint_state_map_["wrist_flex_joint"],    arm_joint_state_map_["wrist_roll_joint"]
+    joint_state_map_["shoulder_pan_joint"],  joint_state_map_["shoulder_lift_joint"], 
+    joint_state_map_["upperarm_roll_joint"], joint_state_map_["elbow_flex_joint"], joint_state_map_["forearm_roll_joint"], 
+    joint_state_map_["wrist_flex_joint"],    joint_state_map_["wrist_roll_joint"]
   };
 
   std::string joint_name = "";
@@ -271,7 +297,7 @@ void SIGVerseFetchTeleopKey::operateArm(const int joint_number, const double add
   }
   
   // Clamp
-  double clamped_next_pos = std::min(std::max(arm_joint_min_map_[joint_name], arm_joint_state_map_[joint_name]+add_pos), arm_joint_max_map_[joint_name]);
+  double clamped_next_pos = std::min(std::max(joint_min_map_[joint_name], joint_state_map_[joint_name]+add_pos), joint_max_map_[joint_name]);
 
   positions[joint_number-1] = clamped_next_pos;
 
@@ -314,17 +340,19 @@ void SIGVerseFetchTeleopKey::showHelp()
   puts("---------------------------");
   puts("arrow keys : Move Fetch");
   puts("space      : Stop Fetch");
-  puts("r/f : Increase/Decrease Moving Speed");
   puts("---------------------------");
-  puts("y : Rotate Arm - Upward");
-  puts("h : Rotate Arm - Horizontal");
-  puts("n : Rotate Arm - Downward");
+  puts("q/z : Increase/Decrease Moving Speed");
   puts("---------------------------");
-  puts("q/a/z : Up/Stop/Down Torso");
+  puts("y : Up   Torso");
+  puts("h : Stop Torso");
+  puts("n : Down Torso");
   puts("---------------------------");
-  puts("w/s/x : Turn Head Left/Front/Right ");
-  puts("e/d/c : Turn Head Up/Front/Down");
+  puts("a : Rotate Arm - Vertical");
+  puts("b : Rotate Arm - Upward");
+  puts("c : Rotate Arm - Horizontal");
+  puts("d : Rotate Arm - Downward");
   puts("---------------------------");
+  puts("r/f   : Control head_pan/head_tilt ");
   puts("u/j/m : Control shoulder_pan/shoulder_lift/upperarm_roll ");
   puts("i/k   : Control elbow_flex/forearm_roll ");
   puts("o/l   : Control wrist_flex/wrist_roll ");
@@ -332,11 +360,11 @@ void SIGVerseFetchTeleopKey::showHelp()
   puts("g : Grasp/Open Hand");
 }
 
-void SIGVerseFetchTeleopKey::showHelpArm(const std::string &arm_name)
+void SIGVerseFetchTeleopKey::showHelpJoint(const std::string &joint_name)
 {
   puts("");
   puts("---------------------------");
-  puts(("Control "+arm_name).c_str());
+  puts(("Control "+joint_name).c_str());
   puts("u/j/m : + / Stop / - ");
   puts("---------------------------");
   puts("q : Quit");
@@ -430,91 +458,106 @@ int SIGVerseFetchTeleopKey::run()
           moveBaseTwist(0.0, 0.0, 0.0);
           break;
         }
-        case KEYCODE_R:
+        case KEYCODE_Q:
         {
           ROS_DEBUG("Move Speed Up");
           move_speed *= 2;
           if(move_speed > 2  ){ move_speed=2; }
           break;
         }
-        case KEYCODE_F:
+        case KEYCODE_Z:
         {
           ROS_DEBUG("Move Speed Down");
           move_speed /= 2;
           if(move_speed < 0.125){ move_speed=0.125; }
           break;
         }
-        case KEYCODE_Y:
+        case KEYCODE_A:
         {
-          ROS_DEBUG("Rotate Arm - Upward");
-          operateArm({ 0.0, -0.8, 0.0, +0.4, 0.0, +0.4, 0.0 }, 3.0);
+          ROS_DEBUG("Rotate Arm - Vertical");
+          operateArm({ 0.0, +1.0, 0.0, -2.25, 0.0, -0.25, 0.0  }, 3.0);
           break;
         }
-        case KEYCODE_H:
+        case KEYCODE_B:
+        {
+          ROS_DEBUG("Rotate Arm - Upward");
+          operateArm({ 0.0, -1.0, 0.0, +0.5, 0.0, +0.5, 0.0 }, 3.0);
+          break;
+        }
+        case KEYCODE_C:
         {
           ROS_DEBUG("Rotate Arm - Horizontal");
           operateArm({ 0.0, +1.0, 0.0, -2.25, 0.0, +1.25, 0.0 }, 3.0);
           break;
         }
-        case KEYCODE_N:
+        case KEYCODE_D:
         {
           ROS_DEBUG("Rotate Arm - Downward");
-          operateArm({ 0.0, +1.0, 0.0, 0.0, 0.0, -1.0, 0.0 }, 3.0);
+          operateArm({ 0.0, +1.0, 0.0, 0.0, 0.0, -0.4, 0.0 }, 3.0);
           break;
         }
-        case KEYCODE_Q:
+        case KEYCODE_Y:
         {
           ROS_DEBUG("Torso Height - Up");
           operateTorso(0.4, std::max<int>((int)(std::abs(0.4 - torso_lift_joint_pos1_) / 0.05), 1));
           break;
         }
-        case KEYCODE_A:
+        case KEYCODE_H:
         {
           ROS_DEBUG("Torso Height - Stop");
           operateTorso(2.0*torso_lift_joint_pos1_-torso_lift_joint_pos2_, 0.5);
           break;
         }
-        case KEYCODE_Z:
+        case KEYCODE_N:
         {
           ROS_DEBUG("Torso Height - Down");
           operateTorso(0.0, std::max<int>((int)(std::abs(0.0 - torso_lift_joint_pos1_) / 0.05), 1));
           break;
         }
-        case KEYCODE_W:
+        case KEYCODE_R:
+        case KEYCODE_F:
         {
-          ROS_DEBUG("Turn Head - Left");
-          operateHead(+1.57, 0.0, 2.0);
+          std::string joint_name;
+
+          switch(c)
+          {
+            case KEYCODE_R:{ joint_name = "head_pan_joint";  break;}
+            case KEYCODE_F:{ joint_name = "head_tilt_joint"; break; }
+          }
+
+          ROS_DEBUG("Control %s", joint_name.c_str());
+          showHelpJoint(joint_name);
+          
+          bool is_in_control = true;
+
+          while(is_in_control)
+          {
+            ros::spinOnce();
+            loop_rate.sleep();
+
+            if(!canReceive(kfd)){ continue; }
+
+            if(read(kfd, &c, 1) < 0)
+            {
+              perror("read():");
+              exit(EXIT_FAILURE);
+            }
+
+            switch(c)
+            {
+              case KEYCODE_U:{ ROS_DEBUG("Head  +  "); operateHead(joint_name, +1.0, 2.0); break; }
+              case KEYCODE_J:{ ROS_DEBUG("Head Stop"); operateHead(joint_name,  0.0, 2.0); break; }
+              case KEYCODE_M:{ ROS_DEBUG("Head  -  "); operateHead(joint_name, -1.0, 2.0); break; }
+              case KEYCODE_Q:
+              {
+                is_in_control = false;
+                showHelp();
+                break;
+              }
+            }
+          }
           break;
-        }
-        case KEYCODE_S:
-        {
-          ROS_DEBUG("Turn Head - Front");
-          operateHead(0.0, 0.0, 2.0);
-          break;
-        }
-        case KEYCODE_X:
-        {
-          ROS_DEBUG("Turn Head - Right");
-          operateHead(-1.57, 0.0, 2.0);
-          break;
-        }
-        case KEYCODE_E:
-        {
-          ROS_DEBUG("Turn Head - Up");
-          operateHead(0.0, -0.785, 2.0);
-          break;
-        }
-        case KEYCODE_D:
-        {
-          ROS_DEBUG("Turn Head - Front");
-          operateHead(0.0, 0.0, 2.0);
-          break;
-        }
-        case KEYCODE_C:
-        {
-          ROS_DEBUG("Turn Head - Down");
-          operateHead(0.0, +1.57, 2.0);
-          break;
+
         }
         case KEYCODE_U:
         case KEYCODE_J:
@@ -528,13 +571,13 @@ int SIGVerseFetchTeleopKey::run()
 
           switch(c)
           {
-            case KEYCODE_U:{ joint_number = 1; ROS_DEBUG("Control shoulder_pan_joint");  showHelpArm("shoulder_pan_joint"); break; }
-            case KEYCODE_J:{ joint_number = 2; ROS_DEBUG("Control shoulder_lift_joint"); showHelpArm("shoulder_lift_joint"); break; }
-            case KEYCODE_M:{ joint_number = 3; ROS_DEBUG("Control upperarm_roll_joint"); showHelpArm("upperarm_roll_joint"); break; }
-            case KEYCODE_I:{ joint_number = 4; ROS_DEBUG("Control elbow_flex_joint");    showHelpArm("elbow_flex_joint"); break; }
-            case KEYCODE_K:{ joint_number = 5; ROS_DEBUG("Control forearm_roll_joint");  showHelpArm("forearm_roll_joint"); break; }
-            case KEYCODE_O:{ joint_number = 6; ROS_DEBUG("Control wrist_flex_joint");    showHelpArm("wrist_flex_joint"); break; }
-            case KEYCODE_L:{ joint_number = 7; ROS_DEBUG("Control wrist_roll_joint");    showHelpArm("wrist_roll_joint"); break; }
+            case KEYCODE_U:{ joint_number = 1; ROS_DEBUG("Control shoulder_pan_joint");  showHelpJoint("shoulder_pan_joint"); break; }
+            case KEYCODE_J:{ joint_number = 2; ROS_DEBUG("Control shoulder_lift_joint"); showHelpJoint("shoulder_lift_joint"); break; }
+            case KEYCODE_M:{ joint_number = 3; ROS_DEBUG("Control upperarm_roll_joint"); showHelpJoint("upperarm_roll_joint"); break; }
+            case KEYCODE_I:{ joint_number = 4; ROS_DEBUG("Control elbow_flex_joint");    showHelpJoint("elbow_flex_joint"); break; }
+            case KEYCODE_K:{ joint_number = 5; ROS_DEBUG("Control forearm_roll_joint");  showHelpJoint("forearm_roll_joint"); break; }
+            case KEYCODE_O:{ joint_number = 6; ROS_DEBUG("Control wrist_flex_joint");    showHelpJoint("wrist_flex_joint"); break; }
+            case KEYCODE_L:{ joint_number = 7; ROS_DEBUG("Control wrist_roll_joint");    showHelpJoint("wrist_roll_joint"); break; }
           }
 
           bool is_in_control = true;
