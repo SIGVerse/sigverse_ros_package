@@ -1,0 +1,26 @@
+<launch>
+	<arg name="launch_ros_bridge"         default="false"/>
+	<arg name="sigverse_ros_bridge_port"  default="50001" />
+	<arg name="ros_bridge_port"           default="9090" />
+
+	<node name="sigverse_transform_transferer" pkg="sigverse_tools" type="transform_transferer">
+
+		<param name="map_frame"  type="string" value="/map" />
+		<param name="base_frame" type="string" value="/base_link" />
+		
+		<!--
+		<remap from="/base_transform"   to="/base_transform" />
+		-->
+	</node>
+
+	<group if="$(arg launch_ros_bridge)">
+		<group ns="sigverse_ros_bridge">
+			<node name="sigverse_ros_bridge" pkg="sigverse_ros_bridge" type="sigverse_ros_bridge" args="$(arg sigverse_ros_bridge_port)"/>
+		</group>
+		
+		<include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" > 
+			<arg name="port" value="$(arg ros_bridge_port)"/>
+		</include>
+	</group>
+</launch>
+
