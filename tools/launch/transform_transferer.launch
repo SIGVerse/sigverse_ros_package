@@ -2,11 +2,13 @@
 	<arg name="launch_ros_bridge"         default="false"/>
 	<arg name="sigverse_ros_bridge_port"  default="50001" />
 	<arg name="ros_bridge_port"           default="9090" />
+	<arg name="map_frame"                 default="/map" />
+	<arg name="base_frame"                default="/base_link" />
 
 	<node name="sigverse_transform_transferer" pkg="sigverse_tools" type="transform_transferer">
 
-		<param name="map_frame"  type="string" value="/map" />
-		<param name="base_frame" type="string" value="/base_link" />
+		<param name="map_frame"  type="string" value="$(arg map_frame)" />
+		<param name="base_frame" type="string" value="$(arg base_frame)" />
 		
 		<!--
 		<remap from="/base_transform"   to="/base_transform" />
