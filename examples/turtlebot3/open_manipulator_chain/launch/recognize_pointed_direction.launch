@@ -22,7 +22,9 @@
 		<arg name="port" value="$(arg ros_bridge_port)"/>
 	</include>
 
-	<node pkg="image_view" type="image_view" name="image_view" args="image:=$(arg camera)/depth/image_raw"/>
+	<node pkg="image_view" type="image_view" name="image_view" args="image:=$(arg camera)/depth/image_raw">
+		<param name="autosize" value="true" />
+	</node>
 
 </launch>
 
