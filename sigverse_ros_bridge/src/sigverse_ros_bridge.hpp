@@ -16,14 +16,14 @@
 #include <pthread.h>
 #include <signal.h>
 
-#include <ros/ros.h>
-#include <std_msgs/String.h>
-#include <geometry_msgs/Twist.h>
-#include <geometry_msgs/TransformStamped.h>
-#include <sensor_msgs/CameraInfo.h>
-#include <sensor_msgs/Image.h>
-#include <sensor_msgs/LaserScan.h>
-#include <tf/transform_broadcaster.h>
+#include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/string.hpp"
+#include "geometry_msgs/msg/twist.hpp"
+#include "geometry_msgs/msg/transform_stamped.hpp"
+#include "sensor_msgs/msg/camera_info.hpp"
+#include "sensor_msgs/msg/image.hpp"
+#include "sensor_msgs/msg/laser_scan.hpp"
+#include "tf2_ros/transform_broadcaster.h"
 
 #include <bsoncxx/array/view.hpp>
 #include <bsoncxx/builder/basic/sub_document.hpp>
@@ -55,25 +55,28 @@
 class SIGVerseROSBridge
 {
 private:
-	static pid_t gettid(void);
+  static pid_t gettid(void);
 
-	static void rosSigintHandler(int sig);
-	static bool checkReceivable( int fd );
+  static void rosSigintHandler(int sig);
+  static bool checkReceivable (int fd );
 
-	static void setVectorDouble(std::vector<double> &destVec, const bsoncxx::array::view &arrayView);
-	static void setVectorFloat (std::vector<float>  &destVec, const bsoncxx::array::view &arrayView);
+  static void setVectorDouble(std::vector<double> &destVec, const bsoncxx::array::view &arrayView);
+  static void setVectorFloat (std::vector<float>  &destVec, const bsoncxx::array::view &arrayView);
 
-	template < size_t ArrayNum >
-	static void setArrayDouble(boost::array<double, ArrayNum> &vec, const bsoncxx::array::view &arrayView);
+  template < size_t ArrayNum >
+  static void setArrayDouble(std::array<double, ArrayNum> &vec, const bsoncxx::array::view &arrayView);
 
-	static void *receivingThread(void *param);
+  template < size_t ArrayNum >
+  static void setArrayDouble(boost::array<double, ArrayNum> &vec, const bsoncxx::array::view &arrayView);
 
-	static bool isRunning;
-	static int  syncTimeCnt;
-	static int  syncTimeMaxNum;
+  static void *receivingThread(void *param);
+
+  static bool isRunning;
+  static int  syncTimeCnt;
+  static int  syncTimeMaxNum;
 
 public:
-	int run(int argc, char **argv);
+  int run(int argc, char **argv);
 };
 
 #endif // SIGVERSE_ROS_BRIDGE_HPP
