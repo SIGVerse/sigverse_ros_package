@@ -70,8 +70,6 @@ void SIGVerseROSBridge::setArrayDouble(boost::array<double, ArrayNum> &destArray
     }
 }
 
-
-
 void * SIGVerseROSBridge::receivingThread(void *param)
 {
   int dstSocket = *((int *)param);
@@ -253,13 +251,13 @@ void * SIGVerseROSBridge::receivingThread(void *param)
       cameraInfo.width             = (uint32_t)bsonView["msg"]["width"] .get_int32();
       cameraInfo.distortion_model  =           bsonView["msg"]["distortion_model"].get_utf8().value.to_string();
 
-      bsoncxx::array::view dView = bsonView["msg"]["D"].get_array().value;
+      bsoncxx::array::view dView = bsonView["msg"]["d"].get_array().value;
       cameraInfo.d.resize((size_t)std::distance(dView.cbegin(), dView.cend()));
       setVectorDouble(cameraInfo.d, dView);
 
-      setArrayDouble(cameraInfo.k, bsonView["msg"]["K"].get_array().value);
-      setArrayDouble(cameraInfo.r, bsonView["msg"]["R"].get_array().value);
-      setArrayDouble(cameraInfo.p, bsonView["msg"]["P"].get_array().value);
+      setArrayDouble(cameraInfo.k, bsonView["msg"]["k"].get_array().value);
+      setArrayDouble(cameraInfo.r, bsonView["msg"]["r"].get_array().value);
+      setArrayDouble(cameraInfo.p, bsonView["msg"]["p"].get_array().value);
 
       cameraInfo.binning_x         = (uint32_t)bsonView["msg"]["binning_x"].get_int32();
       cameraInfo.binning_y         = (uint32_t)bsonView["msg"]["binning_y"].get_int32();
@@ -363,8 +361,8 @@ void * SIGVerseROSBridge::receivingThread(void *param)
       for(auto itr = tfArrayView.cbegin(); itr != tfArrayView.cend(); ++itr)
       {
         std::string frameId      = (*itr)["header"]["frame_id"].get_utf8().value.to_string();
-        int32_t sec             = (*itr)["header"]["stamp"]["sec"]    .get_int32();
-        int32_t nsec            = (*itr)["header"]["stamp"]["nanosec"].get_int32(); // get_uint32() is not available; use get_int32() and cast if safe.
+        int32_t sec              = (*itr)["header"]["stamp"]["sec"]    .get_int32();
+        int32_t nsec             = (*itr)["header"]["stamp"]["nanosec"].get_int32(); // get_uint32() is not available; use get_int32() and cast if safe.
         std::string childFrameId = (*itr)["child_frame_id"]    .get_utf8().value.to_string();
 
         geometry_msgs::msg::TransformStamped stampedTransform;

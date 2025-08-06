@@ -40,10 +40,10 @@
 
 #include <boost/array.hpp>
 
-#define TYPE_TWIST        "geometry_msgs/Twist"
-#define TYPE_CAMERA_INFO  "sensor_msgs/CameraInfo"
-#define TYPE_IMAGE        "sensor_msgs/Image"
-#define TYPE_LASER_SCAN   "sensor_msgs/LaserScan"
+#define TYPE_TWIST        "geometry_msgs/msg/Twist"
+#define TYPE_CAMERA_INFO  "sensor_msgs/msg/CameraInfo"
+#define TYPE_IMAGE        "sensor_msgs/msg/Image"
+#define TYPE_LASER_SCAN   "sensor_msgs/msg/LaserScan"
 #define TYPE_TIME_SYNC    "sigverse/TimeSync"
 #define TYPE_TF_LIST      "sigverse/TfList"
 
