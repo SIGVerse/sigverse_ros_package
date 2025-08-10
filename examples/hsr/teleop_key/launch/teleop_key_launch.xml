@@ -24,8 +24,9 @@
 		<arg name="default_call_service_timeout" value="5.0"/>
 		<arg name="call_services_in_new_thread" value="true"/>
 		<arg name="send_action_goals_in_new_thread" value="true"/>
+<!--		<arg name="bson_only_mode" value="true"/> -->
 	</include>
-	
+
 <!--
 	<node pkg="tmc_suction" exec="suction_server" name="suction_server">
 		<remap from="/pressure_sensor_on" to="/hsrb/pressure_sensor_on" />
