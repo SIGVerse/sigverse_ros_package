@@ -328,8 +328,8 @@ void * SIGVerseROSBridge::receivingThread(void *param)
     {
       if(syncTimeCnt < syncTimeMaxNum)
       {
-        int32_t sec  = bsonView["msg"]["data"]["sec"]    .get_int32();
-        int32_t nsec = bsonView["msg"]["data"]["nanosec"].get_int32(); // get_uint32() is not available; use get_int32() and cast if safe.
+        int32_t sec  = bsonView["msg"]["sec"]    .get_int32();
+        int32_t nsec = bsonView["msg"]["nanosec"].get_int32(); // get_uint32() is not available; use get_int32() and cast if safe.
 
         rclcpp::Clock clock;
 		    double now_sec = clock.now().seconds();
