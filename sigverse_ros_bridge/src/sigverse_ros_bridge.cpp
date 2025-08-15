@@ -170,9 +170,9 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 
     bsoncxx::builder::basic::sub_document bsonSubdocument(&bsonCore);
 
-    std::string opValue    = bsonView["op"]   .get_utf8().value.to_string();
-    std::string topicValue = bsonView["topic"].get_utf8().value.to_string();
-    std::string typeValue  = bsonView["type"] .get_utf8().value.to_string();
+    std::string opValue    = std::string(bsonView["op"]   .get_string().value);
+    std::string topicValue = std::string(bsonView["topic"].get_string().value);
+    std::string typeValue  = std::string(bsonView["type"] .get_string().value);
 //    std::cout << "op:" << opValue << std::endl;
 //    std::cout << "tp:" << topicValue << std::endl;
 //    std::cout << "tv:" << typeValue << std::endl;
@@ -245,11 +245,11 @@ void * SIGVerseROSBridge::receivingThread(void *param)
       int32_t sec  = bsonView["msg"]["header"]["stamp"]["sec"]    .get_int32();
       int32_t nsec = bsonView["msg"]["header"]["stamp"]["nanosec"].get_int32(); // get_uint32() is not available; use get_int32() and cast if safe.
       cameraInfo.header.stamp = rclcpp::Time(static_cast<uint64_t>(sec) * 1000000000ULL + static_cast<uint64_t>(nsec));
-      cameraInfo.header.frame_id   =           bsonView["msg"]["header"]["frame_id"]      .get_utf8().value.to_string();
+      cameraInfo.header.frame_id   = std::string(bsonView["msg"]["header"]["frame_id"].get_string().value);
 
-      cameraInfo.height            = (uint32_t)bsonView["msg"]["height"].get_int32();
-      cameraInfo.width             = (uint32_t)bsonView["msg"]["width"] .get_int32();
-      cameraInfo.distortion_model  =           bsonView["msg"]["distortion_model"].get_utf8().value.to_string();
+      cameraInfo.height            = (uint32_t)  bsonView["msg"]["height"].get_int32();
+      cameraInfo.width             = (uint32_t)  bsonView["msg"]["width"] .get_int32();
+      cameraInfo.distortion_model  = std::string(bsonView["msg"]["distortion_model"].get_string().value);
 
       bsoncxx::array::view dView = bsonView["msg"]["d"].get_array().value;
       cameraInfo.d.resize((size_t)std::distance(dView.cbegin(), dView.cend()));
@@ -277,12 +277,12 @@ void * SIGVerseROSBridge::receivingThread(void *param)
       int32_t sec  = bsonView["msg"]["header"]["stamp"]["sec"]    .get_int32();
       int32_t nsec = bsonView["msg"]["header"]["stamp"]["nanosec"].get_int32(); // get_uint32() is not available; use get_int32() and cast if safe.
       image.header.stamp = rclcpp::Time(static_cast<uint64_t>(sec) * 1000000000ULL + static_cast<uint64_t>(nsec));
-      image.header.frame_id   =           bsonView["msg"]["header"]["frame_id"]      .get_utf8().value.to_string();
-      image.height            = (uint32_t)bsonView["msg"]["height"]      .get_int32();
-      image.width             = (uint32_t)bsonView["msg"]["width"]       .get_int32();
-      image.encoding          =           bsonView["msg"]["encoding"]    .get_utf8().value.to_string();
-      image.is_bigendian      = (uint8_t) bsonView["msg"]["is_bigendian"].get_int32(); //.raw()[0];
-      image.step              = (uint32_t)bsonView["msg"]["step"]        .get_int32();
+      image.header.frame_id   = std::string(bsonView["msg"]["header"]["frame_id"].get_string().value);
+      image.height            = (uint32_t)  bsonView["msg"]["height"]      .get_int32();
+      image.width             = (uint32_t)  bsonView["msg"]["width"]       .get_int32();
+      image.encoding          = std::string(bsonView["msg"]["encoding"]    .get_string().value);
+      image.is_bigendian      = (uint8_t)   bsonView["msg"]["is_bigendian"].get_int32(); //.raw()[0];
+      image.step              = (uint32_t)  bsonView["msg"]["step"]        .get_int32();
 
       size_t sizet = (image.step * image.height);
       image.data.resize(sizet);
@@ -298,7 +298,7 @@ void * SIGVerseROSBridge::receivingThread(void *param)
       int32_t sec  = bsonView["msg"]["header"]["stamp"]["sec"]    .get_int32();
       int32_t nsec = bsonView["msg"]["header"]["stamp"]["nanosec"].get_int32(); // get_uint32() is not available; use get_int32() and cast if safe.
       laserScan.header.stamp = rclcpp::Time(static_cast<uint64_t>(sec) * 1000000000ULL + static_cast<uint64_t>(nsec));
-      laserScan.header.frame_id   =           bsonView["msg"]["header"]["frame_id"]      .get_utf8().value.to_string();
+      laserScan.header.frame_id   = std::string(bsonView["msg"]["header"]["frame_id"].get_string().value);
 
       laserScan.angle_min       = (float)bsonView["msg"]["angle_min"]      .get_double();
       laserScan.angle_max       = (float)bsonView["msg"]["angle_max"]      .get_double();
@@ -360,10 +360,10 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 
       for(auto itr = tfArrayView.cbegin(); itr != tfArrayView.cend(); ++itr)
       {
-        std::string frameId      = (*itr)["header"]["frame_id"].get_utf8().value.to_string();
-        int32_t sec              = (*itr)["header"]["stamp"]["sec"]    .get_int32();
-        int32_t nsec             = (*itr)["header"]["stamp"]["nanosec"].get_int32(); // get_uint32() is not available; use get_int32() and cast if safe.
-        std::string childFrameId = (*itr)["child_frame_id"]    .get_utf8().value.to_string();
+        std::string frameId      = std::string((*itr)["header"]["frame_id"].get_string().value);
+        int32_t sec              =             (*itr)["header"]["stamp"]["sec"]    .get_int32();
+        int32_t nsec             =             (*itr)["header"]["stamp"]["nanosec"].get_int32(); // get_uint32() is not available; use get_int32() and cast if safe.
+        std::string childFrameId = std::string((*itr)["child_frame_id"]    .get_string().value);
 
         geometry_msgs::msg::TransformStamped stampedTransform;
 
