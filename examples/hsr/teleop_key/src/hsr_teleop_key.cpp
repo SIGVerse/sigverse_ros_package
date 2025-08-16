@@ -2,6 +2,7 @@
 #include <cmath>
 #include <signal.h>
 #include <termios.h>
+#include <functional>
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
@@ -133,8 +134,8 @@ SIGVerseHsrTeleopKey::SIGVerseHsrTeleopKey()
   pub_arm_trajectory_     = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/hsrb/arm_trajectory_controller/command", 10);
   pub_gripper_trajectory_ = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/hsrb/gripper_controller/command", 10);
 
-  sub_msg_         = node_->create_subscription<std_msgs::msg::String>       ("/hsrb/message/to_robot", 100, [this](std_msgs::msg::String::SharedPtr msg)       { this->messageCallback(msg); });
-  sub_joint_state_ = node_->create_subscription<sensor_msgs::msg::JointState>("/hsrb/joint_states",     10,  [this](sensor_msgs::msg::JointState::SharedPtr msg){ this->jointStateCallback(msg); });
+  sub_msg_         = node_->create_subscription<std_msgs::msg::String>       ("/hsrb/message/to_robot", 10, std::bind(&SIGVerseHsrTeleopKey::messageCallback,    this, std::placeholders::_1));
+  sub_joint_state_ = node_->create_subscription<sensor_msgs::msg::JointState>("/hsrb/joint_states",     10, std::bind(&SIGVerseHsrTeleopKey::jointStateCallback, this, std::placeholders::_1));
 
 //  pub_suction_goal_       = node_handle_.advertise<tmc_suction::SuctionControlActionGoal>  ("/hsrb/suction_control/goal", 10, false);
 //  sub_suction_result_     = node_handle_.subscribe<tmc_suction::SuctionControlActionResult>("/hsrb/suction_control/result", 10, &SIGVerseHsrTeleopKey::suctionResultCallback, this);
@@ -399,13 +400,13 @@ int SIGVerseHsrTeleopKey::run()
   tcsetattr(kfd, TCSANOW, &raw);
   /////////////////////////////////////////////
 
-  auto logger = node_->get_logger();
-
   showHelp();
 
   // Override the default ros sigint handler.
   // This must be set after the first NodeHandle is created.
   signal(SIGINT, rosSigintHandler);
+
+  auto logger = node_->get_logger();
 
   rclcpp::Rate loop_rate(40);
 

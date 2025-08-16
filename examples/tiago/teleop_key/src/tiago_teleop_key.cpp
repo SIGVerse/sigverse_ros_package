@@ -1,17 +1,18 @@
-#include <stdio.h>
-#include <string>
-#include <algorithm>
+#include <memory>
 #include <cmath>
 #include <signal.h>
 #include <termios.h>
-#include <ros/ros.h>
-#include <std_msgs/String.h>
-#include <geometry_msgs/Twist.h>
-#include <tf/transform_listener.h>
-#include <sensor_msgs/JointState.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <trajectory_msgs/JointTrajectory.h>
-#include <trajectory_msgs/JointTrajectoryPoint.h>
+#include <functional>
+
+#include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/string.hpp"
+#include "std_msgs/msg/bool.hpp"
+#include "geometry_msgs/msg/twist.hpp"
+#include "sensor_msgs/msg/joint_state.hpp"
+#include "geometry_msgs/msg/pose_stamped.hpp"
+#include "geometry_msgs/msg/point_stamped.hpp"
+#include "trajectory_msgs/msg/joint_trajectory.hpp"
+#include "trajectory_msgs/msg/joint_trajectory_point.hpp"
 
 class SIGVerseTiagoTeleopKey
 {
@@ -70,15 +71,14 @@ public:
   static void rosSigintHandler(int sig);
   static int  canReceive(int fd);
 
-  void messageCallback(const std_msgs::String::ConstPtr& message);
-  void jointStateCallback(const sensor_msgs::JointState::ConstPtr& joint_state);
+  void messageCallback(const std_msgs::msg::String::SharedPtr message);
+  void jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr joint_state);
   void sendMessage(const std::string &message);
   void moveBaseTwist(double linear_x, double linear_y, double angular_z);
   void operateTorso(const double torso_lift_pos, const double duration_sec);
   void operateHead(const double head_1_pos, const double head_2_pos, const double duration_sec);
   void operateArm(const std::vector<double> & positions, const double duration_sec);
   void operateArm(const int joint_number, const double arm_pos, const double duration_sec);
-//  double getDurationRot(const double next_pos, const double current_pos);
   void operateHand(bool grasp);
 
   void showHelp();
@@ -90,18 +90,17 @@ private:
   double torso_lift_joint_pos1_;
   double torso_lift_joint_pos2_;
 
-  ros::NodeHandle node_handle_;
+  rclcpp::Node::SharedPtr node_;
 
-  ros::Subscriber sub_msg_;
-  ros::Publisher  pub_msg_;
-  ros::Subscriber sub_joint_state_;
-  ros::Publisher  pub_base_twist_;
-  ros::Publisher  pub_torso_trajectory_;
-  ros::Publisher  pub_head_trajectory_;
-  ros::Publisher  pub_arm_trajectory_;
-  ros::Publisher  pub_gripper_trajectory_;
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr pub_msg_;
+  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr pub_base_twist_;
+  rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr pub_torso_trajectory_;
+  rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr pub_head_trajectory_;
+  rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr pub_arm_trajectory_;
+  rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr pub_gripper_trajectory_;
 
-  tf::TransformListener listener_;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub_msg_;
+  rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr sub_joint_state_;
 };
 
 
@@ -133,19 +132,29 @@ SIGVerseTiagoTeleopKey::SIGVerseTiagoTeleopKey()
   arm_joint_min_map_["arm_5_joint"] = -2.07;
   arm_joint_min_map_["arm_6_joint"] = -1.39;
   arm_joint_min_map_["arm_7_joint"] = -2.07;
+
+  node_ = rclcpp::Node::make_shared("tiago_teleop_key");
+
+  pub_msg_                = node_->create_publisher<std_msgs::msg::String>("/tiago/message/to_human", 10);
+  pub_base_twist_         = node_->create_publisher<geometry_msgs::msg::Twist>("/mobile_base_controller/cmd_vel", 10);
+  pub_torso_trajectory_   = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/torso_controller/command", 10);
+  pub_head_trajectory_    = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/head_controller/command", 10);
+  pub_arm_trajectory_     = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/arm_controller/command", 10);
+  pub_gripper_trajectory_ = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/gripper_controller/command", 10);
+  sub_msg_                = node_->create_subscription<std_msgs::msg::String>("/tiago/message/to_robot", 10, std::bind(&SIGVerseTiagoTeleopKey::messageCallback, this, std::placeholders::_1));
+  sub_joint_state_        = node_->create_subscription<sensor_msgs::msg::JointState>("/joint_states",    10, std::bind(&SIGVerseTiagoTeleopKey::jointStateCallback, this, std::placeholders::_1));
 }
 
 
-void SIGVerseTiagoTeleopKey::rosSigintHandler(int sig)
+void SIGVerseTiagoTeleopKey::rosSigintHandler([[maybe_unused]] int sig)
 {
-  ros::shutdown();
+  rclcpp::shutdown();
 }
 
 
 int SIGVerseTiagoTeleopKey::canReceive( int fd )
 {
   fd_set fdset;
-  int ret;
   struct timeval timeout;
   FD_ZERO( &fdset );
   FD_SET( fd , &fdset );
@@ -156,20 +165,15 @@ int SIGVerseTiagoTeleopKey::canReceive( int fd )
   return select( fd+1 , &fdset , NULL , NULL , &timeout );
 }
 
-void SIGVerseTiagoTeleopKey::messageCallback(const std_msgs::String::ConstPtr& message)
+void SIGVerseTiagoTeleopKey::messageCallback(const std_msgs::msg::String::SharedPtr message)
 {
-  ROS_INFO("Subscribe message: %s", message->data.c_str());
+  RCLCPP_INFO(node_->get_logger(), "Subscribe message: %s", message->data.c_str());
 }
 
-void SIGVerseTiagoTeleopKey::jointStateCallback(const sensor_msgs::JointState::ConstPtr& joint_state)
+void SIGVerseTiagoTeleopKey::jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr joint_state)
 {
-  for(int i=0; i<joint_state->name.size(); i++)
+  for(size_t i=0; i<joint_state->name.size(); i++)
   {
-//    if(joint_state->name[i] == "gripper_left_finger_joint")
-//    {
-//      puts(("gripper_left_finger_joint="+std::to_string(joint_state->position[i])).c_str());
-//    }
-
     if(joint_state->name[i] == "torso_lift_joint")
     {
       torso_lift_joint_pos2_ = torso_lift_joint_pos1_;
@@ -187,55 +191,55 @@ void SIGVerseTiagoTeleopKey::jointStateCallback(const sensor_msgs::JointState::C
 
 void SIGVerseTiagoTeleopKey::sendMessage(const std::string &message)
 {
-  ROS_INFO("Send message:%s", message.c_str());
+  RCLCPP_INFO(node_->get_logger(), "Send message:%s", message.c_str());
 
-  std_msgs::String string_msg;
+  std_msgs::msg::String string_msg;
   string_msg.data = message;
-  pub_msg_.publish(string_msg);
+  pub_msg_->publish(string_msg);
 }
 
 void SIGVerseTiagoTeleopKey::moveBaseTwist(double linear_x, double linear_y, double angular_z)
 {
-  geometry_msgs::Twist twist;
+  geometry_msgs::msg::Twist twist;
 
   twist.linear.x  = linear_x;
   twist.linear.y  = linear_y;
   twist.angular.z = angular_z;
-  pub_base_twist_.publish(twist);
+  pub_base_twist_->publish(twist);
 }
 
 void SIGVerseTiagoTeleopKey::operateTorso(const double torso_lift_pos, const double duration_sec)
 {
-  trajectory_msgs::JointTrajectory joint_trajectory;
+  trajectory_msgs::msg::JointTrajectory joint_trajectory;
   joint_trajectory.joint_names.push_back("torso_lift_joint");
 
-  trajectory_msgs::JointTrajectoryPoint torso_joint_point;
+  trajectory_msgs::msg::JointTrajectoryPoint torso_joint_point;
 
   torso_joint_point.positions = { torso_lift_pos };
 
-  torso_joint_point.time_from_start = ros::Duration(duration_sec);
+  torso_joint_point.time_from_start = rclcpp::Duration::from_seconds(duration_sec);
   joint_trajectory.points.push_back(torso_joint_point);
-  pub_torso_trajectory_.publish(joint_trajectory);
+  pub_torso_trajectory_->publish(joint_trajectory);
 }
 
 void SIGVerseTiagoTeleopKey::operateHead(const double head_1_pos, const double head_2_pos, const double duration_sec)
 {
-  trajectory_msgs::JointTrajectory joint_trajectory;
+  trajectory_msgs::msg::JointTrajectory joint_trajectory;
   joint_trajectory.joint_names.push_back("head_1_joint");
   joint_trajectory.joint_names.push_back("head_2_joint");
 
-  trajectory_msgs::JointTrajectoryPoint head_joint_point;
+  trajectory_msgs::msg::JointTrajectoryPoint head_joint_point;
 
   head_joint_point.positions = { head_1_pos, head_2_pos };
 
-  head_joint_point.time_from_start = ros::Duration(duration_sec);
+  head_joint_point.time_from_start = rclcpp::Duration::from_seconds(duration_sec);
   joint_trajectory.points.push_back(head_joint_point);
-  pub_torso_trajectory_.publish(joint_trajectory);
+  pub_torso_trajectory_->publish(joint_trajectory);
 }
 
 void SIGVerseTiagoTeleopKey::operateArm(const std::vector<double> & positions, const double duration_sec)
 {
-  trajectory_msgs::JointTrajectory joint_trajectory;
+  trajectory_msgs::msg::JointTrajectory joint_trajectory;
   joint_trajectory.joint_names.push_back("arm_1_joint");
   joint_trajectory.joint_names.push_back("arm_2_joint");
   joint_trajectory.joint_names.push_back("arm_3_joint");
@@ -244,13 +248,13 @@ void SIGVerseTiagoTeleopKey::operateArm(const std::vector<double> & positions, c
   joint_trajectory.joint_names.push_back("arm_6_joint");
   joint_trajectory.joint_names.push_back("arm_7_joint");
 
-  trajectory_msgs::JointTrajectoryPoint arm_joint_point;
+  trajectory_msgs::msg::JointTrajectoryPoint arm_joint_point;
 
   arm_joint_point.positions = positions;
 
-  arm_joint_point.time_from_start = ros::Duration(duration_sec);
+  arm_joint_point.time_from_start = rclcpp::Duration::from_seconds(duration_sec);
   joint_trajectory.points.push_back(arm_joint_point);
-  pub_arm_trajectory_.publish(joint_trajectory);
+  pub_arm_trajectory_->publish(joint_trajectory);
 }
 
 void SIGVerseTiagoTeleopKey::operateArm(const int joint_number, const double add_pos, const double duration_sec)
@@ -279,26 +283,26 @@ void SIGVerseTiagoTeleopKey::operateArm(const int joint_number, const double add
 
 void SIGVerseTiagoTeleopKey::operateHand(bool is_hand_open)
 {
-  trajectory_msgs::JointTrajectory joint_trajectory;
+  trajectory_msgs::msg::JointTrajectory joint_trajectory;
   joint_trajectory.joint_names.push_back("gripper_left_finger_joint");
   joint_trajectory.joint_names.push_back("gripper_right_finger_joint");
 
-  trajectory_msgs::JointTrajectoryPoint gripper_joint_point;
+  trajectory_msgs::msg::JointTrajectoryPoint gripper_joint_point;
 
   if(is_hand_open)
   {
-    ROS_DEBUG("Grasp");
+    RCLCPP_DEBUG(node_->get_logger(), "Grasp");
     gripper_joint_point.positions = { 0.0, 0.0 };
   }
   else
   {
-    ROS_DEBUG("Open hand");
+    RCLCPP_DEBUG(node_->get_logger(), "Open hand");
     gripper_joint_point.positions = { 0.04, 0.04 };
   }
 
-  gripper_joint_point.time_from_start = ros::Duration(2);
+  gripper_joint_point.time_from_start = rclcpp::Duration::from_seconds(2);
   joint_trajectory.points.push_back(gripper_joint_point);
-  pub_gripper_trajectory_.publish(joint_trajectory);
+  pub_gripper_trajectory_->publish(joint_trajectory);
 }
 
 
@@ -364,19 +368,12 @@ int SIGVerseTiagoTeleopKey::run()
   showHelp();
 
   // Override the default ros sigint handler.
-  // This must be set after the first NodeHandle is created.
+  // This must be set after the first Node is created.
   signal(SIGINT, rosSigintHandler);
 
-  ros::Rate loop_rate(40);
+  auto logger = node_->get_logger();
 
-  sub_msg_                = node_handle_.subscribe<std_msgs::String>       ("/tiago/message/to_robot", 100, &SIGVerseTiagoTeleopKey::messageCallback, this);
-  pub_msg_                = node_handle_.advertise<std_msgs::String>       ("/tiago/message/to_human", 10);
-  sub_joint_state_        = node_handle_.subscribe<sensor_msgs::JointState>("/joint_states", 10, &SIGVerseTiagoTeleopKey::jointStateCallback, this);
-  pub_base_twist_         = node_handle_.advertise<geometry_msgs::Twist>   ("/mobile_base_controller/cmd_vel", 10);
-  pub_torso_trajectory_   = node_handle_.advertise<trajectory_msgs::JointTrajectory>("/torso_controller/command", 10);
-  pub_head_trajectory_    = node_handle_.advertise<trajectory_msgs::JointTrajectory>("/head_controller/command", 10);
-  pub_arm_trajectory_     = node_handle_.advertise<trajectory_msgs::JointTrajectory>("/arm_controller/command", 10);
-  pub_gripper_trajectory_ = node_handle_.advertise<trajectory_msgs::JointTrajectory>("/gripper_controller/command", 10);
+  rclcpp::Rate loop_rate(40);
 
   const float linear_coef  = 0.2f;
   const float angular_coef = 0.5f;
@@ -388,7 +385,7 @@ int SIGVerseTiagoTeleopKey::run()
   std::string arm_flex_joint_name   = "arm_flex_joint";
   std::string wrist_flex_joint_name = "wrist_flex_joint";
 
-  while (ros::ok())
+  while (rclcpp::ok())
   {
     if(canReceive(kfd))
     {
@@ -415,117 +412,117 @@ int SIGVerseTiagoTeleopKey::run()
         }
         case KEYCODE_UP:
         {
-          ROS_DEBUG("Go Forward");
+          RCLCPP_DEBUG(logger, "Go Forward");
           moveBaseTwist(+linear_coef*move_speed, 0.0, 0.0);
           break;
         }
         case KEYCODE_DOWN:
         {
-          ROS_DEBUG("Go Backward");
+          RCLCPP_DEBUG(logger, "Go Backward");
           moveBaseTwist(-linear_coef*move_speed, 0.0, 0.0);
           break;
         }
         case KEYCODE_RIGHT:
         {
-          ROS_DEBUG("Go Right");
+          RCLCPP_DEBUG(logger, "Go Right");
           moveBaseTwist(0.0, 0.0, -angular_coef*move_speed);
           break;
         }
         case KEYCODE_LEFT:
         {
-          ROS_DEBUG("Go Left");
+          RCLCPP_DEBUG(logger, "Go Left");
           moveBaseTwist(0.0, 0.0, +angular_coef*move_speed);
           break;
         }
         case KEYCODE_SPACE:
         {
-          ROS_DEBUG("Stop");
+          RCLCPP_DEBUG(logger, "Stop");
           moveBaseTwist(0.0, 0.0, 0.0);
           break;
         }
         case KEYCODE_R:
         {
-          ROS_DEBUG("Move Speed Up");
+          RCLCPP_DEBUG(logger, "Move Speed Up");
           move_speed *= 2;
           if(move_speed > 2  ){ move_speed=2; }
           break;
         }
         case KEYCODE_F:
         {
-          ROS_DEBUG("Move Speed Down");
+          RCLCPP_DEBUG(logger, "Move Speed Down");
           move_speed /= 2;
           if(move_speed < 0.125){ move_speed=0.125; }
           break;
         }
         case KEYCODE_Y:
         {
-          ROS_DEBUG("Rotate Arm - Upward");
+          RCLCPP_DEBUG(logger, "Rotate Arm - Upward");
           operateArm({ 1.57, -1.4, -3.14, 2.2, 1.57, 0.0, 0.0 }, 3.0);
           break;
         }
         case KEYCODE_H:
         {
-          ROS_DEBUG("Rotate Arm - Horizontal");
+          RCLCPP_DEBUG(logger, "Rotate Arm - Horizontal");
           operateArm({ 1.57, -1.4, -3.14, 2.0, 1.57, 0.6, 0.0 }, 3.0);
           break;
         }
         case KEYCODE_N:
         {
-          ROS_DEBUG("Rotate Arm - Downward");
+          RCLCPP_DEBUG(logger, "Rotate Arm - Downward");
           operateArm({ 1.57, -1.3, -3.14, 0.7, 1.57, 0.0, 0.0 }, 3.0);
           break;
         }
         case KEYCODE_Q:
         {
-          ROS_DEBUG("Torso Height - Up");
+          RCLCPP_DEBUG(logger, "Torso Height - Up");
           operateTorso(0.35, std::max<int>((int)(std::abs(0.35 - torso_lift_joint_pos1_) / 0.05), 1));
           break;
         }
         case KEYCODE_A:
         {
-          ROS_DEBUG("Torso Height - Stop");
+          RCLCPP_DEBUG(logger, "Torso Height - Stop");
           operateTorso(2.0*torso_lift_joint_pos1_-torso_lift_joint_pos2_, 0.5);
           break;
         }
         case KEYCODE_Z:
         {
-          ROS_DEBUG("Torso Height - Down");
+          RCLCPP_DEBUG(logger, "Torso Height - Down");
           operateTorso(0.0, std::max<int>((int)(std::abs(0.0 - torso_lift_joint_pos1_) / 0.05), 1));
           break;
         }
         case KEYCODE_W:
         {
-          ROS_DEBUG("Turn Head - Left");
+          RCLCPP_DEBUG(logger, "Turn Head - Left");
           operateHead(+1.24, 0.0, 2.0);
           break;
         }
         case KEYCODE_S:
         {
-          ROS_DEBUG("Turn Head - Front");
+          RCLCPP_DEBUG(logger, "Turn Head - Front");
           operateHead(0.0, 0.0, 2.0);
           break;
         }
         case KEYCODE_X:
         {
-          ROS_DEBUG("Turn Head - Right");
+          RCLCPP_DEBUG(logger, "Turn Head - Right");
           operateHead(-1.24, 0.0, 2.0);
           break;
         }
         case KEYCODE_E:
         {
-          ROS_DEBUG("Turn Head - Up");
+          RCLCPP_DEBUG(logger, "Turn Head - Up");
           operateHead(0.0, 0.79, 2.0);
           break;
         }
         case KEYCODE_D:
         {
-          ROS_DEBUG("Turn Head - Front");
+          RCLCPP_DEBUG(logger, "Turn Head - Front");
           operateHead(0.0, 0.0, 2.0);
           break;
         }
         case KEYCODE_C:
         {
-          ROS_DEBUG("Turn Head - Down");
+          RCLCPP_DEBUG(logger, "Turn Head - Down");
           operateHead(0.0, -0.98, 2.0);
           break;
         }
@@ -541,20 +538,20 @@ int SIGVerseTiagoTeleopKey::run()
 
           switch(c)
           {
-            case KEYCODE_U:{ joint_number = 1; ROS_DEBUG("Control Arm1"); showHelpArm("Arm1"); break; }
-            case KEYCODE_J:{ joint_number = 2; ROS_DEBUG("Control Arm2"); showHelpArm("Arm2"); break; }
-            case KEYCODE_M:{ joint_number = 3; ROS_DEBUG("Control Arm3"); showHelpArm("Arm3"); break; }
-            case KEYCODE_I:{ joint_number = 4; ROS_DEBUG("Control Arm4"); showHelpArm("Arm4"); break; }
-            case KEYCODE_K:{ joint_number = 5; ROS_DEBUG("Control Arm5"); showHelpArm("Arm5"); break; }
-            case KEYCODE_O:{ joint_number = 6; ROS_DEBUG("Control Arm6"); showHelpArm("Arm6"); break; }
-            case KEYCODE_L:{ joint_number = 7; ROS_DEBUG("Control Arm7"); showHelpArm("Arm7"); break; }
+            case KEYCODE_U:{ joint_number = 1; RCLCPP_DEBUG(logger, "Control Arm1"); showHelpArm("Arm1"); break; }
+            case KEYCODE_J:{ joint_number = 2; RCLCPP_DEBUG(logger, "Control Arm2"); showHelpArm("Arm2"); break; }
+            case KEYCODE_M:{ joint_number = 3; RCLCPP_DEBUG(logger, "Control Arm3"); showHelpArm("Arm3"); break; }
+            case KEYCODE_I:{ joint_number = 4; RCLCPP_DEBUG(logger, "Control Arm4"); showHelpArm("Arm4"); break; }
+            case KEYCODE_K:{ joint_number = 5; RCLCPP_DEBUG(logger, "Control Arm5"); showHelpArm("Arm5"); break; }
+            case KEYCODE_O:{ joint_number = 6; RCLCPP_DEBUG(logger, "Control Arm6"); showHelpArm("Arm6"); break; }
+            case KEYCODE_L:{ joint_number = 7; RCLCPP_DEBUG(logger, "Control Arm7"); showHelpArm("Arm7"); break; }
           }
 
           bool is_in_control = true;
 
           while(is_in_control)
           {
-            ros::spinOnce();
+            rclcpp::spin_some(node_);
             loop_rate.sleep();
 
             if(!canReceive(kfd)){ continue; }
@@ -567,9 +564,9 @@ int SIGVerseTiagoTeleopKey::run()
 
             switch(c)
             {
-              case KEYCODE_U:{ ROS_DEBUG("Arm  +  "); operateArm(joint_number, +1.0, 2.0); break; }
-              case KEYCODE_J:{ ROS_DEBUG("Arm Stop"); operateArm(joint_number,  0.0, 2.0); break; }
-              case KEYCODE_M:{ ROS_DEBUG("Arm  -  "); operateArm(joint_number, -1.0, 2.0); break; }
+              case KEYCODE_U:{ RCLCPP_DEBUG(logger, "Arm  +  "); operateArm(joint_number, +1.0, 2.0); break; }
+              case KEYCODE_J:{ RCLCPP_DEBUG(logger, "Arm Stop"); operateArm(joint_number,  0.0, 2.0); break; }
+              case KEYCODE_M:{ RCLCPP_DEBUG(logger, "Arm  -  "); operateArm(joint_number, -1.0, 2.0); break; }
               case KEYCODE_Q:
               {
                 is_in_control = false;
@@ -590,7 +587,7 @@ int SIGVerseTiagoTeleopKey::run()
       }
     }
 
-    ros::spinOnce();
+    rclcpp::spin_some(node_);
 
     loop_rate.sleep();
   }
@@ -600,13 +597,14 @@ int SIGVerseTiagoTeleopKey::run()
   tcsetattr(kfd, TCSANOW, &cooked);
   /////////////////////////////////////////////
 
+  rclcpp::shutdown();
   return EXIT_SUCCESS;
 }
 
 
-int main(int argc, char** argv)
+int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {
-  ros::init(argc, argv, "tiago_teleop_key");
+  rclcpp::init(argc, argv);
   SIGVerseTiagoTeleopKey tiago_teleop_key;
   return tiago_teleop_key.run();
 }
