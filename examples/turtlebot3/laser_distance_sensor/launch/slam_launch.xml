@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+	<arg name="sigverse_ros_bridge_port"        default="50001" />
+	<arg name="ros_bridge_port" default="9090"/>
+
+	<!-- Teleop node -->
+	<node pkg="sigverse_turtlebot3_laser_distance_sensor" exec="teleop_key" output="screen" launch-prefix="gnome-terminal -t 'TurtleBot3 teleop key' -- ">
+		<!-- 
+		<remap from="/tb3/cmd_vel" to="/tb3/cmd_vel"/> 
+		-->
+	</node>
+
+	<!-- slam_toolbox -->
+	<node pkg="slam_toolbox" exec="sync_slam_toolbox_node" name="sigverse_turtlebot3_slam" output="screen">
+		<param name="base_frame"  value="base_footprint"/>
+		<param name="odom_frame"  value="odom"/>
+		<param name="map_update_interval"     value="1.0"/>
+		<param name="minimum_travel_distance" value="0.2"/>
+	</node>
+
+	<node pkg="sigverse_ros_bridge" exec="sigverse_ros_bridge" args="$(var sigverse_ros_bridge_port)"/>
+
+	<include file="$(find-pkg-share rosbridge_server)/launch/rosbridge_websocket_launch.xml" > 
+		<arg name="port" value="$(var ros_bridge_port)"/>
+		<arg name="default_call_service_timeout" value="5.0"/>
+		<arg name="call_services_in_new_thread" value="true"/>
+		<arg name="send_action_goals_in_new_thread" value="true"/>
+		<!-- <arg name="bson_only_mode" value="true"/> -->
+	</include>
+	
+	<node pkg="rviz2" exec="rviz2" args="-d $(find-pkg-share sigverse_turtlebot3_laser_distance_sensor)/launch/slam.rviz"/>
+</launch>
+
