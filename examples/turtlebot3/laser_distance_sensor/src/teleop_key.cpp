@@ -192,8 +192,10 @@ void SIGVerseTb3LaserDistanceSensorTeleopKey::keyLoop(int argc, char** argv)
     loop_rate.sleep();
   }
 
+  /////////////////////////////////////////////
   // cooked mode
   tcsetattr(kfd, TCSANOW, &cooked);
+  /////////////////////////////////////////////
 }
 
 int main(int argc, char** argv)
