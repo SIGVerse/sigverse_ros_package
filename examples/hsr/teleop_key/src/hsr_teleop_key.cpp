@@ -624,7 +624,7 @@ int SIGVerseHsrTeleopKey::run()
 }
 
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
+int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
 
