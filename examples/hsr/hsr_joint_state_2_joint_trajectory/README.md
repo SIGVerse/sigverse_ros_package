@@ -7,6 +7,7 @@ This package is to manipulate HSR via joint_state_publisher.
 - **xacro**
 - **joint_state_publisher_gui**
 - **hsrb_description**
+- **hsrb_meshes**
 
 For reference
 ```bash
