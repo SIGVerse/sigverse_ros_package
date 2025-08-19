@@ -2,14 +2,15 @@
 #include <csignal>
 #include <unistd.h>
 #include <termios.h>
+#include <functional>
 #include <mutex>
-#include <ros/ros.h>
-#include <geometry_msgs/Twist.h>
-#include <sensor_msgs/JointState.h>
-#include <trajectory_msgs/JointTrajectory.h>
-#include <trajectory_msgs/JointTrajectoryPoint.h>
+#include "rclcpp/rclcpp.hpp"
+#include "geometry_msgs/msg/twist.hpp"
+#include "sensor_msgs/msg/joint_state.hpp"
+#include "trajectory_msgs/msg/joint_trajectory.hpp"
+#include "trajectory_msgs/msg/joint_trajectory_point.hpp"
 
-class SIGVerseTb3OpenManipulatorGraspingTeleopKey
+class SIGVerseTb3OpenManipulatorTeleopKey
 {
 private:
   static const char KEY_1 = 0x31;
@@ -56,7 +57,7 @@ private:
   const double GRIP_MAX = +0.035;
 
 public:
-  SIGVerseTb3OpenManipulatorGraspingTeleopKey();
+  SIGVerseTb3OpenManipulatorTeleopKey();
 
   void keyLoop(int argc, char** argv);
 
@@ -65,42 +66,40 @@ private:
   static void rosSigintHandler(int sig);
   static int  canReceiveKey( const int fd );
 
-  void jointStateCallback(const sensor_msgs::JointState::ConstPtr& joint_state);
-  void moveBase(ros::Publisher &publisher, const double linear_x, const double angular_z);
-  void moveArm(ros::Publisher &publisher, const std::string &name, const double position, const double current_pos);
-  void moveHand(ros::Publisher &publisher, const double position, const double current_pos);
-  void stopJoints(ros::Publisher &publisher, const int duration_sec);
+  void jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr joint_state);
+  void moveBase(rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr publisher, const double linear_x, const double angular_z);
+  void moveArm(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const std::string &name, const double position, const double current_pos);
+  void moveHand(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const double position, const double current_pos);
+  void stopJoints(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const int duration_sec);
 
   static int calcTrajectoryDuration(const double val, const double current_val);
 
   void showHelp();
 
-  // Current positions that is updated by JointState
+  rclcpp::Node::SharedPtr node_;
+
+  // Current positions updated by JointState
   double joint1_pos1_, joint2_pos1_, joint3_pos1_, joint4_pos1_, grip_joint_pos1_;
   double joint1_pos2_, joint2_pos2_, joint3_pos2_, joint4_pos2_;
-//  clock_t joint_state_time1_, joint_state_time2_;
 };
 
 
-SIGVerseTb3OpenManipulatorGraspingTeleopKey::SIGVerseTb3OpenManipulatorGraspingTeleopKey()
+SIGVerseTb3OpenManipulatorTeleopKey::SIGVerseTb3OpenManipulatorTeleopKey()
 {
   joint1_pos1_ = 0.0; joint2_pos1_ = 0.0; joint3_pos1_ = 0.0; joint4_pos1_ = 0.0; grip_joint_pos1_ = 0.0;
   joint1_pos2_ = 0.0; joint2_pos2_ = 0.0; joint3_pos2_ = 0.0; joint4_pos2_ = 0.0;
-//  joint_state_time2_ = clock();
-//  joint_state_time1_ = clock();
 }
 
 
-void SIGVerseTb3OpenManipulatorGraspingTeleopKey::rosSigintHandler(int sig)
+void SIGVerseTb3OpenManipulatorTeleopKey::rosSigintHandler([[maybe_unused]] int sig)
 {
-  ros::shutdown();
+  rclcpp::shutdown();
 }
 
 
-int SIGVerseTb3OpenManipulatorGraspingTeleopKey::canReceiveKey( const int fd )
+int SIGVerseTb3OpenManipulatorTeleopKey::canReceiveKey( const int fd )
 {
   fd_set fdset;
-  int ret;
   struct timeval timeout;
   FD_ZERO( &fdset );
   FD_SET( fd , &fdset );
@@ -111,14 +110,9 @@ int SIGVerseTb3OpenManipulatorGraspingTeleopKey::canReceiveKey( const int fd )
   return select( fd+1 , &fdset , NULL , NULL , &timeout );
 }
 
-void SIGVerseTb3OpenManipulatorGraspingTeleopKey::jointStateCallback(const sensor_msgs::JointState::ConstPtr& joint_state)
+void SIGVerseTb3OpenManipulatorTeleopKey::jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr joint_state)
 {
-//  ROS_INFO("jointStateCallback size=%d", (int)joint_state->name.size());
-
-//  joint_state_time2_ = joint_state_time1_;
-//  joint_state_time1_ = clock();
-
-  for(int i=0; i<joint_state->name.size(); i++)
+  for(size_t i=0; i<joint_state->name.size(); i++)
   {
     if(joint_state->name[i]==JOINT1_NAME)
     {
@@ -147,9 +141,9 @@ void SIGVerseTb3OpenManipulatorGraspingTeleopKey::jointStateCallback(const senso
   }
 }
 
-void SIGVerseTb3OpenManipulatorGraspingTeleopKey::moveBase(ros::Publisher &publisher, const double linear_x, const double angular_z)
+void SIGVerseTb3OpenManipulatorTeleopKey::moveBase(rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr publisher, const double linear_x, const double angular_z)
 {
-  geometry_msgs::Twist twist;
+  geometry_msgs::msg::Twist twist;
 
   twist.linear.x  = linear_x;
   twist.linear.y  = 0.0;
@@ -158,11 +152,11 @@ void SIGVerseTb3OpenManipulatorGraspingTeleopKey::moveBase(ros::Publisher &publi
   twist.angular.y = 0.0;
   twist.angular.z = angular_z;
 
-  publisher.publish(twist);
+  publisher->publish(twist);
 }
 
 
-void SIGVerseTb3OpenManipulatorGraspingTeleopKey::moveArm(ros::Publisher &publisher, const std::string &name, const double position, const double current_pos)
+void SIGVerseTb3OpenManipulatorTeleopKey::moveArm(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const std::string &name, const double position, const double current_pos)
 {
   std::vector<std::string> names;
   names.push_back(name);
@@ -170,12 +164,15 @@ void SIGVerseTb3OpenManipulatorGraspingTeleopKey::moveArm(ros::Publisher &publis
   std::vector<double> positions;
   positions.push_back(position);
 
-  ros::Duration duration;
-  duration.sec = calcTrajectoryDuration(position, current_pos);
+  double duration_sec = calcTrajectoryDuration(position, current_pos);
 
-  trajectory_msgs::JointTrajectory joint_trajectory;
+  builtin_interfaces::msg::Duration duration;
+  duration.sec  = static_cast<int32_t>(duration_sec);
+  duration.nanosec = static_cast<uint32_t>((duration_sec - duration.sec) * 1e9);
 
-  trajectory_msgs::JointTrajectoryPoint arm_joint_point;
+  trajectory_msgs::msg::JointTrajectory joint_trajectory;
+
+  trajectory_msgs::msg::JointTrajectoryPoint arm_joint_point;
 
   joint_trajectory.points.push_back(arm_joint_point);
 
@@ -183,10 +180,10 @@ void SIGVerseTb3OpenManipulatorGraspingTeleopKey::moveArm(ros::Publisher &publis
   joint_trajectory.points[0].positions = positions;
   joint_trajectory.points[0].time_from_start = duration;
 
-  publisher.publish(joint_trajectory);
+  publisher->publish(joint_trajectory);
 }
 
-void SIGVerseTb3OpenManipulatorGraspingTeleopKey::moveHand(ros::Publisher &publisher, const double position, const double current_pos)
+void SIGVerseTb3OpenManipulatorTeleopKey::moveHand(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const double position, const double current_pos)
 {
   std::vector<std::string> joint_names {GRIP_JOINT_NAME, GRIP_JOINT_SUB_NAME};
 
@@ -195,46 +192,41 @@ void SIGVerseTb3OpenManipulatorGraspingTeleopKey::moveHand(ros::Publisher &publi
   positions.push_back(position); // for grip_joint
   positions.push_back(position); // for grip_joint_sub
 
-  ros::Duration duration;
-  duration.sec = calcTrajectoryDuration(position, current_pos);
+  double duration_sec = calcTrajectoryDuration(position, current_pos);
 
-  trajectory_msgs::JointTrajectoryPoint point;
+  builtin_interfaces::msg::Duration duration;
+  duration.sec  = static_cast<int32_t>(duration_sec);
+  duration.nanosec = static_cast<uint32_t>((duration_sec - duration.sec) * 1e9);
+
+  trajectory_msgs::msg::JointTrajectoryPoint point;
   point.positions = positions;
   point.time_from_start = duration;
 
-  trajectory_msgs::JointTrajectory joint_trajectory;
+  trajectory_msgs::msg::JointTrajectory joint_trajectory;
   joint_trajectory.joint_names = joint_names;
   joint_trajectory.points.push_back(point);
 
-  publisher.publish(joint_trajectory);
+  publisher->publish(joint_trajectory);
 }
 
 
-void SIGVerseTb3OpenManipulatorGraspingTeleopKey::stopJoints(ros::Publisher &publisher, const int duration_sec)
+void SIGVerseTb3OpenManipulatorTeleopKey::stopJoints(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const int duration_sec)
 {
-//  std::vector<std::string> names {JOINT1_NAME, JOINT2_NAME, JOINT3_NAME, JOINT4_NAME, GRIP_JOINT_NAME, GRIP_JOINT_SUB_NAME};
   std::vector<std::string> names {JOINT1_NAME, JOINT2_NAME, JOINT3_NAME, JOINT4_NAME};
 
-//  double coef = (double)(clock()-joint_state_time2_)/(joint_state_time1_-joint_state_time2_);
-
   std::vector<double> positions;
-//  positions.push_back(coef*(joint1_pos1_-joint1_pos2_)+joint1_pos2_);
-//  positions.push_back(coef*(joint2_pos1_-joint2_pos2_)+joint2_pos2_);
-//  positions.push_back(coef*(joint3_pos1_-joint3_pos2_)+joint3_pos2_);
-//  positions.push_back(coef*(joint4_pos1_-joint4_pos2_)+joint4_pos2_);
   positions.push_back(2.0*joint1_pos1_-joint1_pos2_);
   positions.push_back(2.0*joint2_pos1_-joint2_pos2_);
   positions.push_back(2.0*joint3_pos1_-joint3_pos2_);
   positions.push_back(2.0*joint4_pos1_-joint4_pos2_);
-//  positions.push_back(grip_joint_pos_);
-//  positions.push_back(grip_joint_pos_); // grip_joint_sub is same as grip_joint
 
-  ros::Duration duration;
+  builtin_interfaces::msg::Duration duration;
   duration.sec = duration_sec;
+  duration.nanosec = 0;
 
-  trajectory_msgs::JointTrajectory joint_trajectory;
+  trajectory_msgs::msg::JointTrajectory joint_trajectory;
 
-  trajectory_msgs::JointTrajectoryPoint arm_joint_point;
+  trajectory_msgs::msg::JointTrajectoryPoint arm_joint_point;
 
   joint_trajectory.points.push_back(arm_joint_point);
 
@@ -242,17 +234,17 @@ void SIGVerseTb3OpenManipulatorGraspingTeleopKey::stopJoints(ros::Publisher &pub
   joint_trajectory.points[0].positions = positions;
   joint_trajectory.points[0].time_from_start = duration;
 
-  publisher.publish(joint_trajectory);
+  publisher->publish(joint_trajectory);
 }
 
 
-int SIGVerseTb3OpenManipulatorGraspingTeleopKey::calcTrajectoryDuration(const double val, const double current_val)
+int SIGVerseTb3OpenManipulatorTeleopKey::calcTrajectoryDuration(const double val, const double current_val)
 {
   return std::max<int>((int)(std::abs(val - current_val) / 0.5), 1);
 }
 
 
-void SIGVerseTb3OpenManipulatorGraspingTeleopKey::showHelp()
+void SIGVerseTb3OpenManipulatorTeleopKey::showHelp()
 {
   puts("\n");
   puts("---------------------------");
@@ -271,14 +263,10 @@ void SIGVerseTb3OpenManipulatorGraspingTeleopKey::showHelp()
   puts("j: Rotate Arm - Horizontal");
   puts("m: Rotate Arm - Downward");
   puts("---------------------------");
-  puts("1: Joint1 Right");
-  puts("2: Joint1 Left");
-  puts("3: Joint2 Up");
-  puts("4: Joint2 Down");
-  puts("5: Joint3 Up");
-  puts("6: Joint3 Down");
-  puts("7: Joint4 Up");
-  puts("8: Joint4 Down");
+  puts("1/2: Joint1 Right/Left");
+  puts("3/4: Joint2 Up/Down");
+  puts("5/6: Joint3 Up/Down");
+  puts("7/8: Joint4 Up/Down");
   puts("---------------------------");
   puts("o: Hand Open");
   puts("c: Hand Close");
@@ -287,7 +275,7 @@ void SIGVerseTb3OpenManipulatorGraspingTeleopKey::showHelp()
 }
 
 
-void SIGVerseTb3OpenManipulatorGraspingTeleopKey::keyLoop(int argc, char** argv)
+void SIGVerseTb3OpenManipulatorTeleopKey::keyLoop(int argc, char** argv)
 {
   char c;
   int  ret;
@@ -307,25 +295,27 @@ void SIGVerseTb3OpenManipulatorGraspingTeleopKey::keyLoop(int argc, char** argv)
   tcsetattr(kfd, TCSANOW, &raw);
   /////////////////////////////////////////////
 
-  ros::init(argc, argv, "tb3_omc_teleop_key", ros::init_options::NoSigintHandler);
+  rclcpp::init(argc, argv);
 
-  ros::NodeHandle node_handle;
+  node_ = rclcpp::Node::make_shared("tb3_omc_teleop_key");
+
+  auto logger = node_->get_logger();
 
   // Override the default ros sigint handler.
   // This must be set after the first NodeHandle is created.
   signal(SIGINT, rosSigintHandler);
 
-  ros::Rate loop_rate(10);
+  rclcpp::Rate loop_rate(10);
 
-  ros::Subscriber sub_joint_state = node_handle.subscribe<sensor_msgs::JointState>       ("/tb3omc/joint_state", 10, &SIGVerseTb3OpenManipulatorGraspingTeleopKey::jointStateCallback, this);
-  ros::Publisher pub_base_twist = node_handle.advertise<geometry_msgs::Twist>            ("/tb3omc/cmd_vel", 10);
-  ros::Publisher pub_joint_traj = node_handle.advertise<trajectory_msgs::JointTrajectory>("/tb3omc/joint_trajectory", 10);
+  auto sub_joint_state = node_->create_subscription<sensor_msgs::msg::JointState>("/tb3omc/joint_state", 10, std::bind(&SIGVerseTb3OpenManipulatorTeleopKey::jointStateCallback, this, std::placeholders::_1));
+  auto pub_base_twist  = node_->create_publisher<geometry_msgs::msg::Twist>("/tb3omc/cmd_vel", 10);
+  auto pub_joint_traj  = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/tb3omc/joint_trajectory", 10);
 
   sleep(2);
 
   showHelp();
 
-  while (ros::ok())
+  while (rclcpp::ok())
   {
     if(canReceiveKey(kfd))
     {
@@ -342,7 +332,7 @@ void SIGVerseTb3OpenManipulatorGraspingTeleopKey::keyLoop(int argc, char** argv)
       {
         case KEYCODE_SPACE:
         {
-          ROS_DEBUG("Stop");
+          RCLCPP_DEBUG(logger, "Stop");
           moveBase(pub_base_twist, 0.0, 0.0);
           stopJoints(pub_joint_traj, 1.0);
           break;
@@ -350,34 +340,34 @@ void SIGVerseTb3OpenManipulatorGraspingTeleopKey::keyLoop(int argc, char** argv)
         case KEY_W:
         case KEYCODE_UP:
         {
-          ROS_DEBUG("Go Forward");
+          RCLCPP_DEBUG(logger, "Go Forward");
           moveBase(pub_base_twist, +LINEAR_VEL, 0.0);
           break;
         }
         case KEY_S:
         case KEYCODE_DOWN:
         {
-          ROS_DEBUG("Go Back");
+          RCLCPP_DEBUG(logger, "Go Back");
           moveBase(pub_base_twist, -LINEAR_VEL, 0.0);
           break;
         }
         case KEY_D:
         case KEYCODE_RIGHT:
         {
-          ROS_DEBUG("Turn Right");
+          RCLCPP_DEBUG(logger, "Turn Right");
           moveBase(pub_base_twist, 0.0, -ANGULAR_VEL);
           break;
         }
         case KEY_A:
         case KEYCODE_LEFT:
         {
-          ROS_DEBUG("Turn Left");
+          RCLCPP_DEBUG(logger, "Turn Left");
           moveBase(pub_base_twist, 0.0, +ANGULAR_VEL);
           break;
         }
         case KEY_U:
         {
-          ROS_DEBUG("Rotate Arm - Upward");
+          RCLCPP_DEBUG(logger, "Rotate Arm - Upward");
           moveArm(pub_joint_traj, JOINT2_NAME, 0.0, joint2_pos1_);
           moveArm(pub_joint_traj, JOINT3_NAME, 0.0, joint3_pos1_);
           moveArm(pub_joint_traj, JOINT4_NAME, 0.0, joint4_pos1_);
@@ -385,7 +375,7 @@ void SIGVerseTb3OpenManipulatorGraspingTeleopKey::keyLoop(int argc, char** argv)
         }
         case KEY_J:
         {
-          ROS_DEBUG("Rotate Arm - Horizontal");
+          RCLCPP_DEBUG(logger, "Rotate Arm - Horizontal");
           moveArm(pub_joint_traj, JOINT2_NAME, +1.57, joint2_pos1_);
           moveArm(pub_joint_traj, JOINT3_NAME, -1.57, joint3_pos1_);
           moveArm(pub_joint_traj, JOINT4_NAME, +0.26, joint4_pos1_);
@@ -393,7 +383,7 @@ void SIGVerseTb3OpenManipulatorGraspingTeleopKey::keyLoop(int argc, char** argv)
         }
         case KEY_M:
         {
-          ROS_DEBUG("Rotate Arm - Downward");
+          RCLCPP_DEBUG(logger, "Rotate Arm - Downward");
           moveArm(pub_joint_traj, JOINT2_NAME, +1.75, joint2_pos1_);
           moveArm(pub_joint_traj, JOINT3_NAME, -1.57, joint3_pos1_);
           moveArm(pub_joint_traj, JOINT4_NAME, +0.26, joint4_pos1_);
@@ -401,74 +391,74 @@ void SIGVerseTb3OpenManipulatorGraspingTeleopKey::keyLoop(int argc, char** argv)
         }
         case KEY_1:
         {
-          ROS_DEBUG("Joint1 Right");
+          RCLCPP_DEBUG(logger, "Joint1 Right");
           moveArm(pub_joint_traj, JOINT1_NAME, JOINT_MIN, joint1_pos1_);
           break;
         }
         case KEY_2:
         {
-          ROS_DEBUG("Joint1 Left");
+          RCLCPP_DEBUG(logger, "Joint1 Left");
           moveArm(pub_joint_traj, JOINT1_NAME, JOINT_MAX, joint1_pos1_);
           break;
         }
         case KEY_3:
         {
-          ROS_DEBUG("Joint2 Up");
+          RCLCPP_DEBUG(logger, "Joint2 Up");
           moveArm(pub_joint_traj, JOINT2_NAME, JOINT_MIN, joint2_pos1_);
           break;
         }
         case KEY_4:
         {
-          ROS_DEBUG("Joint2 Down");
+          RCLCPP_DEBUG(logger, "Joint2 Down");
           moveArm(pub_joint_traj, JOINT2_NAME, JOINT_MAX, joint2_pos1_);
           break;
         }
         case KEY_5:
         {
-          ROS_DEBUG("Joint3 Up");
+          RCLCPP_DEBUG(logger, "Joint3 Up");
           moveArm(pub_joint_traj, JOINT3_NAME, JOINT_MIN, joint3_pos1_);
           break;
         }
         case KEY_6:
         {
-          ROS_DEBUG("Joint3 Down");
+          RCLCPP_DEBUG(logger, "Joint3 Down");
           moveArm(pub_joint_traj, JOINT3_NAME, JOINT_MAX, joint3_pos1_);
           break;
         }
         case KEY_7:
         {
-          ROS_DEBUG("Joint4 Up");
+          RCLCPP_DEBUG(logger, "Joint4 Up");
           moveArm(pub_joint_traj, JOINT4_NAME, JOINT_MIN, joint4_pos1_);
           break;
         }
         case KEY_8:
         {
-          ROS_DEBUG("Joint4 Down");
+          RCLCPP_DEBUG(logger, "Joint4 Down");
           moveArm(pub_joint_traj, JOINT4_NAME, JOINT_MAX, joint4_pos1_);
           break;
         }
         case KEY_O:
         {
-          ROS_DEBUG("Hand Open");
+          RCLCPP_DEBUG(logger, "Hand Open");
           moveHand(pub_joint_traj, GRIP_MIN, grip_joint_pos1_);
           break;
         }
         case KEY_C:
         {
-          ROS_DEBUG("Hand Close");
+          RCLCPP_DEBUG(logger, "Hand Close");
           moveHand(pub_joint_traj, GRIP_MAX, grip_joint_pos1_);
           break;
         }
         case KEY_H:
         {
-          ROS_DEBUG("Show Help");
+          RCLCPP_DEBUG(logger, "Show Help");
           showHelp();
           break;
         }
       }
     }
 
-    ros::spinOnce();
+    rclcpp::spin_some(node_);
 
     loop_rate.sleep();
   }
@@ -484,9 +474,9 @@ void SIGVerseTb3OpenManipulatorGraspingTeleopKey::keyLoop(int argc, char** argv)
 
 int main(int argc, char** argv)
 {
-  SIGVerseTb3OpenManipulatorGraspingTeleopKey grasping_teleop_key;
+  SIGVerseTb3OpenManipulatorTeleopKey teleop_key;
 
-  grasping_teleop_key.keyLoop(argc, argv);
+  teleop_key.keyLoop(argc, argv);
 
   return(EXIT_SUCCESS);
 }

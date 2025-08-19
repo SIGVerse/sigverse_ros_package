@@ -8,12 +8,9 @@
   
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <build_depend>rclcpp</build_depend>
-  <build_depend>geometry_msgs</build_depend>
+  <depend>rclcpp</depend>
+  <depend>geometry_msgs</depend>
 
-  <exec_depend>rclcpp</exec_depend>
-  <exec_depend>geometry_msgs</exec_depend>
-  <exec_depend>rosbridge_server</exec_depend>
   <exec_depend>slam_toolbox</exec_depend>
   <exec_depend>rviz2</exec_depend>
   <exec_depend>rosbridge_server</exec_depend>
