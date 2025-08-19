@@ -3,10 +3,12 @@
 #include <csignal>
 #include <unistd.h>
 #include <termios.h>
-#include <ros/ros.h>
-#include <std_msgs/String.h>
-#include <sensor_msgs/Image.h>
-#include <trajectory_msgs/JointTrajectory.h>
+#include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/string.hpp"
+#include "sensor_msgs/msg/image.hpp"
+#include "trajectory_msgs/msg/joint_trajectory.hpp"
+#include "trajectory_msgs/msg/joint_trajectory_point.hpp"
+#include "builtin_interfaces/msg/duration.hpp"
 
 class SIGVerseTb3RecognizePointedDirection
 {
@@ -22,20 +24,22 @@ public:
 
 private:
 
-  static void rosSigintHandler(int sig);
+  static void rosSigintHandler([[maybe_unused]] int sig);
 
-  void instructionCallback(const std_msgs::String::ConstPtr& instruction_message);
-  void depthImageCallback (const sensor_msgs::Image::ConstPtr& image);
+  void instructionCallback(const std_msgs::msg::String::SharedPtr instruction_message);
+  void depthImageCallback (const sensor_msgs::msg::Image::SharedPtr image);
 
   void rotateArm();
   float calcSlope(const std::vector<float> &x, const std::vector<float> &y);
-  void moveArm(ros::Publisher &publisher, const std::string &name, const double position);
+  void moveArm(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const std::string &name, const double position);
 
-  ros::Publisher pub_joint_traj_;
+  rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr pub_joint_traj_;
 
   uint32_t depth_width_, depth_height_;
   uint8_t is_bigendian_;
   std::vector<uint8_t> depth_data_;
+
+  rclcpp::Node::SharedPtr node_;
 };
 
 
@@ -47,13 +51,13 @@ SIGVerseTb3RecognizePointedDirection::SIGVerseTb3RecognizePointedDirection()
 }
 
 
-void SIGVerseTb3RecognizePointedDirection::rosSigintHandler(int sig)
+void SIGVerseTb3RecognizePointedDirection::rosSigintHandler([[maybe_unused]] int sig)
 {
-  ros::shutdown();
+  rclcpp::shutdown();
 }
 
 
-void SIGVerseTb3RecognizePointedDirection::instructionCallback(const std_msgs::String::ConstPtr& instruction_message)
+void SIGVerseTb3RecognizePointedDirection::instructionCallback(const std_msgs::msg::String::SharedPtr instruction_message)
 {
   if(instruction_message->data==INSTRUCTION_MESSAGE)
   {
@@ -62,13 +66,11 @@ void SIGVerseTb3RecognizePointedDirection::instructionCallback(const std_msgs::S
 }
 
 
-void SIGVerseTb3RecognizePointedDirection::depthImageCallback(const sensor_msgs::Image::ConstPtr& image)
+void SIGVerseTb3RecognizePointedDirection::depthImageCallback(const sensor_msgs::msg::Image::SharedPtr image)
 {
   depth_width_  = image->width;
   depth_height_ = image->height;
   is_bigendian_ = image->is_bigendian;
-
-//  puts(("is_bigendian_=" + std::to_string(image->is_bigendian)).c_str());
 
   uint32_t data_size = image->step * image->height;
 
@@ -104,22 +106,12 @@ void SIGVerseTb3RecognizePointedDirection::rotateArm()
     }
   }
   
-//  puts(("data[504000]=" + std::to_string(depth_data_[504000])).c_str());
-//  puts(("data[504001]=" + std::to_string(depth_data_[504001])).c_str());
-//  puts(("data[504002]=" + std::to_string(depth_data_[504002])).c_str());
-//  puts(("data[504003]=" + std::to_string(depth_data_[504003])).c_str());
-//  
-//  uint32_t center = ((uint32_t)depth_data_[504000]) | ((uint32_t)depth_data_[504001]<<8) | ((uint32_t)depth_data_[504002]<<16) | ((uint32_t)depth_data_[504003]<<24);
-//  float depth;
-//  memcpy(&depth, &center, 4);
-//  puts(("depth=" + std::to_string(depth)).c_str());
-
   // Intermediate calculation for the calculation of the arm slope of avatar
   float depth_total[depth_width_];
   float row_position[depth_width_];
 
   int height_max = depth_height_ * 0.4; // Exclude the lower side.
-  float depth_max = 0.75; // 0.75[m]
+  float depth_max = 0.75; // [m]
 
   for(int j=0; j<depth_width_; j++)
   {
@@ -164,8 +156,6 @@ void SIGVerseTb3RecognizePointedDirection::rotateArm()
 
   float slope = calcSlope(x_list, y_list);
 
-//  puts(("slope=" + std::to_string(slope)).c_str());
-
   // Rotate the arm
   if(slope < 0.0f)
   {
@@ -199,7 +189,7 @@ float SIGVerseTb3RecognizePointedDirection::calcSlope(const std::vector<float> &
 }
 
 
-void SIGVerseTb3RecognizePointedDirection::moveArm(ros::Publisher &publisher, const std::string &name, const double position)
+void SIGVerseTb3RecognizePointedDirection::moveArm(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const std::string &name, const double position)
 {
   std::vector<std::string> names;
   names.push_back(name);
@@ -207,12 +197,13 @@ void SIGVerseTb3RecognizePointedDirection::moveArm(ros::Publisher &publisher, co
   std::vector<double> positions;
   positions.push_back(position);
 
-  ros::Duration duration;
+  builtin_interfaces::msg::Duration duration;
   duration.sec = 2;
+  duration.nanosec = 0;
 
-  trajectory_msgs::JointTrajectory joint_trajectory;
+  trajectory_msgs::msg::JointTrajectory joint_trajectory;
 
-  trajectory_msgs::JointTrajectoryPoint arm_joint_point;
+  trajectory_msgs::msg::JointTrajectoryPoint arm_joint_point;
 
   joint_trajectory.points.push_back(arm_joint_point);
 
@@ -220,30 +211,30 @@ void SIGVerseTb3RecognizePointedDirection::moveArm(ros::Publisher &publisher, co
   joint_trajectory.points[0].positions = positions;
   joint_trajectory.points[0].time_from_start = duration;
 
-  publisher.publish(joint_trajectory);
+  publisher->publish(joint_trajectory);
 }
 
 
 void SIGVerseTb3RecognizePointedDirection::run(int argc, char** argv)
 {
-  ros::init(argc, argv, "tb3_omc_recognize_pointed_direction", ros::init_options::NoSigintHandler);
+  rclcpp::init(argc, argv);
 
-  ros::NodeHandle node_handle;
+  node_ = rclcpp::Node::make_shared("tb3_omc_recognize_pointed_direction");
 
   // Override the default ros sigint handler.
   // This must be set after the first NodeHandle is created.
   signal(SIGINT, rosSigintHandler);
 
-  ros::Rate loop_rate(10);
+  rclcpp::Rate loop_rate(10);
 
-  ros::Subscriber sub_instruction = node_handle.subscribe<std_msgs::String>("/tb3omc/instruction", 10, &SIGVerseTb3RecognizePointedDirection::instructionCallback, this);
-  ros::Subscriber sub_depth_image = node_handle.subscribe                  ("/camera/depth/image_raw", 10, &SIGVerseTb3RecognizePointedDirection::depthImageCallback, this);
+  auto sub_instruction = node_->create_subscription<std_msgs::msg::String>("/tb3omc/instruction", 10, std::bind(&SIGVerseTb3RecognizePointedDirection::instructionCallback, this, std::placeholders::_1));
+  auto sub_depth_image = node_->create_subscription<sensor_msgs::msg::Image>("/camera/depth/image_raw", 10, std::bind(&SIGVerseTb3RecognizePointedDirection::depthImageCallback, this, std::placeholders::_1));
 
-  pub_joint_traj_ = node_handle.advertise<trajectory_msgs::JointTrajectory>("/tb3omc/joint_trajectory", 10);
+  pub_joint_traj_ = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/tb3omc/joint_trajectory", 10);
 
   sleep(1);
 
-  ros::spin();
+  rclcpp::spin(node_);
 
   return;
 }
@@ -257,4 +248,3 @@ int main(int argc, char** argv)
 
   return(EXIT_SUCCESS);
 }
-

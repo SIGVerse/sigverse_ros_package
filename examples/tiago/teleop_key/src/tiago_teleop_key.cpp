@@ -68,7 +68,7 @@ private:
 public:
   SIGVerseTiagoTeleopKey();
 
-  static void rosSigintHandler(int sig);
+  static void rosSigintHandler([[maybe_unused]] int sig);
   static int  canReceive(int fd);
 
   void messageCallback(const std_msgs::msg::String::SharedPtr message);

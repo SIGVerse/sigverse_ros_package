@@ -19,7 +19,7 @@ public:
 
 private:
 
-  static void rosSigintHandler(int sig);
+  static void rosSigintHandler([[maybe_unused]] int sig);
   void jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr joint_state);
   bool isContainJointNames(std::vector<std::string> joint_names);
   double getCurrentJointStatesAngle(std::string joint_name);

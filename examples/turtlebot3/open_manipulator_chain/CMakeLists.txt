@@ -24,15 +24,16 @@ add_executable(turtlebot3_teleop_key src/turtlebot3_teleop_key.cpp)
 ament_target_dependencies(turtlebot3_teleop_key rclcpp std_msgs geometry_msgs sensor_msgs trajectory_msgs builtin_interfaces tf2_ros)
 
 # recognize_pointed_direction
-#add_executable(recognize_pointed_direction src/recognize_pointed_direction.cpp)
-#ament_target_dependencies(recognize_pointed_direction rclcpp std_msgs geometry_msgs sensor_msgs trajectory_msgs builtin_interfaces tf2_ros)
+add_executable(recognize_pointed_direction src/recognize_pointed_direction.cpp)
+ament_target_dependencies(recognize_pointed_direction rclcpp std_msgs geometry_msgs sensor_msgs trajectory_msgs builtin_interfaces tf2_ros)
 
 # add_executable(grasping_auto src/grasping_auto.cpp)
 # ament_target_dependencies(grasping_auto rclcpp std_msgs geometry_msgs sensor_msgs trajectory_msgs builtin_interfaces tf2_ros)
 
 install(
   TARGETS turtlebot3_teleop_key 
-  #recognize_pointed_direction grasping_auto
+  recognize_pointed_direction 
+  #grasping_auto
   DESTINATION lib/${PROJECT_NAME}
 )
 

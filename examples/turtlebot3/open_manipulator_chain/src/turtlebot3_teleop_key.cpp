@@ -63,7 +63,7 @@ public:
 
 private:
 
-  static void rosSigintHandler(int sig);
+  static void rosSigintHandler([[maybe_unused]] int sig);
   static int  canReceiveKey( const int fd );
 
   void jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr joint_state);
