@@ -1,20 +1,25 @@
 #include <cstdio>
 #include <cmath>
 #include <csignal>
+#include <limits>
 #include <unistd.h>
 #include <termios.h>
-#include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/string.hpp"
-#include "sensor_msgs/msg/image.hpp"
-#include "trajectory_msgs/msg/joint_trajectory.hpp"
-#include "trajectory_msgs/msg/joint_trajectory_point.hpp"
-#include "builtin_interfaces/msg/duration.hpp"
+#include <rclcpp/rclcpp.hpp>
+#include <std_msgs/msg/string.hpp>
+#include <geometry_msgs/msg/point.hpp>
+#include <trajectory_msgs/msg/joint_trajectory.hpp>
+#include <trajectory_msgs/msg/joint_trajectory_point.hpp>
+#include <builtin_interfaces/msg/duration.hpp>
+#include <yolo_msgs/msg/detection_array.hpp>
+#include <visualization_msgs/msg/marker_array.hpp>
 
 class SIGVerseTb3RecognizePointedDirection
 {
 private:
+  const int RIGHT_SHOULDER = 7;
+//  const int RIGHT_ELBOW    = 9;
+  const int RIGHT_WRIST    = 11;
   const std::string JOINT1_NAME = "joint1";
-  const double JOINT1_ANGLE = 0.5;
   const std::string INSTRUCTION_MESSAGE = "Rotate the arm to this side";
 
 public:
@@ -23,37 +28,136 @@ public:
   void run(int argc, char** argv);
 
 private:
-
   static void rosSigintHandler([[maybe_unused]] int sig);
 
-  void instructionCallback(const std_msgs::msg::String::SharedPtr instruction_message);
-  void depthImageCallback (const sensor_msgs::msg::Image::SharedPtr image);
+  void yoloDetectionCallback(const yolo_msgs::msg::DetectionArray::SharedPtr detection_array);
+  bool computePointingFloorIntersection(const geometry_msgs::msg::Point& shoulder, const geometry_msgs::msg::Point& wrist, double floor_z, geometry_msgs::msg::Point& floor_hit_point);
+  void publishKeypointsMarkers(const std::string& frame_id, const std::optional<geometry_msgs::msg::Point>& hit_point);
 
+  void instructionCallback(const std_msgs::msg::String::SharedPtr instruction_message);
   void rotateArm();
-  float calcSlope(const std::vector<float> &x, const std::vector<float> &y);
   void moveArm(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const std::string &name, const double position);
 
-  rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr pub_joint_traj_;
-
-  uint32_t depth_width_, depth_height_;
-  uint8_t is_bigendian_;
-  std::vector<uint8_t> depth_data_;
-
   rclcpp::Node::SharedPtr node_;
-};
 
+  rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr pub_joint_trajectory_;
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr pub_debug_markers_;
+
+  std::map<int, geometry_msgs::msg::Point> keypoint_map_;
+  geometry_msgs::msg::Point hit_point_;
+  double floor_z_;
+};
 
 SIGVerseTb3RecognizePointedDirection::SIGVerseTb3RecognizePointedDirection()
 {
-  depth_width_  = 0;
-  depth_height_ = 0;
-  is_bigendian_ = 0;
+  hit_point_.x = std::numeric_limits<double>::quiet_NaN();
 }
-
 
 void SIGVerseTb3RecognizePointedDirection::rosSigintHandler([[maybe_unused]] int sig)
 {
   rclcpp::shutdown();
+}
+
+void SIGVerseTb3RecognizePointedDirection::yoloDetectionCallback(const yolo_msgs::msg::DetectionArray::SharedPtr detection_array)
+{
+  if (detection_array->detections.empty()) { return; }
+
+  // Find the detection with the highest score
+  const yolo_msgs::msg::Detection* best_detection = nullptr;
+  double best_score = -std::numeric_limits<double>::infinity();
+
+  for (const auto &detection : detection_array->detections)
+  {
+    if (detection.score > best_score) 
+    {
+      best_score = detection.score;
+      best_detection = &detection;
+    }
+  }
+
+  for (const auto &keypoint : best_detection->keypoints3d.data) 
+  {
+    keypoint_map_[keypoint.id] = keypoint.point;
+  }
+
+  // Update hit_point_
+  if (computePointingFloorIntersection(keypoint_map_[RIGHT_SHOULDER], keypoint_map_[RIGHT_WRIST], floor_z_, hit_point_)) 
+  {
+//    RCLCPP_INFO(node_->get_logger(), "Hit Position=(%.3f, %.3f, %.3f)", hit_point_.x, hit_point_.y, hit_point_.z);
+  }
+  else
+  {
+    RCLCPP_WARN(node_->get_logger(), "Couldn't compute pointing floor intersection");
+  }
+
+  publishKeypointsMarkers(best_detection->keypoints3d.frame_id, hit_point_);
+}
+
+/**
+ * @brief Compute intersection of the ray (shoulder -> wrist) with floor z=floor_z.
+ * @param shoulder  Shoulder position in base_link (m)
+ * @param wrist     Wrist position in base_link (m)
+ * @param floor_z   Floor height (e.g., -0.5)
+ * @param floor_hit_point  Output: intersection point with the floor
+ * @return true if intersection exists; false otherwise
+ */
+bool SIGVerseTb3RecognizePointedDirection::computePointingFloorIntersection(
+  const geometry_msgs::msg::Point& shoulder, const geometry_msgs::msg::Point& wrist, double floor_z, geometry_msgs::msg::Point& floor_hit_point)
+{
+  if (wrist.z >= shoulder.z){ return false; }
+  if (floor_z >= wrist.z)   { return false; }
+
+  const double dx = wrist.x - shoulder.x;
+  const double dy = wrist.y - shoulder.y;
+  const double dz = wrist.z - shoulder.z;
+
+  if (std::fabs(dz) < 1e-9) { return false; }
+
+  // Parameter to reach z = floor_z along the ray from the shoulder toward the wrist
+  const double t = (floor_z - shoulder.z) / dz;
+
+  floor_hit_point.x = shoulder.x + t * dx;
+  floor_hit_point.y = shoulder.y + t * dy;
+  floor_hit_point.z = floor_z;
+
+  return true;
+}
+
+void SIGVerseTb3RecognizePointedDirection::publishKeypointsMarkers(const std::string& frame_id, const std::optional<geometry_msgs::msg::Point>& hit_point)
+{
+  visualization_msgs::msg::MarkerArray markerArray;
+  const auto stamp = node_->now();
+
+  // Keypoints: green spheres
+  visualization_msgs::msg::Marker marker_keypoints;
+  marker_keypoints.header.frame_id = frame_id;
+  marker_keypoints.header.stamp    = stamp;
+  marker_keypoints.ns   = "keypoints";
+  marker_keypoints.id   = 0;  // Keep constant to overwrite
+  marker_keypoints.type = visualization_msgs::msg::Marker::SPHERE_LIST;
+  marker_keypoints.action = visualization_msgs::msg::Marker::ADD;
+  marker_keypoints.scale = []{ geometry_msgs::msg::Vector3 v; v.x=0.05; v.y=0.05; v.z=0.05; return v; }();
+  marker_keypoints.color = []{ std_msgs::msg::ColorRGBA c; c.r=0.0f; c.g=1.0f; c.b=0.0f; c.a=1.0f; return c; }(); // green
+  marker_keypoints.pose.orientation.w = 1.0;
+  marker_keypoints.points.reserve(keypoint_map_.size());
+  for (const auto& kv : keypoint_map_) marker_keypoints.points.push_back(kv.second);
+  markerArray.markers.push_back(marker_keypoints);
+
+  // Hit point: red sphere
+  visualization_msgs::msg::Marker marker_hit_point;
+  marker_hit_point.header.frame_id = frame_id;
+  marker_hit_point.header.stamp    = stamp;
+  marker_hit_point.ns   = "hit_point";
+  marker_hit_point.id   = 0;  // Keep constant to overwrite
+  marker_hit_point.type = visualization_msgs::msg::Marker::SPHERE;
+  marker_hit_point.action = visualization_msgs::msg::Marker::ADD;
+  marker_hit_point.scale = []{ geometry_msgs::msg::Vector3 v; v.x=0.1; v.y=0.1; v.z=0.1; return v; }();
+  marker_hit_point.color = []{ std_msgs::msg::ColorRGBA c; c.r=1.0f; c.g=0.0f; c.b=0.0f; c.a=1.0f; return c; }(); // red
+  marker_hit_point.pose.orientation.w = 1.0;
+  marker_hit_point.pose.position = *hit_point;
+  markerArray.markers.push_back(marker_hit_point);
+
+  pub_debug_markers_->publish(markerArray);
 }
 
 
@@ -61,133 +165,26 @@ void SIGVerseTb3RecognizePointedDirection::instructionCallback(const std_msgs::m
 {
   if(instruction_message->data==INSTRUCTION_MESSAGE)
   {
+    RCLCPP_INFO(node_->get_logger(), "Received Instruction Message");
+//    RCLCPP_INFO(node_->get_logger(), "Hit Position=(%.3f, %.3f, %.3f)", hit_point_.x, hit_point_.y, hit_point_.z);
     rotateArm();
   }
 }
 
-
-void SIGVerseTb3RecognizePointedDirection::depthImageCallback(const sensor_msgs::msg::Image::SharedPtr image)
-{
-  depth_width_  = image->width;
-  depth_height_ = image->height;
-  is_bigendian_ = image->is_bigendian;
-
-  uint32_t data_size = image->step * image->height;
-
-  if(depth_data_.size()!=data_size){ depth_data_.resize(data_size); }
-
-  memcpy(&depth_data_[0], &image->data[0], data_size * sizeof(uint8_t));
-}
-
-
 void SIGVerseTb3RecognizePointedDirection::rotateArm()
 {
-  if(depth_width_==0){ return; }
-
-  // Get depth data
-  float depth_data[depth_height_][depth_width_];
-
-  for(int j=0; j<depth_height_; j++)
+  if (std::isnan(hit_point_.x)) 
   {
-    for(int i=0; i<depth_width_; i++)
-    {
-      int idx = 4 * (depth_width_ * j + i);
-
-      if(is_bigendian_==0)
-      {
-        uint32_t tmp = ((uint32_t)depth_data_[idx]) | ((uint32_t)depth_data_[idx+1]<<8) | ((uint32_t)depth_data_[idx+2]<<16) | ((uint32_t)depth_data_[idx+3]<<24);
-        memcpy(&depth_data[j][i], &tmp, 4);
-      }
-      else
-      {
-        uint32_t tmp = ((uint32_t)depth_data_[idx]<<24) | ((uint32_t)depth_data_[idx+1]<<16) | ((uint32_t)depth_data_[idx+2]<<8) | ((uint32_t)depth_data_[idx+3]);
-        memcpy(&depth_data[j][i], &tmp, 4);
-      }
-    }
+    RCLCPP_WARN(node_->get_logger(), "the hit_point_ is uninitialized.");
+    return;
   }
-  
-  // Intermediate calculation for the calculation of the arm slope of avatar
-  float depth_total[depth_width_];
-  float row_position[depth_width_];
-
-  int height_max = depth_height_ * 0.4; // Exclude the lower side.
-  float depth_max = 0.75; // [m]
-
-  for(int j=0; j<depth_width_; j++)
-  {
-    // Calc the depth total per column
-    depth_total[j] = 0.0f;
-
-    for(int i=0; i<height_max; i++)
-    {
-      if(depth_data[i][j]!=0 && depth_data[i][j]<depth_max)
-      {
-        depth_total[j] += 1.0f / depth_data[i][j];
-      }
-    }
-
-    // Calc the row position of the depth centroid per column
-    row_position[j] = 0.0f;
-
-    if(depth_total[j]!=0)
-    {
-      for(int i=0; i<height_max; i++)
-      {
-        if(depth_data[i][j]!=0 && depth_data[i][j]<depth_max)
-        {
-          row_position[j] += i * 1.0f / depth_data[i][j] / depth_total[j];
-        }
-      }
-    }
-  }
-
-  // Calc the arm slope of avatar using the least squares method
-  std::vector<float> x_list;
-  std::vector<float> y_list;
-
-  for(int j=0; j<depth_width_; j++)
-  {
-    if(row_position[j]!=0)
-    {
-      x_list.push_back(j);
-      y_list.push_back(row_position[j]);
-    }
-  }
-
-  float slope = calcSlope(x_list, y_list);
 
   // Rotate the arm
-  if(slope < 0.0f)
-  {
-    moveArm(pub_joint_traj_, JOINT1_NAME, +JOINT1_ANGLE);
-  }
-  else
-  {
-    moveArm(pub_joint_traj_, JOINT1_NAME, -JOINT1_ANGLE);
-  }
+  if     (hit_point_.y > +0.4){ moveArm(pub_joint_trajectory_, JOINT1_NAME, +0.50); }
+  else if(hit_point_.y >  0.0){ moveArm(pub_joint_trajectory_, JOINT1_NAME, +0.25); }
+  else if(hit_point_.y > -0.4){ moveArm(pub_joint_trajectory_, JOINT1_NAME, -0.25); }
+  else                        { moveArm(pub_joint_trajectory_, JOINT1_NAME, -0.50); }
 }
-
-
-float SIGVerseTb3RecognizePointedDirection::calcSlope(const std::vector<float> &x, const std::vector<float> &y)
-{
-  // Calc a slope using the least squares method
-
-  double a = 0.0;
-  double sum_xy = 0.0, sum_x = 0.0, sum_y = 0.0, sum_x2 = 0.0;
-
-  int num = x.size();
-
-  for(int i=0; i<num; i++)
-  {
-    sum_xy += x[i] * y[i];
-    sum_x  += x[i];
-    sum_y  += y[i];
-    sum_x2 += std::pow((double)x[i], 2);
-  }
-
-  return (float)((num * sum_xy - sum_x * sum_y) / (num * sum_x2 - std::pow(sum_x, 2)));
-}
-
 
 void SIGVerseTb3RecognizePointedDirection::moveArm(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const std::string &name, const double position)
 {
@@ -225,12 +222,15 @@ void SIGVerseTb3RecognizePointedDirection::run(int argc, char** argv)
   // This must be set after the first NodeHandle is created.
   signal(SIGINT, rosSigintHandler);
 
+  floor_z_ = node_->declare_parameter<double>("floor_z", -0.5);
+
   rclcpp::Rate loop_rate(10);
 
-  auto sub_instruction = node_->create_subscription<std_msgs::msg::String>("/tb3omc/instruction", 10, std::bind(&SIGVerseTb3RecognizePointedDirection::instructionCallback, this, std::placeholders::_1));
-  auto sub_depth_image = node_->create_subscription<sensor_msgs::msg::Image>("/camera/depth/image_raw", 10, std::bind(&SIGVerseTb3RecognizePointedDirection::depthImageCallback, this, std::placeholders::_1));
+  pub_joint_trajectory_ = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/tb3omc/joint_trajectory", 10);
+  pub_debug_markers_    = node_->create_publisher<visualization_msgs::msg::MarkerArray> ("/tb3omc/debug_markers", 10);
 
-  pub_joint_traj_ = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/tb3omc/joint_trajectory", 10);
+  auto sub_instruction     = node_->create_subscription<std_msgs::msg::String>             ("/tb3omc/instruction", 10, std::bind(&SIGVerseTb3RecognizePointedDirection::instructionCallback, this, std::placeholders::_1));
+  auto sub_yolo_detections = node_->create_subscription<yolo_msgs::msg::DetectionArray>    ("/yolo_human_pose/detections_3d", 10, std::bind(&SIGVerseTb3RecognizePointedDirection::yoloDetectionCallback, this, std::placeholders::_1));
 
   sleep(1);
 

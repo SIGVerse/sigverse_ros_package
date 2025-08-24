@@ -18,6 +18,8 @@ find_package(sensor_msgs REQUIRED)
 find_package(trajectory_msgs REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(tf2_ros REQUIRED)
+find_package(yolo_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
 
 # grasping_teleop_key
 add_executable(turtlebot3_teleop_key src/turtlebot3_teleop_key.cpp)
@@ -25,7 +27,7 @@ ament_target_dependencies(turtlebot3_teleop_key rclcpp std_msgs geometry_msgs se
 
 # recognize_pointed_direction
 add_executable(recognize_pointed_direction src/recognize_pointed_direction.cpp)
-ament_target_dependencies(recognize_pointed_direction rclcpp std_msgs geometry_msgs sensor_msgs trajectory_msgs builtin_interfaces tf2_ros)
+ament_target_dependencies(recognize_pointed_direction rclcpp std_msgs geometry_msgs sensor_msgs trajectory_msgs builtin_interfaces tf2_ros yolo_msgs visualization_msgs)
 
 # add_executable(grasping_auto src/grasping_auto.cpp)
 # ament_target_dependencies(grasping_auto rclcpp std_msgs geometry_msgs sensor_msgs trajectory_msgs builtin_interfaces tf2_ros)
