@@ -17,46 +17,10 @@
 class SIGVerseTiagoTeleopKey
 {
 private:
-
-  static const char KEYCODE_1 = 0x31;
-  static const char KEYCODE_2 = 0x32;
-  static const char KEYCODE_3 = 0x33;
-  static const char KEYCODE_4 = 0x34;
-  static const char KEYCODE_5 = 0x35;
-  static const char KEYCODE_6 = 0x36;
-  static const char KEYCODE_7 = 0x37;
-
   static const char KEYCODE_UP    = 0x41;
   static const char KEYCODE_DOWN  = 0x42;
   static const char KEYCODE_RIGHT = 0x43;
   static const char KEYCODE_LEFT  = 0x44;
-
-  static const char KEYCODE_A = 0x61;
-  static const char KEYCODE_C = 0x63;
-  static const char KEYCODE_D = 0x64;
-  static const char KEYCODE_E = 0x65;
-  static const char KEYCODE_F = 0x66;
-  static const char KEYCODE_G = 0x67;
-  static const char KEYCODE_H = 0x68;
-  static const char KEYCODE_I = 0x69;
-  static const char KEYCODE_J = 0x6a;
-  static const char KEYCODE_K = 0x6b;
-  static const char KEYCODE_L = 0x6c;
-  static const char KEYCODE_M = 0x6d;
-  static const char KEYCODE_N = 0x6e;
-  static const char KEYCODE_O = 0x6f;
-  static const char KEYCODE_Q = 0x71;
-  static const char KEYCODE_R = 0x72;
-  static const char KEYCODE_S = 0x73;
-  static const char KEYCODE_U = 0x75;
-  static const char KEYCODE_W = 0x77;
-  static const char KEYCODE_X = 0x78;
-  static const char KEYCODE_Y = 0x79;
-  static const char KEYCODE_Z = 0x7a;
-
-  static const char KEYCODE_COMMA  = 0x2c;
-  static const char KEYCODE_PERIOD = 0x2e;
-  static const char KEYCODE_SPACE  = 0x20;
 
   const std::string MSG_TELL_ME  = "Please tell me";
   const std::string MSG_POINT_IT = "Please point it";
@@ -400,12 +364,12 @@ int SIGVerseTiagoTeleopKey::run()
           
       switch(c)
       {
-        case KEYCODE_1:
+        case '1':
         {
           sendMessage(MSG_TELL_ME);
           break;
         }
-        case KEYCODE_2:
+        case '2':
         {
           sendMessage(MSG_POINT_IT);
           break;
@@ -434,117 +398,117 @@ int SIGVerseTiagoTeleopKey::run()
           moveBaseTwist(0.0, 0.0, +angular_coef*move_speed);
           break;
         }
-        case KEYCODE_SPACE:
+        case ' ':
         {
           RCLCPP_DEBUG(logger, "Stop");
           moveBaseTwist(0.0, 0.0, 0.0);
           break;
         }
-        case KEYCODE_R:
+        case 'r':
         {
           RCLCPP_DEBUG(logger, "Move Speed Up");
           move_speed *= 2;
           if(move_speed > 2  ){ move_speed=2; }
           break;
         }
-        case KEYCODE_F:
+        case 'f':
         {
           RCLCPP_DEBUG(logger, "Move Speed Down");
           move_speed /= 2;
           if(move_speed < 0.125){ move_speed=0.125; }
           break;
         }
-        case KEYCODE_Y:
+        case 'y':
         {
           RCLCPP_DEBUG(logger, "Rotate Arm - Upward");
           operateArm({ 1.57, -1.4, -3.14, 2.2, 1.57, 0.0, 0.0 }, 3.0);
           break;
         }
-        case KEYCODE_H:
+        case 'h':
         {
           RCLCPP_DEBUG(logger, "Rotate Arm - Horizontal");
           operateArm({ 1.57, -1.4, -3.14, 2.0, 1.57, 0.6, 0.0 }, 3.0);
           break;
         }
-        case KEYCODE_N:
+        case 'n':
         {
           RCLCPP_DEBUG(logger, "Rotate Arm - Downward");
           operateArm({ 1.57, -1.3, -3.14, 0.7, 1.57, 0.0, 0.0 }, 3.0);
           break;
         }
-        case KEYCODE_Q:
+        case 'q':
         {
           RCLCPP_DEBUG(logger, "Torso Height - Up");
           operateTorso(0.35, std::max<int>((int)(std::abs(0.35 - torso_lift_joint_pos1_) / 0.05), 1));
           break;
         }
-        case KEYCODE_A:
+        case 'a':
         {
           RCLCPP_DEBUG(logger, "Torso Height - Stop");
           operateTorso(2.0*torso_lift_joint_pos1_-torso_lift_joint_pos2_, 0.5);
           break;
         }
-        case KEYCODE_Z:
+        case 'z':
         {
           RCLCPP_DEBUG(logger, "Torso Height - Down");
           operateTorso(0.0, std::max<int>((int)(std::abs(0.0 - torso_lift_joint_pos1_) / 0.05), 1));
           break;
         }
-        case KEYCODE_W:
+        case 'w':
         {
           RCLCPP_DEBUG(logger, "Turn Head - Left");
           operateHead(+1.24, 0.0, 2.0);
           break;
         }
-        case KEYCODE_S:
+        case 's':
         {
           RCLCPP_DEBUG(logger, "Turn Head - Front");
           operateHead(0.0, 0.0, 2.0);
           break;
         }
-        case KEYCODE_X:
+        case 'x':
         {
           RCLCPP_DEBUG(logger, "Turn Head - Right");
           operateHead(-1.24, 0.0, 2.0);
           break;
         }
-        case KEYCODE_E:
+        case 'e':
         {
           RCLCPP_DEBUG(logger, "Turn Head - Up");
           operateHead(0.0, 0.79, 2.0);
           break;
         }
-        case KEYCODE_D:
+        case 'd':
         {
           RCLCPP_DEBUG(logger, "Turn Head - Front");
           operateHead(0.0, 0.0, 2.0);
           break;
         }
-        case KEYCODE_C:
+        case 'c':
         {
           RCLCPP_DEBUG(logger, "Turn Head - Down");
           operateHead(0.0, -0.98, 2.0);
           break;
         }
-        case KEYCODE_U:
-        case KEYCODE_J:
-        case KEYCODE_M:
-        case KEYCODE_I:
-        case KEYCODE_K:
-        case KEYCODE_O:
-        case KEYCODE_L:
+        case 'u':
+        case 'j':
+        case 'm':
+        case 'i':
+        case 'k':
+        case 'o':
+        case 'l':
         {
           int joint_number;
 
           switch(c)
           {
-            case KEYCODE_U:{ joint_number = 1; RCLCPP_DEBUG(logger, "Control Arm1"); showHelpArm("Arm1"); break; }
-            case KEYCODE_J:{ joint_number = 2; RCLCPP_DEBUG(logger, "Control Arm2"); showHelpArm("Arm2"); break; }
-            case KEYCODE_M:{ joint_number = 3; RCLCPP_DEBUG(logger, "Control Arm3"); showHelpArm("Arm3"); break; }
-            case KEYCODE_I:{ joint_number = 4; RCLCPP_DEBUG(logger, "Control Arm4"); showHelpArm("Arm4"); break; }
-            case KEYCODE_K:{ joint_number = 5; RCLCPP_DEBUG(logger, "Control Arm5"); showHelpArm("Arm5"); break; }
-            case KEYCODE_O:{ joint_number = 6; RCLCPP_DEBUG(logger, "Control Arm6"); showHelpArm("Arm6"); break; }
-            case KEYCODE_L:{ joint_number = 7; RCLCPP_DEBUG(logger, "Control Arm7"); showHelpArm("Arm7"); break; }
+            case 'u':{ joint_number = 1; RCLCPP_DEBUG(logger, "Control Arm1"); showHelpArm("Arm1"); break; }
+            case 'j':{ joint_number = 2; RCLCPP_DEBUG(logger, "Control Arm2"); showHelpArm("Arm2"); break; }
+            case 'm':{ joint_number = 3; RCLCPP_DEBUG(logger, "Control Arm3"); showHelpArm("Arm3"); break; }
+            case 'i':{ joint_number = 4; RCLCPP_DEBUG(logger, "Control Arm4"); showHelpArm("Arm4"); break; }
+            case 'k':{ joint_number = 5; RCLCPP_DEBUG(logger, "Control Arm5"); showHelpArm("Arm5"); break; }
+            case 'o':{ joint_number = 6; RCLCPP_DEBUG(logger, "Control Arm6"); showHelpArm("Arm6"); break; }
+            case 'l':{ joint_number = 7; RCLCPP_DEBUG(logger, "Control Arm7"); showHelpArm("Arm7"); break; }
           }
 
           bool is_in_control = true;
@@ -564,10 +528,10 @@ int SIGVerseTiagoTeleopKey::run()
 
             switch(c)
             {
-              case KEYCODE_U:{ RCLCPP_DEBUG(logger, "Arm  +  "); operateArm(joint_number, +1.0, 2.0); break; }
-              case KEYCODE_J:{ RCLCPP_DEBUG(logger, "Arm Stop"); operateArm(joint_number,  0.0, 2.0); break; }
-              case KEYCODE_M:{ RCLCPP_DEBUG(logger, "Arm  -  "); operateArm(joint_number, -1.0, 2.0); break; }
-              case KEYCODE_Q:
+              case 'u':{ RCLCPP_DEBUG(logger, "Arm  +  "); operateArm(joint_number, +1.0, 2.0); break; }
+              case 'j':{ RCLCPP_DEBUG(logger, "Arm Stop"); operateArm(joint_number,  0.0, 2.0); break; }
+              case 'm':{ RCLCPP_DEBUG(logger, "Arm  -  "); operateArm(joint_number, -1.0, 2.0); break; }
+              case 'q':
               {
                 is_in_control = false;
                 showHelp();
@@ -577,7 +541,7 @@ int SIGVerseTiagoTeleopKey::run()
           }
           break;
         }
-        case KEYCODE_G:
+        case 'g':
         {
           operateHand(is_hand_open);
 

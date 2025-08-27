@@ -18,14 +18,6 @@ private:
   static const char KEYCODE_RIGHT = 0x43;
   static const char KEYCODE_LEFT  = 0x44;
 
-  static const char KEY_A = 0x61;
-  static const char KEY_D = 0x64;
-  static const char KEY_H = 0x68;
-  static const char KEY_S = 0x73;
-  static const char KEY_W = 0x77;
-
-  static const char KEYCODE_SPACE  = 0x20;
-
   const double LINEAR_VEL  = 0.2;
   const double ANGULAR_VEL = 0.4;
 
@@ -145,41 +137,41 @@ void SIGVerseTb3LaserDistanceSensorTeleopKey::keyLoop(int argc, char** argv)
 
       switch (c)
       {
-        case KEYCODE_SPACE:
+        case ' ':
         {
           RCLCPP_DEBUG(logger, "Stop");
           moveBase(pub_base_twist, 0.0, 0.0);
           break;
         }
-        case KEY_W:
+        case 'w':
         case KEYCODE_UP:
         {
           RCLCPP_DEBUG(logger, "Go Forward");
           moveBase(pub_base_twist, +LINEAR_VEL, 0.0);
           break;
         }
-        case KEY_S:
+        case 's':
         case KEYCODE_DOWN:
         {
           RCLCPP_DEBUG(logger, "Go Back");
           moveBase(pub_base_twist, -LINEAR_VEL, 0.0);
           break;
         }
-        case KEY_D:
+        case 'd':
         case KEYCODE_RIGHT:
         {
           RCLCPP_DEBUG(logger, "Turn Right");
           moveBase(pub_base_twist, 0.0, -ANGULAR_VEL);
           break;
         }
-        case KEY_A:
+        case 'a':
         case KEYCODE_LEFT:
         {
           RCLCPP_DEBUG(logger, "Turn Left");
           moveBase(pub_base_twist, 0.0, +ANGULAR_VEL);
           break;
         }
-        case KEY_H:
+        case 'h':
         {
           RCLCPP_DEBUG(logger, "Show Help");
           showHelp();

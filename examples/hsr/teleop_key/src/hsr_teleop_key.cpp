@@ -23,39 +23,10 @@
 class SIGVerseHsrTeleopKey
 {
 private:
-
-  static const char KEYCODE_1 = 0x31;
-  static const char KEYCODE_2 = 0x32;
-  
   static const char KEYCODE_UP    = 0x41;
   static const char KEYCODE_DOWN  = 0x42;
   static const char KEYCODE_RIGHT = 0x43;
   static const char KEYCODE_LEFT  = 0x44;
-
-  static const char KEYCODE_A = 0x61;
-  static const char KEYCODE_B = 0x62;
-  static const char KEYCODE_C = 0x63;
-  static const char KEYCODE_D = 0x64;
-  static const char KEYCODE_E = 0x65;
-  static const char KEYCODE_G = 0x67;
-  static const char KEYCODE_H = 0x68;
-  static const char KEYCODE_I = 0x69;
-  static const char KEYCODE_J = 0x6a;
-  static const char KEYCODE_K = 0x6b;
-  static const char KEYCODE_L = 0x6c;
-  static const char KEYCODE_M = 0x6d;
-  static const char KEYCODE_N = 0x6e;
-  static const char KEYCODE_O = 0x6f;
-  static const char KEYCODE_Q = 0x71;
-  static const char KEYCODE_U = 0x75;
-  static const char KEYCODE_V = 0x76;
-  static const char KEYCODE_W = 0x77;
-  static const char KEYCODE_Y = 0x79;
-  static const char KEYCODE_Z = 0x7a;
-
-  static const char KEYCODE_COMMA  = 0x2c;
-  static const char KEYCODE_PERIOD = 0x2e;
-  static const char KEYCODE_SPACE  = 0x20;
 
   const std::string MSG_TELL_ME  = "Please tell me";
   const std::string MSG_POINT_IT = "Please point it";
@@ -432,12 +403,12 @@ int SIGVerseHsrTeleopKey::run()
           
       switch(c)
       {
-        case KEYCODE_1:
+        case '1':
         {
           sendMessage(MSG_TELL_ME);
           break;
         }
-        case KEYCODE_2:
+        case '2':
         {
           sendMessage(MSG_POINT_IT);
           break;
@@ -466,130 +437,130 @@ int SIGVerseHsrTeleopKey::run()
           moveBaseTwist(0.0, 0.0, +angular_coef*move_speed);
           break;
         }
-        case KEYCODE_SPACE:
+        case ' ':
         {
           RCLCPP_DEBUG(logger, "Stop");
           moveBaseTwist(0.0, 0.0, 0.0);
           break;
         }
-        case KEYCODE_U:
+        case 'u':
         {
           RCLCPP_DEBUG(logger, "Move Left Forward");
           moveBaseJointTrajectory(+1.0, +1.0, +M_PI_4, 10);
           break;
         }
-        case KEYCODE_I:
+        case 'i':
         {
           RCLCPP_DEBUG(logger, "Move Forward");
           moveBaseJointTrajectory(+1.0, 0.0, 0.0, 10);
           break;
         }
-        case KEYCODE_O:
+        case 'o':
         {
           RCLCPP_DEBUG(logger, "Move Right Forward");
           moveBaseJointTrajectory(+1.0, -1.0, -M_PI_4, 10);
           break;
         }
-        case KEYCODE_J:
+        case 'j':
         {
           RCLCPP_DEBUG(logger, "Move Left");
           moveBaseJointTrajectory(0.0, +1.0, +M_PI_2, 10);
           break;
         }
-        case KEYCODE_K:
+        case 'k':
         {
           RCLCPP_DEBUG(logger, "Stop");
           moveBaseJointTrajectory(0.0, 0.0, 0.0, 0.5);
           break;
         }
-        case KEYCODE_L:
+        case 'l':
         {
           RCLCPP_DEBUG(logger, "Move Right");
           moveBaseJointTrajectory(0.0, -1.0, -M_PI_2, 10);
           break;
         }
-        case KEYCODE_M:
+        case 'm':
         {
           RCLCPP_DEBUG(logger, "Move Left Backward");
           moveBaseJointTrajectory(-1.0, +1.0, +M_PI_2+M_PI_4, 10);
           break;
         }
-        case KEYCODE_COMMA:
+        case ',':
         {
           RCLCPP_DEBUG(logger, "Move Backward");
           moveBaseJointTrajectory(-1.0, 0.0, +M_PI, 10);
           break;
         }
-        case KEYCODE_PERIOD:
+        case '.':
         {
           RCLCPP_DEBUG(logger, "Move Right Backward");
           moveBaseJointTrajectory(-1.0, -1.0, -M_PI_2-M_PI_4, 10);
           break;
         }
-        case KEYCODE_Q:
+        case 'q':
         {
           RCLCPP_DEBUG(logger, "Move Speed Up");
           move_speed *= 2;
           if(move_speed > 2  ){ move_speed=2; }
           break;
         }
-        case KEYCODE_Z:
+        case 'z':
         {
           RCLCPP_DEBUG(logger, "Move Speed Down");
           move_speed /= 2;
           if(move_speed < 0.125){ move_speed=0.125; }
           break;
         }
-        case KEYCODE_Y:
+        case 'y':
         {
           RCLCPP_DEBUG(logger, "Up Torso");
           operateArm(ARM_LIFT_JOINT_NAME, 0.69, std::max<int>((int)(std::abs(0.69 - arm_lift_joint_pos1_) / 0.05), 1)/move_speed);
           break;
         }
-        case KEYCODE_H:
+        case 'h':
         {
           RCLCPP_DEBUG(logger, "Stop Torso");
           operateArm(ARM_LIFT_JOINT_NAME, 2.0*arm_lift_joint_pos1_-arm_lift_joint_pos2_, 0.5);
           break;
         }
-        case KEYCODE_N:
+        case 'n':
         {
           RCLCPP_DEBUG(logger, "Down Torso");
           operateArm(ARM_LIFT_JOINT_NAME, 0.0, std::max<int>((int)(std::abs(0.0 - arm_lift_joint_pos1_) / 0.05), 1)/move_speed);
           break;
         }
         //operateArm(const double arm_lift_pos, const double arm_flex_pos, const double wrist_flex_pos, const int duration_sec);
-        case KEYCODE_A:
+        case 'a':
         {
           RCLCPP_DEBUG(logger, "Rotate Arm - Vertical");
           operateArmFlex(0.0, -1.57);
           break;
         }
-        case KEYCODE_B:
+        case 'b':
         {
           RCLCPP_DEBUG(logger, "Rotate Arm - Upward");
           operateArmFlex(-0.785, -0.785);
           break;
         }
-        case KEYCODE_C:
+        case 'c':
         {
           RCLCPP_DEBUG(logger, "Rotate Arm - Horizontal");
           operateArmFlex(-1.57, 0.0);
           break;
         }
-        case KEYCODE_D:
+        case 'd':
         {
           RCLCPP_DEBUG(logger, "Rotate Arm - Downward");
           operateArmFlex(-2.2, 0.35);
           break;
         }
-        case KEYCODE_E:
+        case 'e':
         {
           RCLCPP_DEBUG(logger, "Rotate Arm - Suction Downward");
           operateArm(arm_lift_joint_pos1_, -2.01, -0.878, -1.108, 0.174, 3);
           break;
         }
-        case KEYCODE_G:
+        case 'g':
         {
           operateHand(is_hand_open);
 

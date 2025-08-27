@@ -13,33 +13,10 @@
 class SIGVerseTb3OpenManipulatorTeleopKey
 {
 private:
-  static const char KEY_1 = 0x31;
-  static const char KEY_2 = 0x32;
-  static const char KEY_3 = 0x33;
-  static const char KEY_4 = 0x34;
-  static const char KEY_5 = 0x35;
-  static const char KEY_6 = 0x36;
-  static const char KEY_7 = 0x37;
-  static const char KEY_8 = 0x38;
-
   static const char KEYCODE_UP    = 0x41;
   static const char KEYCODE_DOWN  = 0x42;
   static const char KEYCODE_RIGHT = 0x43;
   static const char KEYCODE_LEFT  = 0x44;
-
-  static const char KEY_A = 0x61;
-  static const char KEY_C = 0x63;
-  static const char KEY_D = 0x64;
-  static const char KEY_H = 0x68;
-  static const char KEY_J = 0x6a;
-  static const char KEY_M = 0x6d;
-  static const char KEY_O = 0x6f;
-  static const char KEY_S = 0x73;
-  static const char KEY_U = 0x75;
-  static const char KEY_W = 0x77;
-  
-  static const char KEYCODE_SPACE  = 0x20;
-
 
   const std::string JOINT1_NAME = "joint1";
   const std::string JOINT2_NAME = "joint2";
@@ -330,42 +307,42 @@ void SIGVerseTb3OpenManipulatorTeleopKey::keyLoop(int argc, char** argv)
 
       switch(c)
       {
-        case KEYCODE_SPACE:
+        case ' ':
         {
           RCLCPP_DEBUG(logger, "Stop");
           moveBase(pub_base_twist, 0.0, 0.0);
           stopJoints(pub_joint_traj, 1.0);
           break;
         }
-        case KEY_W:
+        case 'w':
         case KEYCODE_UP:
         {
           RCLCPP_DEBUG(logger, "Go Forward");
           moveBase(pub_base_twist, +LINEAR_VEL, 0.0);
           break;
         }
-        case KEY_S:
+        case 's':
         case KEYCODE_DOWN:
         {
           RCLCPP_DEBUG(logger, "Go Back");
           moveBase(pub_base_twist, -LINEAR_VEL, 0.0);
           break;
         }
-        case KEY_D:
+        case 'd':
         case KEYCODE_RIGHT:
         {
           RCLCPP_DEBUG(logger, "Turn Right");
           moveBase(pub_base_twist, 0.0, -ANGULAR_VEL);
           break;
         }
-        case KEY_A:
+        case 'a':
         case KEYCODE_LEFT:
         {
           RCLCPP_DEBUG(logger, "Turn Left");
           moveBase(pub_base_twist, 0.0, +ANGULAR_VEL);
           break;
         }
-        case KEY_U:
+        case 'u':
         {
           RCLCPP_DEBUG(logger, "Rotate Arm - Upward");
           moveArm(pub_joint_traj, JOINT2_NAME, 0.0, joint2_pos1_);
@@ -373,7 +350,7 @@ void SIGVerseTb3OpenManipulatorTeleopKey::keyLoop(int argc, char** argv)
           moveArm(pub_joint_traj, JOINT4_NAME, 0.0, joint4_pos1_);
           break;
         }
-        case KEY_J:
+        case 'j':
         {
           RCLCPP_DEBUG(logger, "Rotate Arm - Horizontal");
           moveArm(pub_joint_traj, JOINT2_NAME, +1.57, joint2_pos1_);
@@ -381,7 +358,7 @@ void SIGVerseTb3OpenManipulatorTeleopKey::keyLoop(int argc, char** argv)
           moveArm(pub_joint_traj, JOINT4_NAME, +0.26, joint4_pos1_);
           break;
         }
-        case KEY_M:
+        case 'm':
         {
           RCLCPP_DEBUG(logger, "Rotate Arm - Downward");
           moveArm(pub_joint_traj, JOINT2_NAME, +1.75, joint2_pos1_);
@@ -389,67 +366,67 @@ void SIGVerseTb3OpenManipulatorTeleopKey::keyLoop(int argc, char** argv)
           moveArm(pub_joint_traj, JOINT4_NAME, +0.26, joint4_pos1_);
           break;
         }
-        case KEY_1:
+        case '1':
         {
           RCLCPP_DEBUG(logger, "Joint1 Right");
           moveArm(pub_joint_traj, JOINT1_NAME, JOINT_MIN, joint1_pos1_);
           break;
         }
-        case KEY_2:
+        case '2':
         {
           RCLCPP_DEBUG(logger, "Joint1 Left");
           moveArm(pub_joint_traj, JOINT1_NAME, JOINT_MAX, joint1_pos1_);
           break;
         }
-        case KEY_3:
+        case '3':
         {
           RCLCPP_DEBUG(logger, "Joint2 Up");
           moveArm(pub_joint_traj, JOINT2_NAME, JOINT_MIN, joint2_pos1_);
           break;
         }
-        case KEY_4:
+        case '4':
         {
           RCLCPP_DEBUG(logger, "Joint2 Down");
           moveArm(pub_joint_traj, JOINT2_NAME, JOINT_MAX, joint2_pos1_);
           break;
         }
-        case KEY_5:
+        case '5':
         {
           RCLCPP_DEBUG(logger, "Joint3 Up");
           moveArm(pub_joint_traj, JOINT3_NAME, JOINT_MIN, joint3_pos1_);
           break;
         }
-        case KEY_6:
+        case '6':
         {
           RCLCPP_DEBUG(logger, "Joint3 Down");
           moveArm(pub_joint_traj, JOINT3_NAME, JOINT_MAX, joint3_pos1_);
           break;
         }
-        case KEY_7:
+        case '7':
         {
           RCLCPP_DEBUG(logger, "Joint4 Up");
           moveArm(pub_joint_traj, JOINT4_NAME, JOINT_MIN, joint4_pos1_);
           break;
         }
-        case KEY_8:
+        case '8':
         {
           RCLCPP_DEBUG(logger, "Joint4 Down");
           moveArm(pub_joint_traj, JOINT4_NAME, JOINT_MAX, joint4_pos1_);
           break;
         }
-        case KEY_O:
+        case 'o':
         {
           RCLCPP_DEBUG(logger, "Hand Open");
           moveHand(pub_joint_traj, GRIP_MIN, grip_joint_pos1_);
           break;
         }
-        case KEY_C:
+        case 'c':
         {
           RCLCPP_DEBUG(logger, "Hand Close");
           moveHand(pub_joint_traj, GRIP_MAX, grip_joint_pos1_);
           break;
         }
-        case KEY_H:
+        case 'h':
         {
           RCLCPP_DEBUG(logger, "Show Help");
           showHelp();
