@@ -194,7 +194,7 @@ void SIGVerseHsrTeleopKey::moveBaseJointTrajectory(const double linear_x, const 
   geometry_msgs::msg::PointStamped basefootprint_2_target;
   geometry_msgs::msg::PointStamped odom_2_target;
   basefootprint_2_target.header.frame_id = "/base_footprint";
-  basefootprint_2_target.header.stamp = node_->get_clock()->now();
+  basefootprint_2_target.header.stamp = rclcpp::Time(0);
   basefootprint_2_target.point.x = linear_x;
   basefootprint_2_target.point.y = linear_y;
   odom_2_target = tf_buffer_->transform(basefootprint_2_target, "odom", tf2::Duration(0)); 
@@ -379,7 +379,7 @@ int SIGVerseHsrTeleopKey::run()
 
   auto logger = node_->get_logger();
 
-  rclcpp::Rate loop_rate(40);
+  rclcpp::Rate loop_rate(50);
 
   const float linear_coef  = 0.2f;
   const float angular_coef = 0.5f;

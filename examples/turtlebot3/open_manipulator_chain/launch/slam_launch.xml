@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
-	<arg name="sigverse_ros_bridge_port"    default="50001" />
-	<arg name="ros_bridge_port"             default="9090" />
-	<arg name="camera"                      default="/camera" />
-	
+	<arg name="sigverse_ros_bridge_port"        default="50001" />
+	<arg name="ros_bridge_port" default="9090"/>
+
+	<!-- Teleop node -->
 	<node pkg="sigverse_turtlebot3_open_manipulator" exec="turtlebot3_teleop_key" output="screen" launch-prefix="gnome-terminal -t 'TurtleBot3 teleop key' -- ">
 		<!--
 		<remap from="/tb3/joint_state"         to="/tb3/joint_state" />
@@ -12,6 +12,13 @@
 		-->
 	</node>
 
+	<!-- slam_toolbox -->
+	<node pkg="slam_toolbox" exec="sync_slam_toolbox_node" name="sigverse_turtlebot3_slam" output="screen">
+		<param name="base_frame"  value="base_footprint"/>
+		<param name="odom_frame"  value="odom"/>
+		<param name="map_update_interval"     value="1.0"/>
+		<param name="minimum_travel_distance" value="0.2"/>
+	</node>
 
 	<node pkg="sigverse_ros_bridge" exec="sigverse_ros_bridge" args="$(var sigverse_ros_bridge_port)"/>
 
@@ -22,9 +29,7 @@
 		<arg name="send_action_goals_in_new_thread" value="true"/>
 		<!-- <arg name="bson_only_mode" value="true"/> -->
 	</include>
-
-	<node pkg="image_tools" exec="showimage" name="showimage">
-		<remap from="image" to="$(var camera)/rgb/image_raw"/>
-	</node>
+	
+	<node pkg="rviz2" exec="rviz2" args="-d $(find-pkg-share sigverse_turtlebot3_laser_distance_sensor)/launch/slam.rviz"/>
 </launch>
 

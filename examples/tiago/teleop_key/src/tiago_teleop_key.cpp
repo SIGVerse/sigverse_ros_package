@@ -337,7 +337,7 @@ int SIGVerseTiagoTeleopKey::run()
 
   auto logger = node_->get_logger();
 
-  rclcpp::Rate loop_rate(40);
+  rclcpp::Rate loop_rate(50);
 
   const float linear_coef  = 0.2f;
   const float angular_coef = 0.5f;

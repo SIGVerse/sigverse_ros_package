@@ -23,8 +23,8 @@ private:
   const std::string JOINT3_NAME = "joint3";
   const std::string JOINT4_NAME = "joint4";
 
-  const std::string GRIP_JOINT_NAME     = "grip_joint";
-  const std::string GRIP_JOINT_SUB_NAME = "grip_joint_sub";
+  const std::string GRIP_JOINT_NAME     = "gripper_left_joint";
+  const std::string GRIP_JOINT_SUB_NAME = "gripper_right_joint";
 
   const double LINEAR_VEL  = 0.2;
   const double ANGULAR_VEL = 0.4;
@@ -166,8 +166,8 @@ void SIGVerseTb3OpenManipulatorTeleopKey::moveHand(rclcpp::Publisher<trajectory_
 
   std::vector<double> positions;
 
-  positions.push_back(position); // for grip_joint
-  positions.push_back(position); // for grip_joint_sub
+  positions.push_back(position); // for gripper_left_joint
+  positions.push_back(position); // for gripper_right_joint
 
   double duration_sec = calcTrajectoryDuration(position, current_pos);
 
@@ -282,11 +282,11 @@ void SIGVerseTb3OpenManipulatorTeleopKey::keyLoop(int argc, char** argv)
   // This must be set after the first NodeHandle is created.
   signal(SIGINT, rosSigintHandler);
 
-  rclcpp::Rate loop_rate(10);
+  rclcpp::Rate loop_rate(50);
 
-  auto sub_joint_state = node_->create_subscription<sensor_msgs::msg::JointState>("/tb3omc/joint_state", 10, std::bind(&SIGVerseTb3OpenManipulatorTeleopKey::jointStateCallback, this, std::placeholders::_1));
-  auto pub_base_twist  = node_->create_publisher<geometry_msgs::msg::Twist>("/tb3omc/cmd_vel", 10);
-  auto pub_joint_traj  = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/tb3omc/joint_trajectory", 10);
+  auto sub_joint_state = node_->create_subscription<sensor_msgs::msg::JointState>      ("/tb3/joint_state", 10, std::bind(&SIGVerseTb3OpenManipulatorTeleopKey::jointStateCallback, this, std::placeholders::_1));
+  auto pub_base_twist  = node_->create_publisher<geometry_msgs::msg::Twist>            ("/tb3/cmd_vel", 10);
+  auto pub_joint_traj  = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/tb3/joint_trajectory", 10);
 
   sleep(2);
 
@@ -353,17 +353,17 @@ void SIGVerseTb3OpenManipulatorTeleopKey::keyLoop(int argc, char** argv)
         case 'j':
         {
           RCLCPP_DEBUG(logger, "Rotate Arm - Horizontal");
-          moveArm(pub_joint_traj, JOINT2_NAME, +1.57, joint2_pos1_);
-          moveArm(pub_joint_traj, JOINT3_NAME, -1.57, joint3_pos1_);
-          moveArm(pub_joint_traj, JOINT4_NAME, +0.26, joint4_pos1_);
+          moveArm(pub_joint_traj, JOINT2_NAME, +1.20, joint2_pos1_);
+          moveArm(pub_joint_traj, JOINT3_NAME, -0.80, joint3_pos1_);
+          moveArm(pub_joint_traj, JOINT4_NAME, +0.00, joint4_pos1_);
           break;
         }
         case 'm':
         {
           RCLCPP_DEBUG(logger, "Rotate Arm - Downward");
-          moveArm(pub_joint_traj, JOINT2_NAME, +1.75, joint2_pos1_);
-          moveArm(pub_joint_traj, JOINT3_NAME, -1.57, joint3_pos1_);
-          moveArm(pub_joint_traj, JOINT4_NAME, +0.26, joint4_pos1_);
+          moveArm(pub_joint_traj, JOINT2_NAME, +1.20, joint2_pos1_);
+          moveArm(pub_joint_traj, JOINT3_NAME, -0.80, joint3_pos1_);
+          moveArm(pub_joint_traj, JOINT4_NAME, +0.80, joint4_pos1_);
           break;
         }
         case '1':

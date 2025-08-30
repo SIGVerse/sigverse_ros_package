@@ -3,25 +3,27 @@
 
 #include <cstdio>
 #include <cmath>
-#include <cstring>
 #include <csignal>
+#include <optional>
+#include <mutex>
+#include <limits>
 #include <unistd.h>
 #include <termios.h>
 #include <chrono>
-#include <ros/ros.h>
-#include <tf/transform_broadcaster.h>
-#include <tf/transform_listener.h>
-#include <geometry_msgs/Twist.h>
-#include <sensor_msgs/CameraInfo.h>
-#include <sensor_msgs/JointState.h>
-#include <sensor_msgs/PointCloud2.h>
-#include <trajectory_msgs/JointTrajectory.h>
-#include <darknet_ros_msgs/BoundingBox.h>
-#include <darknet_ros_msgs/BoundingBoxes.h>
+#include <rclcpp/rclcpp.hpp>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
+#include <geometry_msgs/msg/twist.hpp>
+#include <sensor_msgs/msg/camera_info.hpp>
+#include <sensor_msgs/msg/joint_state.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
+#include <trajectory_msgs/msg/joint_trajectory.hpp>
+#include <yolo_msgs/msg/detection_array.hpp>
+#include <visualization_msgs/msg/marker_array.hpp>
 
 using namespace std::chrono;
 
-class SIGVerseTb3OpenManipulatorGraspingAuto
+class SIGVerseTb3GraspingAuto
 {
 public:
   enum GraspingStage
@@ -35,27 +37,10 @@ public:
   };
 
 private:
-  static const char KEY_1 = 0x31;
-  static const char KEY_2 = 0x32;
-  static const char KEY_3 = 0x33;
-  static const char KEY_4 = 0x34;
-  static const char KEY_5 = 0x35;
-
   static const char KEYCODE_UP    = 0x41;
   static const char KEYCODE_DOWN  = 0x42;
   static const char KEYCODE_RIGHT = 0x43;
   static const char KEYCODE_LEFT  = 0x44;
-
-  static const char KEY_A = 0x61;
-  static const char KEY_D = 0x64;
-  static const char KEY_H = 0x68;
-  static const char KEY_L = 0x6c;
-  static const char KEY_O = 0x6f;
-  static const char KEY_S = 0x73;
-  static const char KEY_W = 0x77;
-
-  static const char KEYCODE_SPACE  = 0x20;
-
 
   const std::string LINK1_NAME = "link1";
   const std::string LINK3_NAME = "link3";
@@ -93,79 +78,72 @@ private:
   const int MAX_OBJECTS_NUM = 10;
 
 public:
-  SIGVerseTb3OpenManipulatorGraspingAuto();
+  SIGVerseTb3GraspingAuto();
 
   void keyLoop(int argc, char** argv);
 
 private:
 
-  static void rosSigintHandler(int sig);
+  static void rosSigintHandler([[maybe_unused]] int sig);
   static int  canReceiveKey( const int fd );
 
-  void jointStateCallback   (const sensor_msgs::JointState::ConstPtr& joint_state);
-  void rgbCameraInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& camera_info);
-  void boundingBoxesCallback(const darknet_ros_msgs::BoundingBoxes::ConstPtr& bounding_boxes);
-  void pointCloudCallback   (const sensor_msgs::PointCloud2::ConstPtr& point_cloud);
+  void yoloDetectionCallback(const yolo_msgs::msg::DetectionArray::SharedPtr detection_array);
+  void jointStateCallback   (const sensor_msgs::msg::JointState::SharedPtr joint_state);
 
-  void moveBase(ros::Publisher &publisher, const double linear_x, const double angular_z);
-  void moveArm(ros::Publisher &publisher, const std::string &name, const double position, const double current_pos);
-  void moveHand(ros::Publisher &publisher, const double position, const double current_pos);
-  void stopJoints(ros::Publisher &publisher, const int duration_sec);
-  bool findGraspingTarget(geometry_msgs::Vector3 &point_cloud_pos, const std::string &target_name);
-  bool moveArmTowardObject(tf::TransformBroadcaster &tf_broadcaster, tf::TransformListener &tf_listener, ros::Publisher &pub_joint_traj, const std::string &target_name);
+  void moveBase(const double linear_x, const double angular_z);
+  void moveArm(const std::string &name, const double position, const double current_pos);
+  void moveHand(const double position, const double current_pos);
+  void stopJoints(const int duration_sec);
+  bool findGraspingTarget(geometry_msgs::msg::Point &target_pos, const std::string &target_name);
+  bool moveArmTowardObject(const std::string &target_name);
 
-  void initializePosture(ros::Publisher &pub_joint_traj);
+  void initializePosture();
 
   template <class T> static T clamp(const T val, const T min, const T max);
   static int calcTrajectoryDuration(const double val, const double current_val);
-  static bool get3dPositionFromScreenPosition(geometry_msgs::Vector3 &position3d, const sensor_msgs::PointCloud2 point_cloud, const int x, const int y);
   static bool isWaiting(time_point<system_clock> &latest_stage_time, const int wait_duration_milli);
   static void goNext(time_point<system_clock> &latest_stage_time, GraspingStage &stage);
 
   std::string getDetectedObjectsList();
   void showDetectedObjectsList();
+  void publishDebugMarkers(const std::string& frame_id, const geometry_msgs::msg::Point& target_pos);
   void showHelp();
+
+  rclcpp::Node::SharedPtr node_;
+
+  std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
+  std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
+
+  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr pub_base_twist_;
+  rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr pub_joint_trajectory_;
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr pub_debug_markers_;
+
+  std::optional<yolo_msgs::msg::DetectionArray> yolo_objects_;
+  mutable std::mutex yolo_mutex_; // Guard access if multi-threaded executor is used
 
   // Current positions that is updated by JointState
   double joint1_pos_, joint2_pos_, joint3_pos_, joint4_pos_, grip_joint_pos_;
-
-  int rgb_camera_height_, rgb_camera_width_;
-
-  time_point<system_clock> latest_time_of_bounding_boxes_;
-  time_point<system_clock> latest_time_of_point_cloud_;
-
-  darknet_ros_msgs::BoundingBoxes bounding_boxes_data_;
-  sensor_msgs::PointCloud2        point_cloud_data_;
 };
 
 
-SIGVerseTb3OpenManipulatorGraspingAuto::SIGVerseTb3OpenManipulatorGraspingAuto()
+SIGVerseTb3GraspingAuto::SIGVerseTb3GraspingAuto()
 {
   joint1_pos_ = 0.0;
   joint2_pos_ = 0.0;
   joint3_pos_ = 0.0;
   joint4_pos_ = 0.0;
   grip_joint_pos_ = 0.0;
-
-  rgb_camera_height_ = 0;
-  rgb_camera_width_  = 0;
-
-  latest_time_of_bounding_boxes_ = system_clock::now();
-  latest_time_of_point_cloud_    = system_clock::now();
-
-  bounding_boxes_data_.bounding_boxes.reserve(MAX_OBJECTS_NUM);
 }
 
 
-void SIGVerseTb3OpenManipulatorGraspingAuto::rosSigintHandler(int sig)
+void SIGVerseTb3GraspingAuto::rosSigintHandler([[maybe_unused]] int sig)
 {
-  ros::shutdown();
+  rclcpp::shutdown();
 }
 
-int SIGVerseTb3OpenManipulatorGraspingAuto::canReceiveKey( const int fd )
+int SIGVerseTb3GraspingAuto::canReceiveKey( const int fd )
 {
   fd_set fdset;
-  int ret;
   struct timeval timeout;
   FD_ZERO( &fdset );
   FD_SET( fd , &fdset );
@@ -178,60 +156,19 @@ int SIGVerseTb3OpenManipulatorGraspingAuto::canReceiveKey( const int fd )
 
 
 template <class T>
-T SIGVerseTb3OpenManipulatorGraspingAuto::clamp(const T val, const T min, const T max)
+T SIGVerseTb3GraspingAuto::clamp(const T val, const T min, const T max)
 {
   return std::min<T>(std::max<T>(min, val), max);
 }
 
 
-int SIGVerseTb3OpenManipulatorGraspingAuto::calcTrajectoryDuration(const double val, const double current_val)
+int SIGVerseTb3GraspingAuto::calcTrajectoryDuration(const double val, const double current_val)
 {
   return std::max<int>((int)(std::abs(val - current_val) / 0.5), 1);
 }
 
 
-/**
- * Get the 3D position of PointCloud using the 2D position of the screen.
- * x: 0 to 479,  y: 0 to 359
- */
-bool SIGVerseTb3OpenManipulatorGraspingAuto::get3dPositionFromScreenPosition(geometry_msgs::Vector3 &position3d, const sensor_msgs::PointCloud2 point_cloud, const int x, const int y)
-{
-  if(point_cloud.header.seq==0)
-  {
-    puts("No point cloud data.");
-    return false;
-  }
-
-  // -- PointCloud2 memo --
-  // height: 360, width: 480
-  // point_step=16, row_step=7680(=16*480)
-  int point_data_start_position = y * point_cloud.row_step + x * point_cloud.point_step;
-
-  int xpos = point_data_start_position + point_cloud.fields[0].offset;
-  int ypos = point_data_start_position + point_cloud.fields[1].offset;
-  int zpos = point_data_start_position + point_cloud.fields[2].offset;
-
-  float pos3d_x, pos3d_y, pos3d_z;
-
-  memcpy(&pos3d_x, &point_cloud.data[xpos], sizeof(float));
-  memcpy(&pos3d_y, &point_cloud.data[ypos], sizeof(float));
-  memcpy(&pos3d_z, &point_cloud.data[zpos], sizeof(float));
-
-  position3d.x = (double)pos3d_x;
-  position3d.y = (double)pos3d_y;
-  position3d.z = (double)pos3d_z;
-
-  if(std::isnan(position3d.x) || std::isnan(position3d.y) || std::isnan(position3d.z))
-  {
-//    puts("Point cloud data is nan.");
-    return false;
-  }
-
-  return true;
-}
-
-
-bool SIGVerseTb3OpenManipulatorGraspingAuto::isWaiting(time_point<system_clock> &latest_stage_time, const int wait_duration_milli)
+bool SIGVerseTb3GraspingAuto::isWaiting(time_point<system_clock> &latest_stage_time, const int wait_duration_milli)
 {
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(system_clock::now() - latest_stage_time).count();
 
@@ -241,7 +178,7 @@ bool SIGVerseTb3OpenManipulatorGraspingAuto::isWaiting(time_point<system_clock> 
 }
 
 
-void SIGVerseTb3OpenManipulatorGraspingAuto::goNext(time_point<system_clock> &latest_stage_time, GraspingStage &stage)
+void SIGVerseTb3GraspingAuto::goNext(time_point<system_clock> &latest_stage_time, GraspingStage &stage)
 {
   latest_stage_time = system_clock::now();
 

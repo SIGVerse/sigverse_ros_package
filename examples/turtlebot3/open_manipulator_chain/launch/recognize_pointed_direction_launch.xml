@@ -8,9 +8,9 @@
 	<node pkg="sigverse_turtlebot3_open_manipulator" exec="recognize_pointed_direction" output="screen">
 	    <param name="floor_z" value="$(var floor_z)"/>
 		<!--
-		<remap from="/tb3omc/joint_trajectory"       to="/tb3omc/joint_trajectory" />
-		<remap from="/tb3omc/debug_markers"          to="/tb3omc/debug_markers" />
-		<remap from="/tb3omc/instruction"            to="/tb3omc/instruction" />
+		<remap from="/tb3/joint_trajectory"       to="/tb3/joint_trajectory" />
+		<remap from="/tb3/debug_markers"          to="/tb3/debug_markers" />
+		<remap from="/tb3/instruction"            to="/tb3/instruction" />
 		<remap from="/yolo_human_pose/detections_3d" to="/yolo_human_pose/detections_3d" />
 		-->
 	</node>
@@ -28,9 +28,15 @@
 	<!-- YOLO Human Pose -->
 	<include file="$(find-pkg-share yolo_bringup)/launch/yolov11.launch.py">
 		<arg name="namespace" value="yolo_human_pose"/>
-		<arg name="model" value="yolo11n-pose.pt"/>
+		<arg name="model" value="$(env HOME)/yolo_weights/yolo11n-pose.pt"/>
 		<arg name="device" value="cpu"/>
 		<arg name="threshold" value="0.8"/>
+		<arg name="imgsz_height" value="376"/> 
+		<arg name="imgsz_width" value="672"/>
+		<!--
+		<arg name="imgsz_height" value="188"/> 
+		<arg name="imgsz_width" value="336"/>
+		-->
 		<arg name="input_image_topic" value="$(var camera_ns)/rgb/image_raw"/>
 		<arg name="input_depth_topic" value="$(var camera_ns)/depth/image_raw"/>
 		<arg name="input_depth_info_topic" value="$(var camera_ns)/depth/camera_info"/>

@@ -117,7 +117,7 @@ void SIGVerseTb3LaserDistanceSensorTeleopKey::keyLoop(int argc, char** argv)
 
   auto pub_base_twist = node->create_publisher<geometry_msgs::msg::Twist>("/tb3/cmd_vel", 10);
 
-  rclcpp::WallRate loop_rate(10);
+  rclcpp::WallRate loop_rate(50);
 
   auto logger = node->get_logger();
   sleep(2);

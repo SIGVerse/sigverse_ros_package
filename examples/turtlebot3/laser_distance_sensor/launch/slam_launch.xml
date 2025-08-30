@@ -5,7 +5,7 @@
 
 	<!-- Teleop node -->
 	<node pkg="sigverse_turtlebot3_laser_distance_sensor" exec="teleop_key" output="screen" launch-prefix="gnome-terminal -t 'TurtleBot3 teleop key' -- ">
-		<!-- 
+		<!--
 		<remap from="/tb3/cmd_vel" to="/tb3/cmd_vel"/> 
 		-->
 	</node>
