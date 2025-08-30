@@ -62,13 +62,19 @@ Visualization Manager:
           Value: true
         base_link:
           Value: true
+        base_scan:
+          Value: true
         caster_back_left_link:
           Value: true
         caster_back_right_link:
           Value: true
-        grip_link:
+        dummy_mimic_fix:
           Value: true
-        grip_link_sub:
+        end_effector_link:
+          Value: true
+        gripper_left_link:
+          Value: true
+        gripper_right_link:
           Value: true
         link1:
           Value: true
@@ -107,6 +113,8 @@ Visualization Manager:
         odom:
           base_footprint:
             base_link:
+              base_scan:
+                {}
               caster_back_left_link:
                 {}
               caster_back_right_link:
@@ -116,9 +124,13 @@ Visualization Manager:
                   link3:
                     link4:
                       link5:
-                        grip_link:
+                        dummy_mimic_fix:
                           {}
-                        grip_link_sub:
+                        end_effector_link:
+                          {}
+                        gripper_left_link:
+                          {}
+                        gripper_right_link:
                           {}
               wheel_left_link:
                 {}
@@ -283,5 +295,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1262
-  X: 295
-  Y: 60
+  X: 615
+  Y: 65

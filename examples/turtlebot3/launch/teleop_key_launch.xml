@@ -4,7 +4,7 @@
 	<arg name="ros_bridge_port"             default="9090" />
 	<arg name="camera"                      default="/camera" />
 	
-	<node pkg="sigverse_turtlebot3_open_manipulator" exec="turtlebot3_teleop_key" output="screen" launch-prefix="gnome-terminal -t 'TurtleBot3 teleop key' -- ">
+	<node pkg="sigverse_turtlebot3" exec="turtlebot3_teleop_key" output="screen" launch-prefix="gnome-terminal -t 'TurtleBot3 teleop key' -- ">
 		<!--
 		<remap from="/tb3/joint_state"         to="/tb3/joint_state" />
 		<remap from="/tb3/cmd_vel"             to="/tb3/cmd_vel" />

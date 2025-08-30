@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(sigverse_turtlebot3_open_manipulator)
+project(sigverse_turtlebot3)
 
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)

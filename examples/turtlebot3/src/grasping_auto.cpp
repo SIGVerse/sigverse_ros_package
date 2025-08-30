@@ -338,11 +338,11 @@ void SIGVerseTb3GraspingAuto::keyLoop(int argc, char** argv)
 
     rclcpp::Rate loop_rate(10);
 
-    pub_base_twist_        = node_->create_publisher<geometry_msgs::msg::Twist>            ("/tb3omc/cmd_vel", 10);
-    pub_joint_trajectory_  = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/tb3omc/joint_trajectory", 10);
-    pub_debug_markers_     = node_->create_publisher<visualization_msgs::msg::MarkerArray> ("/tb3omc/debug_markers", 10);
+    pub_base_twist_        = node_->create_publisher<geometry_msgs::msg::Twist>            ("/tb3/cmd_vel", 10);
+    pub_joint_trajectory_  = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/tb3/joint_trajectory", 10);
+    pub_debug_markers_     = node_->create_publisher<visualization_msgs::msg::MarkerArray> ("/tb3/debug_markers", 10);
 
-    auto sub_joint_state     = node_->create_subscription<sensor_msgs::msg::JointState> ("/tb3omc/joint_state",     10, std::bind(&SIGVerseTb3GraspingAuto::jointStateCallback, this, std::placeholders::_1));
+    auto sub_joint_state     = node_->create_subscription<sensor_msgs::msg::JointState>      ("/tb3/joint_state",     10, std::bind(&SIGVerseTb3GraspingAuto::jointStateCallback, this, std::placeholders::_1));
     auto sub_yolo_detections = node_->create_subscription<yolo_msgs::msg::DetectionArray>    ("/yolo_objects/detections_3d", 10, std::bind(&SIGVerseTb3GraspingAuto::yoloDetectionCallback, this, std::placeholders::_1));
 //    sub_point_cloud_     = node_->create_subscription<sensor_msgs::msg::PointCloud2>("/camera/depth/points",    10, std::bind(&SIGVerseTb3GraspingAuto::pointCloudCallback, this, std::placeholders::_1));
 

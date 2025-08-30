@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="3">
-  <name>sigverse_turtlebot3_open_manipulator</name>
+  <name>sigverse_turtlebot3</name>
   <version>2.0.0</version>
   <description>Sample package for TurtleBot3 with OpenManipulator Chain</description>
   <maintainer email="inamura.laboratory@gmail.com">inamura laboratory</maintainer>

@@ -10,7 +10,7 @@
 #include <trajectory_msgs/msg/joint_trajectory.hpp>
 #include <trajectory_msgs/msg/joint_trajectory_point.hpp>
 
-class SIGVerseTb3OpenManipulatorTeleopKey
+class SIGVerseTb3TeleopKey
 {
 private:
   static const char KEYCODE_UP    = 0x41;
@@ -34,7 +34,7 @@ private:
   const double GRIP_MAX = +0.035;
 
 public:
-  SIGVerseTb3OpenManipulatorTeleopKey();
+  SIGVerseTb3TeleopKey();
 
   void keyLoop(int argc, char** argv);
 
@@ -61,20 +61,20 @@ private:
 };
 
 
-SIGVerseTb3OpenManipulatorTeleopKey::SIGVerseTb3OpenManipulatorTeleopKey()
+SIGVerseTb3TeleopKey::SIGVerseTb3TeleopKey()
 {
   joint1_pos1_ = 0.0; joint2_pos1_ = 0.0; joint3_pos1_ = 0.0; joint4_pos1_ = 0.0; grip_joint_pos1_ = 0.0;
   joint1_pos2_ = 0.0; joint2_pos2_ = 0.0; joint3_pos2_ = 0.0; joint4_pos2_ = 0.0;
 }
 
 
-void SIGVerseTb3OpenManipulatorTeleopKey::rosSigintHandler([[maybe_unused]] int sig)
+void SIGVerseTb3TeleopKey::rosSigintHandler([[maybe_unused]] int sig)
 {
   rclcpp::shutdown();
 }
 
 
-int SIGVerseTb3OpenManipulatorTeleopKey::canReceiveKey( const int fd )
+int SIGVerseTb3TeleopKey::canReceiveKey( const int fd )
 {
   fd_set fdset;
   struct timeval timeout;
@@ -87,7 +87,7 @@ int SIGVerseTb3OpenManipulatorTeleopKey::canReceiveKey( const int fd )
   return select( fd+1 , &fdset , NULL , NULL , &timeout );
 }
 
-void SIGVerseTb3OpenManipulatorTeleopKey::jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr joint_state)
+void SIGVerseTb3TeleopKey::jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr joint_state)
 {
   for(size_t i=0; i<joint_state->name.size(); i++)
   {
@@ -118,7 +118,7 @@ void SIGVerseTb3OpenManipulatorTeleopKey::jointStateCallback(const sensor_msgs::
   }
 }
 
-void SIGVerseTb3OpenManipulatorTeleopKey::moveBase(rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr publisher, const double linear_x, const double angular_z)
+void SIGVerseTb3TeleopKey::moveBase(rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr publisher, const double linear_x, const double angular_z)
 {
   geometry_msgs::msg::Twist twist;
 
@@ -133,7 +133,7 @@ void SIGVerseTb3OpenManipulatorTeleopKey::moveBase(rclcpp::Publisher<geometry_ms
 }
 
 
-void SIGVerseTb3OpenManipulatorTeleopKey::moveArm(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const std::string &name, const double position, const double current_pos)
+void SIGVerseTb3TeleopKey::moveArm(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const std::string &name, const double position, const double current_pos)
 {
   std::vector<std::string> names;
   names.push_back(name);
@@ -160,7 +160,7 @@ void SIGVerseTb3OpenManipulatorTeleopKey::moveArm(rclcpp::Publisher<trajectory_m
   publisher->publish(joint_trajectory);
 }
 
-void SIGVerseTb3OpenManipulatorTeleopKey::moveHand(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const double position, const double current_pos)
+void SIGVerseTb3TeleopKey::moveHand(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const double position, const double current_pos)
 {
   std::vector<std::string> joint_names {GRIP_JOINT_NAME, GRIP_JOINT_SUB_NAME};
 
@@ -187,7 +187,7 @@ void SIGVerseTb3OpenManipulatorTeleopKey::moveHand(rclcpp::Publisher<trajectory_
 }
 
 
-void SIGVerseTb3OpenManipulatorTeleopKey::stopJoints(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const int duration_sec)
+void SIGVerseTb3TeleopKey::stopJoints(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const int duration_sec)
 {
   std::vector<std::string> names {JOINT1_NAME, JOINT2_NAME, JOINT3_NAME, JOINT4_NAME};
 
@@ -215,13 +215,13 @@ void SIGVerseTb3OpenManipulatorTeleopKey::stopJoints(rclcpp::Publisher<trajector
 }
 
 
-int SIGVerseTb3OpenManipulatorTeleopKey::calcTrajectoryDuration(const double val, const double current_val)
+int SIGVerseTb3TeleopKey::calcTrajectoryDuration(const double val, const double current_val)
 {
   return std::max<int>((int)(std::abs(val - current_val) / 0.5), 1);
 }
 
 
-void SIGVerseTb3OpenManipulatorTeleopKey::showHelp()
+void SIGVerseTb3TeleopKey::showHelp()
 {
   puts("\n");
   puts("---------------------------");
@@ -252,7 +252,7 @@ void SIGVerseTb3OpenManipulatorTeleopKey::showHelp()
 }
 
 
-void SIGVerseTb3OpenManipulatorTeleopKey::keyLoop(int argc, char** argv)
+void SIGVerseTb3TeleopKey::keyLoop(int argc, char** argv)
 {
   char c;
   int  ret;
@@ -284,7 +284,7 @@ void SIGVerseTb3OpenManipulatorTeleopKey::keyLoop(int argc, char** argv)
 
   rclcpp::Rate loop_rate(50);
 
-  auto sub_joint_state = node_->create_subscription<sensor_msgs::msg::JointState>      ("/tb3/joint_state", 10, std::bind(&SIGVerseTb3OpenManipulatorTeleopKey::jointStateCallback, this, std::placeholders::_1));
+  auto sub_joint_state = node_->create_subscription<sensor_msgs::msg::JointState>      ("/tb3/joint_state", 10, std::bind(&SIGVerseTb3TeleopKey::jointStateCallback, this, std::placeholders::_1));
   auto pub_base_twist  = node_->create_publisher<geometry_msgs::msg::Twist>            ("/tb3/cmd_vel", 10);
   auto pub_joint_traj  = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/tb3/joint_trajectory", 10);
 
@@ -451,7 +451,7 @@ void SIGVerseTb3OpenManipulatorTeleopKey::keyLoop(int argc, char** argv)
 
 int main(int argc, char** argv)
 {
-  SIGVerseTb3OpenManipulatorTeleopKey teleop_key;
+  SIGVerseTb3TeleopKey teleop_key;
 
   teleop_key.keyLoop(argc, argv);
 

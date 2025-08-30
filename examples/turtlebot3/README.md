@@ -4,21 +4,28 @@ This package includes sample ROS nodes for TurtleBot3 equipped with an arm.
 
 ## Prerequisites
 
-- ** xxxxx **
+### SLAM
+- **slam-toolbox**
 
 ## How To Use
 
 teleop_key
 ```bash
-$ ros2 launch sigverse_turtlebot3_open_manipulator teleop_key_launch.xml
+$ ros2 launch sigverse_turtlebot3 teleop_key_launch.xml
 ```
-grasping_auto
+
+SLAM
 ```bash
-$ ros2 launch sigverse_turtlebot3_open_manipulator grasping_auto_launch.xml
+$ ros2 launch sigverse_turtlebot3 slam.launch
 ```
 
 recognize_pointed_direction
 ```bash
-$ ros2 launch sigverse_turtlebot3_open_manipulator recognize_pointed_direction.launch
+$ ros2 launch sigverse_turtlebot3 recognize_pointed_direction.launch
+```
+
+grasping_auto
+```bash
+$ ros2 launch sigverse_turtlebot3 grasping_auto_launch.xml
 ```
 
