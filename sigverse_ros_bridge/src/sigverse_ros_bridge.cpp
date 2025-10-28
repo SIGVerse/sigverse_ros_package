@@ -142,7 +142,7 @@ void * SIGVerseROSBridge::receivingThread(void *param)
       break;
     }
 
-    std::cout << "msg size=" << msgSize << std::endl;
+//    std::cout << "msg size=" << msgSize << std::endl;
 
     // Get BSON data
     while(msgSize!=totalReceivedSize)
@@ -177,7 +177,7 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 //    std::cout << "tp:" << topicValue << std::endl;
 //    std::cout << "tv:" << typeValue << std::endl;
 
-    // Advertise
+    // Create Publisher
     if(typeValue!=TYPE_TIME_SYNC && typeValue!=TYPE_TF_LIST)
     {
       if(typeValue==TYPE_TWIST)
@@ -186,6 +186,7 @@ void * SIGVerseROSBridge::receivingThread(void *param)
         {
           auto publisher = node->create_publisher<geometry_msgs::msg::Twist>(topicValue, 1000);
           twistPublisherMap[topicValue] = publisher;
+          std::cout << "Create Publisher: " << topicValue << std::endl;
         }
       }
       else if(typeValue==TYPE_CAMERA_INFO)
@@ -194,6 +195,7 @@ void * SIGVerseROSBridge::receivingThread(void *param)
         {
           auto publisher = node->create_publisher<sensor_msgs::msg::CameraInfo>(topicValue, 10);
           cameraInfoPublisherMap[topicValue] = publisher;
+          std::cout << "Create Publisher: " << topicValue << std::endl;
         }
       }
       else if(typeValue==TYPE_IMAGE)
@@ -202,6 +204,7 @@ void * SIGVerseROSBridge::receivingThread(void *param)
         {
           auto publisher = node->create_publisher<sensor_msgs::msg::Image>(topicValue, 10);
           imagePublisherMap[topicValue] = publisher;
+          std::cout << "Create Publisher: " << topicValue << std::endl;
         }
       }
       else if(typeValue==TYPE_LASER_SCAN)
@@ -210,6 +213,7 @@ void * SIGVerseROSBridge::receivingThread(void *param)
         {
           auto publisher = node->create_publisher<sensor_msgs::msg::LaserScan>(topicValue, 10);
           laserScanPublisherMap[topicValue] = publisher;
+          std::cout << "Create Publisher: " << topicValue << std::endl;
         }
       }
       else
@@ -217,8 +221,6 @@ void * SIGVerseROSBridge::receivingThread(void *param)
         std::cout << "Not compatible message type! :" << typeValue << std::endl;
         continue;
       }
-
-      std::cout << "Advertised " << topicValue << std::endl;
     }
 
     // Publish

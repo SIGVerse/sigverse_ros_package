@@ -17,7 +17,11 @@
   <depend>tf2_ros</depend>
   <depend>yolo_msgs</depend>
   <depend>visualization_msgs</depend>
+  <depend>moveit_ros_planning_interface</depend>
 
+  <exec_depend>sigverse_turtlebot3_manipulation_hardware</exec_depend>
+  <exec_depend>sigverse_turtlebot3_manipulation_description</exec_depend>
+  <exec_depend>sigverse_turtlebot3_manipulation_moveit_config</exec_depend>
   <exec_depend>rosbridge_server</exec_depend>
   <exec_depend>sigverse_ros_bridge</exec_depend>
   

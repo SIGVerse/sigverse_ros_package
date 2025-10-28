@@ -20,6 +20,7 @@ find_package(builtin_interfaces REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(yolo_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
+find_package(moveit_ros_planning_interface REQUIRED)
 
 # teleop_key
 add_executable(turtlebot3_teleop_key src/turtlebot3_teleop_key.cpp)
@@ -31,7 +32,7 @@ ament_target_dependencies(recognize_pointed_direction rclcpp std_msgs geometry_m
 
 # grasping_auto
 add_executable(grasping_auto src/grasping_auto.cpp)
-ament_target_dependencies(grasping_auto rclcpp std_msgs geometry_msgs sensor_msgs trajectory_msgs builtin_interfaces tf2_ros yolo_msgs visualization_msgs)
+ament_target_dependencies(grasping_auto rclcpp std_msgs geometry_msgs sensor_msgs trajectory_msgs builtin_interfaces tf2_ros yolo_msgs visualization_msgs moveit_ros_planning_interface)
 
 install(
   TARGETS turtlebot3_teleop_key 
@@ -41,7 +42,7 @@ install(
 )
 
 install(
-  DIRECTORY launch
+  DIRECTORY launch config
   DESTINATION share/${PROJECT_NAME}
 )
 

@@ -1,0 +1,5 @@
+<library path="sigverse_turtlebot3_system">
+  <class type="sigverse::SIGVerseTurtleBot3System"
+         base_class_type="hardware_interface::SystemInterface"
+         name="sigverse_turtlebot3_manipulation_hardware/SIGVerseTurtleBot3System"/>
+</library>

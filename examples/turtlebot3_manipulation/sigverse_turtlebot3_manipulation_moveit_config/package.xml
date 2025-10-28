@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>sigverse_turtlebot3_manipulation_moveit_config</name>
+  <version>0.1.0</version>
+  <description>TurtleBot3 MoveIt config for SIGVerse (config-only package)</description>
+  <maintainer email="inamura.laboratory@gmail.com">inamura laboratory</maintainer>
+  <license>SIGVerse License</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

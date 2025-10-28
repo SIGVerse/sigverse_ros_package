@@ -7,6 +7,13 @@ This package includes sample ROS nodes for TurtleBot3 equipped with an arm.
 ### SLAM
 - **slam-toolbox**
 
+### recognize_pointed_direction
+- **yolo_ros**
+
+### grasping_auto
+- **yolo_ros**
+- **moveit**
+
 ## How To Use
 
 teleop_key

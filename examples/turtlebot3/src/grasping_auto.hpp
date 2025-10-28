@@ -20,6 +20,7 @@
 #include <trajectory_msgs/msg/joint_trajectory.hpp>
 #include <yolo_msgs/msg/detection_array.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
+#include <moveit/move_group_interface/move_group_interface.h>
 
 using namespace std::chrono;
 
@@ -55,8 +56,8 @@ private:
   const std::string JOINT3_NAME = "joint3";
   const std::string JOINT4_NAME = "joint4";
 
-  const std::string GRIP_JOINT_NAME     = "grip_joint";
-  const std::string GRIP_JOINT_SUB_NAME = "grip_joint_sub";
+  const std::string GRIP_JOINT_NAME     = "gripper_left_joint";
+  const std::string GRIP_JOINT_SUB_NAME = "gripper_right_joint";
 
   const double LINEAR_VEL  = 0.2;
   const double ANGULAR_VEL = 0.4;
@@ -92,7 +93,7 @@ private:
 
   void moveBase(const double linear_x, const double angular_z);
   void moveArm(const std::string &name, const double position, const double current_pos);
-  void moveHand(const double position, const double current_pos);
+  void moveGripper(const double position, const double current_pos);
   void stopJoints(const int duration_sec);
   bool findGraspingTarget(geometry_msgs::msg::Point &target_pos, const std::string &target_name);
   bool moveArmTowardObject(const std::string &target_name);

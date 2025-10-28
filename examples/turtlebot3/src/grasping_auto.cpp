@@ -10,6 +10,11 @@ void SIGVerseTb3GraspingAuto::yoloDetectionCallback(const yolo_msgs::msg::Detect
 
 void SIGVerseTb3GraspingAuto::jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr joint_state)
 {
+  // Check Time Stamp
+//  auto logger = node_->get_logger();
+//  const auto &st = joint_state->header.stamp;
+//  RCLCPP_INFO(logger, "JointState stamp: %d.%09u (sec.nsec)", st.sec, st.nanosec);
+
   for(size_t i=0; i<joint_state->name.size(); i++)
   {
     if(joint_state->name[i]==JOINT1_NAME)    { joint1_pos_     = joint_state->position[i]; continue; }
@@ -59,7 +64,7 @@ void SIGVerseTb3GraspingAuto::moveArm(const std::string &name, const double posi
 }
 
 
-void SIGVerseTb3GraspingAuto::moveHand(const double position, const double current_pos)
+void SIGVerseTb3GraspingAuto::moveGripper(const double position, const double current_pos)
 {
   std::vector<std::string> joint_names {GRIP_JOINT_NAME, GRIP_JOINT_SUB_NAME};
 
@@ -142,76 +147,56 @@ bool SIGVerseTb3GraspingAuto::findGraspingTarget(geometry_msgs::msg::Point &targ
 
 bool SIGVerseTb3GraspingAuto::moveArmTowardObject(const std::string &target_name)
 {
-  geometry_msgs::msg::Point target_pos;
+  auto logger = node_->get_logger();
 
-  if(!findGraspingTarget(target_pos, target_name)){ return false; }
+  try
+  {
+    geometry_msgs::msg::Point target_pos;
 
-  RCLCPP_INFO(node_->get_logger(), "Target Object=%s", target_name.c_str());
+    if(!findGraspingTarget(target_pos, target_name)){ return false; }
 
-  // tf::Transform target_transform;
+    RCLCPP_INFO(logger, "Target Object=%s", target_name.c_str());
 
-  // target_transform.setOrigin( tf::Vector3(target_pos.x, target_pos.y, target_pos.z) );
-  // target_transform.setRotation( tf::Quaternion::getIdentity() );
+    // Gripper Open
+    moveGripper(GRIP_MIN, grip_joint_pos_);
 
-  // tf_buffer_.sendTransform(tf::StampedTransform(target_transform, ros::Time::now(), CAMERA_DEPTH_OPTICAL_FRAME_NAME, TARGET_NAME));
+    RCLCPP_INFO(logger, "MoveIt -START-");
 
-  // tf::StampedTransform transform_link1_to_target, transform_link3_to_target;
-  // tf::StampedTransform transform_link3_to_link4,  transform_link4_to_link5;
+    moveit::planning_interface::MoveGroupInterface arm(node_, "arm");
+    arm.setPoseReferenceFrame("base_link");
+    arm.setEndEffectorLink("end_effector_link");
+    arm.setGoalPositionTolerance(0.01); //[m]
+    arm.setGoalOrientationTolerance(0.05); //[rad]
 
-  // try
-  // {
-  //   tf_listener_.waitForTransform(LINK1_NAME, TARGET_NAME, ros::Time(0), ros::Duration(0.3) );
+//    puts(("target_pos.x= " + std::to_string(target_pos.x)).c_str());
+//    puts(("target_pos.y= " + std::to_string(target_pos.y)).c_str());
+//    puts(("target_pos.z= " + std::to_string(target_pos.z)).c_str());
 
-  //   tf_listener_.lookupTransform (LINK1_NAME, TARGET_NAME, ros::Time(0), transform_link1_to_target);
-  //   tf_listener_.lookupTransform (LINK3_NAME, TARGET_NAME, ros::Time(0), transform_link3_to_target);
-  //   tf_listener_.lookupTransform (LINK3_NAME, LINK4_NAME,  ros::Time(0), transform_link3_to_link4);
-  //   tf_listener_.lookupTransform (LINK4_NAME, LINK5_NAME,  ros::Time(0), transform_link4_to_link5);
-  // }
-  // catch (tf::TransformException &ex)
-  // {
-  //   puts(("Couldn't lookup the transform of TF."));
-  //   ROS_ERROR("%s",ex.what());
-  //   return false;
-  // }
+    arm.setPositionTarget(target_pos.x, target_pos.y, target_pos.z);
 
-  // tf::Vector3 vec_link3_to_target = transform_link3_to_target.getOrigin();
-  // tf::Vector3 vec_link3_to_link4  = transform_link3_to_link4.getOrigin();
-  // tf::Vector3 vec_link4_to_link5  = transform_link4_to_link5.getOrigin();
+    moveit::planning_interface::MoveGroupInterface::Plan plan;
+    moveit::core::MoveItErrorCode result = arm.plan(plan);
 
-  // double len_link3_target = std::sqrt(std::pow(vec_link3_to_target.x(),2) + std::pow(vec_link3_to_target.z(),2));
-  // double len_link3_link4  = std::sqrt(std::pow(vec_link3_to_link4.x(),2)  + std::pow(vec_link3_to_link4.z(),2));
-  // double len_link4_link5  = std::sqrt(std::pow(vec_link4_to_link5.x(),2)  + std::pow(vec_link4_to_link5.z(),2));
+    if (result == moveit::core::MoveItErrorCode::SUCCESS)
+    {
+      RCLCPP_INFO(logger, "Plan succeeded, executing...");      
+      arm.execute(plan);
+    }
+    else
+    {
+      RCLCPP_ERROR(logger, "Plan failed, cannot execute.");
+    }
 
-  // double distance = len_link3_target - 0.12; // Shorten the distance 12cm.
-
-  // if(distance > len_link3_link4 + len_link4_link5)
-  // {
-  //   puts(("The target is too far. distance="+std::to_string(distance)).c_str());
-  //   return false;
-  // }
-
-  // ROS_DEBUG("Grasp %s", target_name.c_str());
-
-  // // Rotate joint1
-  // tf::Vector3 vec_link1_to_target = transform_link1_to_target.getOrigin();
-
-  // double joint1_angle = std::atan2(vec_link1_to_target.y(), vec_link1_to_target.x());
-
-  // moveArm(JOINT1_NAME, joint1_angle, joint1_pos_);
-
-  // // Rotate joint2, joint3, joint4
-  // double joint2_angle = M_PI/2.0 - std::acos((std::pow(len_link3_link4,2) + std::pow(distance,2) - std::pow(len_link4_link5,2)) / (2.0 * len_link3_link4 * distance));
-  // double joint3_angle = M_PI/2.0 - std::acos((std::pow(len_link3_link4,2) + std::pow(len_link4_link5,2) - std::pow(distance,2)) / (2.0 * len_link3_link4 * len_link4_link5));
-
-  // moveArm(JOINT2_NAME, joint2_angle, joint2_pos_);
-  // moveArm(JOINT3_NAME, joint3_angle, joint3_pos_);
-
-  // double joint4_angle = -(joint2_angle + joint3_angle) + 0.5; // 0.5 means adjustment. Rotate a little downward.
-
-  // moveArm(JOINT4_NAME, joint4_angle, joint4_pos_);
-
-  // // Hand Open
-  // moveHand(GRIP_MIN, grip_joint_pos_);
+    RCLCPP_INFO(logger, "MoveIt -END-");
+  }
+  catch (const std::exception& e)
+  {
+    RCLCPP_ERROR(logger, "moveArmTowardObject: Standard exception: %s",e.what());
+  }
+  catch (...) 
+  {
+    RCLCPP_ERROR(logger, "moveArmTowardObject: Unknown exception caught");
+  }
 
   return true;
 }
@@ -302,7 +287,6 @@ void SIGVerseTb3GraspingAuto::showHelp()
   puts("h: Show help");
 }
 
-
 void SIGVerseTb3GraspingAuto::keyLoop(int argc, char** argv)
 {
   char c;
@@ -329,7 +313,6 @@ void SIGVerseTb3GraspingAuto::keyLoop(int argc, char** argv)
 
     node_ = rclcpp::Node::make_shared("tb3_omc_grasping_auto");
 
-
     // Override the default ros sigint handler.
     // This must be set after the first NodeHandle is created.
     signal(SIGINT, rosSigintHandler);
@@ -344,9 +327,6 @@ void SIGVerseTb3GraspingAuto::keyLoop(int argc, char** argv)
 
     auto sub_joint_state     = node_->create_subscription<sensor_msgs::msg::JointState>      ("/tb3/joint_state",     10, std::bind(&SIGVerseTb3GraspingAuto::jointStateCallback, this, std::placeholders::_1));
     auto sub_yolo_detections = node_->create_subscription<yolo_msgs::msg::DetectionArray>    ("/yolo_objects/detections_3d", 10, std::bind(&SIGVerseTb3GraspingAuto::yoloDetectionCallback, this, std::placeholders::_1));
-//    sub_point_cloud_     = node_->create_subscription<sensor_msgs::msg::PointCloud2>("/camera/depth/points",    10, std::bind(&SIGVerseTb3GraspingAuto::pointCloudCallback, this, std::placeholders::_1));
-
-//    ros::Subscriber sub_bounding_boxes  = node_handle.subscribe("/darknet_ros/bounding_boxes",  10, &SIGVerseTb3GraspingAuto::boundingBoxesCallback, this);
 
     sleep(2);
 
@@ -416,7 +396,7 @@ void SIGVerseTb3GraspingAuto::keyLoop(int argc, char** argv)
             case 'o':
             {
               RCLCPP_DEBUG(logger, "Hand Open");
-              moveHand(GRIP_MIN, grip_joint_pos_);
+              moveGripper(GRIP_MIN, grip_joint_pos_);
               break;
             }
             case 'l':
@@ -453,7 +433,7 @@ void SIGVerseTb3GraspingAuto::keyLoop(int argc, char** argv)
           case Grasp:
           {
             RCLCPP_DEBUG(logger, "Hand Close");
-            moveHand(GRIP_MAX, grip_joint_pos_);
+            moveGripper(GRIP_MAX, grip_joint_pos_);
 
             goNext(latest_stage_time, stage);
             break;
@@ -485,6 +465,8 @@ void SIGVerseTb3GraspingAuto::keyLoop(int argc, char** argv)
       }
 
       rclcpp::spin_some(node_);
+
+//      puts("rclcpp::spin rclcpp::spin rclcpp::spin rclcpp::spin rclcpp::spin");
 
       loop_rate.sleep();
     }
