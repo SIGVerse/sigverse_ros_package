@@ -299,6 +299,10 @@ void SIGVerseTb3GraspingAuto::init_window()
 {
   setlocale(LC_ALL, "");
   initscr();
+  cbreak();              // Disable line buffering
+  noecho();              // Don't echo input characters
+  nodelay(stdscr, TRUE); // Make getch() non-blocking
+  keypad(stdscr, TRUE);  // Enable special keys (arrow keys, etc.)
   refresh();
   update_window_layout();
 }
@@ -340,24 +344,6 @@ void SIGVerseTb3GraspingAuto::show_help()
 
 void SIGVerseTb3GraspingAuto::key_loop(int argc, char** argv)
 {
-  char c;
-  int  ret;
-  char buf[1024];
-
-  /////////////////////////////////////////////
-  int kfd = 0;
-  struct termios cooked;
-
-  // get the console in raw mode
-  struct termios raw;
-  tcgetattr(kfd, &cooked);
-  memcpy(&raw, &cooked, sizeof(struct termios));
-  raw.c_lflag &=~ (ICANON | ECHO);
-  raw.c_cc[VEOL] = 1;
-  raw.c_cc[VEOF] = 2;
-  tcsetattr(kfd, TCSANOW, &raw);
-  /////////////////////////////////////////////
-
   try
   {
     init_window();
@@ -394,23 +380,15 @@ void SIGVerseTb3GraspingAuto::key_loop(int argc, char** argv)
 
       if(!is_grasping)
       {
-        if(can_receive_key(kfd))
+        int c = getch();
+        if(c != ERR)  // Key was pressed
         {
-          // get the next event from the keyboard
-          if((ret = read(kfd, &buf, sizeof(buf))) < 0)
-          {
-            perror("read():");
-            exit(EXIT_FAILURE);
-          }
-
-          // Check if input is multi-byte, but exclude escape sequences (arrow keys)
-          if(ret >= 3 && buf[0] != 0x1b)
+          // Check for multi-byte characters (e.g., full-width input), But allow ncurses special keys.
+          if(c > 127 && (c < KEY_MIN || c > KEY_MAX))
           {
             display_message_in_window("Please use half-width input mode!");
             continue;
           }
-
-          c = buf[ret-1];
 
           switch(c)
           {
@@ -422,28 +400,28 @@ void SIGVerseTb3GraspingAuto::key_loop(int argc, char** argv)
               break;
             }
             case 'w':
-            case KEYCODE_UP:
+            case KEY_UP:
             {
               RCLCPP_DEBUG(logger, "Go Forward");
               move_base(+LINEAR_VEL, 0.0);
               break;
             }
             case 's':
-            case KEYCODE_DOWN:
+            case KEY_DOWN:
             {
               RCLCPP_DEBUG(logger, "Go Back");
               move_base(-LINEAR_VEL, 0.0);
               break;
             }
             case 'd':
-            case KEYCODE_RIGHT:
+            case KEY_RIGHT:
             {
               RCLCPP_DEBUG(logger, "Turn Right");
               move_base(0.0, -ANGULAR_VEL);
               break;
             }
             case 'a':
-            case KEYCODE_LEFT:
+            case KEY_LEFT:
             {
               RCLCPP_DEBUG(logger, "Turn Left");
               move_base(0.0, +ANGULAR_VEL);
@@ -530,11 +508,6 @@ void SIGVerseTb3GraspingAuto::key_loop(int argc, char** argv)
   {
     puts("An exception occurred!");
   }
-
-  /////////////////////////////////////////////
-  // cooked mode
-  tcsetattr(kfd, TCSANOW, &cooked);
-  /////////////////////////////////////////////
 
   shutdown_window();
 

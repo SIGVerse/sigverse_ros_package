@@ -41,11 +41,6 @@ public:
   };
 
 private:
-  static const char KEYCODE_UP    = 0x41;
-  static const char KEYCODE_DOWN  = 0x42;
-  static const char KEYCODE_RIGHT = 0x43;
-  static const char KEYCODE_LEFT  = 0x44;
-
   const std::string LINK1_NAME = "link1";
   const std::string LINK3_NAME = "link3";
   const std::string LINK4_NAME = "link4";
@@ -90,7 +85,6 @@ public:
 private:
 
   static void ros_sigint_handler([[maybe_unused]] int sig);
-  static int  can_receive_key( const int fd );
 
   void yolo_detection_callback(const yolo_msgs::msg::DetectionArray::SharedPtr detection_array);
   void joint_state_callback   (const sensor_msgs::msg::JointState::SharedPtr joint_state);
@@ -153,19 +147,6 @@ SIGVerseTb3GraspingAuto::SIGVerseTb3GraspingAuto()
 void SIGVerseTb3GraspingAuto::ros_sigint_handler([[maybe_unused]] int sig)
 {
   rclcpp::shutdown();
-}
-
-int SIGVerseTb3GraspingAuto::can_receive_key( const int fd )
-{
-  fd_set fdset;
-  struct timeval timeout;
-  FD_ZERO( &fdset );
-  FD_SET( fd , &fdset );
-
-  timeout.tv_sec = 0;
-  timeout.tv_usec = 0;
-
-  return select( fd+1 , &fdset , NULL , NULL , &timeout );
 }
 
 
