@@ -111,7 +111,7 @@ def generate_launch_description():
         package="sigverse_turtlebot3",
         executable="grasping_auto",
         output="screen",
-        prefix='gnome-terminal --title="TurtleBot3 teleop key" --',
+        prefix='gnome-terminal --title="TurtleBot3 teleop key" --geometry=60x20 --',
         parameters=[
             {"robot_description": Command(["xacro ", LaunchConfiguration("urdf_file")])},
             {"robot_description_semantic": srdf_content},

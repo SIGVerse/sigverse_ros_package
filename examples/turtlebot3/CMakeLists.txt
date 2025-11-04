@@ -6,10 +6,13 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
 endif()
 
+set(CURSES_NEED_WIDE TRUE)
+
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+find_package(Curses REQUIRED)
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
@@ -33,6 +36,8 @@ ament_target_dependencies(recognize_pointed_direction rclcpp std_msgs geometry_m
 # grasping_auto
 add_executable(grasping_auto src/grasping_auto.cpp)
 ament_target_dependencies(grasping_auto rclcpp std_msgs geometry_msgs sensor_msgs trajectory_msgs builtin_interfaces tf2_ros yolo_msgs visualization_msgs moveit_ros_planning_interface)
+target_link_libraries(grasping_auto ${CURSES_LIBRARIES})
+target_include_directories(grasping_auto PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CURSES_INCLUDE_DIR})
 
 install(
   TARGETS turtlebot3_teleop_key 

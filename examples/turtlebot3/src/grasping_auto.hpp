@@ -6,6 +6,8 @@
 #include <csignal>
 #include <optional>
 #include <mutex>
+#include <atomic>
+#include <locale.h>
 #include <limits>
 #include <unistd.h>
 #include <termios.h>
@@ -21,6 +23,7 @@
 #include <yolo_msgs/msg/detection_array.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <moveit/move_group_interface/move_group_interface.h>
+#include <ncurses.h> // Include ncurses after MoveIt headers to avoid macro conflicts
 
 using namespace std::chrono;
 
@@ -77,38 +80,43 @@ private:
   const int OBJECTS_INFO_UPDATING_INTERVAL = 500; //[ms]
 
   const int MAX_OBJECTS_NUM = 10;
+  const int WINDOW_HEADER_HEIGHT = 10;
 
 public:
   SIGVerseTb3GraspingAuto();
 
-  void keyLoop(int argc, char** argv);
+  void key_loop(int argc, char** argv);
 
 private:
 
-  static void rosSigintHandler([[maybe_unused]] int sig);
-  static int  canReceiveKey( const int fd );
+  static void ros_sigint_handler([[maybe_unused]] int sig);
+  static int  can_receive_key( const int fd );
 
-  void yoloDetectionCallback(const yolo_msgs::msg::DetectionArray::SharedPtr detection_array);
-  void jointStateCallback   (const sensor_msgs::msg::JointState::SharedPtr joint_state);
+  void yolo_detection_callback(const yolo_msgs::msg::DetectionArray::SharedPtr detection_array);
+  void joint_state_callback   (const sensor_msgs::msg::JointState::SharedPtr joint_state);
 
-  void moveBase(const double linear_x, const double angular_z);
-  void moveArm(const std::string &name, const double position, const double current_pos);
-  void moveGripper(const double position, const double current_pos);
-  void stopJoints(const int duration_sec);
-  bool findGraspingTarget(geometry_msgs::msg::Point &target_pos, const std::string &target_name);
-  bool moveArmTowardObject(const std::string &target_name);
+  void move_base(const double linear_x, const double angular_z);
+  void move_arm(const std::string &name, const double position, const double current_pos);
+  void move_gripper(const double position, const double current_pos);
+  void stop_joints(const int duration_sec);
+  bool find_grasping_target(geometry_msgs::msg::Point &target_pos, const std::string &target_name);
+  bool move_arm_toward_object(const std::string &target_name);
 
-  void initializePosture();
+  void initialize_posture();
 
   template <class T> static T clamp(const T val, const T min, const T max);
-  static int calcTrajectoryDuration(const double val, const double current_val);
-  static bool isWaiting(time_point<system_clock> &latest_stage_time, const int wait_duration_milli);
-  static void goNext(time_point<system_clock> &latest_stage_time, GraspingStage &stage);
+  static int calc_trajectory_duration(const double val, const double current_val);
+  static bool is_waiting(time_point<system_clock> &latest_stage_time, const int wait_duration_milli);
+  static void go_next(time_point<system_clock> &latest_stage_time, GraspingStage &stage);
 
-  std::string getDetectedObjectsList();
-  void showDetectedObjectsList();
-  void publishDebugMarkers(const std::string& frame_id, const geometry_msgs::msg::Point& target_pos);
-  void showHelp();
+  std::string get_detected_objects_list();
+  void show_detected_objects_list();
+  void publish_debug_markers(const std::string& frame_id, const geometry_msgs::msg::Point& target_pos);
+  void show_help();
+  void update_window_layout();
+  void init_window();
+  void resize_window();
+  void shutdown_window();
 
   rclcpp::Node::SharedPtr node_;
 
@@ -124,6 +132,11 @@ private:
 
   // Current positions that is updated by JointState
   double joint1_pos_, joint2_pos_, joint3_pos_, joint4_pos_, grip_joint_pos_;
+
+  // Window settings
+  WINDOW* win_header_ = nullptr;
+  static std::atomic<bool> need_redraw_window_; // set from existing SIGWINCH handler
+  int header_height_ = WINDOW_HEADER_HEIGHT;
 };
 
 
@@ -137,12 +150,12 @@ SIGVerseTb3GraspingAuto::SIGVerseTb3GraspingAuto()
 }
 
 
-void SIGVerseTb3GraspingAuto::rosSigintHandler([[maybe_unused]] int sig)
+void SIGVerseTb3GraspingAuto::ros_sigint_handler([[maybe_unused]] int sig)
 {
   rclcpp::shutdown();
 }
 
-int SIGVerseTb3GraspingAuto::canReceiveKey( const int fd )
+int SIGVerseTb3GraspingAuto::can_receive_key( const int fd )
 {
   fd_set fdset;
   struct timeval timeout;
@@ -163,13 +176,13 @@ T SIGVerseTb3GraspingAuto::clamp(const T val, const T min, const T max)
 }
 
 
-int SIGVerseTb3GraspingAuto::calcTrajectoryDuration(const double val, const double current_val)
+int SIGVerseTb3GraspingAuto::calc_trajectory_duration(const double val, const double current_val)
 {
   return std::max<int>((int)(std::abs(val - current_val) / 0.5), 1);
 }
 
 
-bool SIGVerseTb3GraspingAuto::isWaiting(time_point<system_clock> &latest_stage_time, const int wait_duration_milli)
+bool SIGVerseTb3GraspingAuto::is_waiting(time_point<system_clock> &latest_stage_time, const int wait_duration_milli)
 {
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(system_clock::now() - latest_stage_time).count();
 
@@ -179,7 +192,7 @@ bool SIGVerseTb3GraspingAuto::isWaiting(time_point<system_clock> &latest_stage_t
 }
 
 
-void SIGVerseTb3GraspingAuto::goNext(time_point<system_clock> &latest_stage_time, GraspingStage &stage)
+void SIGVerseTb3GraspingAuto::go_next(time_point<system_clock> &latest_stage_time, GraspingStage &stage)
 {
   latest_stage_time = system_clock::now();
 

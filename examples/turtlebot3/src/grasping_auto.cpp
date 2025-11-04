@@ -1,6 +1,8 @@
 #include "grasping_auto.hpp"
 
-void SIGVerseTb3GraspingAuto::yoloDetectionCallback(const yolo_msgs::msg::DetectionArray::SharedPtr detection_array)
+std::atomic<bool> SIGVerseTb3GraspingAuto::need_redraw_window_{false};
+
+void SIGVerseTb3GraspingAuto::yolo_detection_callback(const yolo_msgs::msg::DetectionArray::SharedPtr detection_array)
 {
   if (detection_array->detections.empty()) { return; }
 
@@ -8,9 +10,9 @@ void SIGVerseTb3GraspingAuto::yoloDetectionCallback(const yolo_msgs::msg::Detect
   yolo_objects_ = *detection_array;   // deep copy
 }
 
-void SIGVerseTb3GraspingAuto::jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr joint_state)
+void SIGVerseTb3GraspingAuto::joint_state_callback(const sensor_msgs::msg::JointState::SharedPtr joint_state)
 {
-  // Check Time Stamp
+  // Check Time Stamp 
 //  auto logger = node_->get_logger();
 //  const auto &st = joint_state->header.stamp;
 //  RCLCPP_INFO(logger, "JointState stamp: %d.%09u (sec.nsec)", st.sec, st.nanosec);
@@ -26,7 +28,7 @@ void SIGVerseTb3GraspingAuto::jointStateCallback(const sensor_msgs::msg::JointSt
 }
 
 
-void SIGVerseTb3GraspingAuto::moveBase(const double linear_x, const double angular_z)
+void SIGVerseTb3GraspingAuto::move_base(const double linear_x, const double angular_z)
 {
   geometry_msgs::msg::Twist twist;
 
@@ -41,7 +43,7 @@ void SIGVerseTb3GraspingAuto::moveBase(const double linear_x, const double angul
 }
 
 
-void SIGVerseTb3GraspingAuto::moveArm(const std::string &name, const double position, const double current_pos)
+void SIGVerseTb3GraspingAuto::move_arm(const std::string &name, const double position, const double current_pos)
 {
   std::vector<std::string> names;
   names.push_back(name);
@@ -49,7 +51,7 @@ void SIGVerseTb3GraspingAuto::moveArm(const std::string &name, const double posi
   std::vector<double> positions;
   positions.push_back(position);
 
-  int duration_sec = calcTrajectoryDuration(position, current_pos);
+  int duration_sec = calc_trajectory_duration(position, current_pos);
 
   trajectory_msgs::msg::JointTrajectory joint_trajectory;
   trajectory_msgs::msg::JointTrajectoryPoint arm_joint_point;
@@ -64,7 +66,7 @@ void SIGVerseTb3GraspingAuto::moveArm(const std::string &name, const double posi
 }
 
 
-void SIGVerseTb3GraspingAuto::moveGripper(const double position, const double current_pos)
+void SIGVerseTb3GraspingAuto::move_gripper(const double position, const double current_pos)
 {
   std::vector<std::string> joint_names {GRIP_JOINT_NAME, GRIP_JOINT_SUB_NAME};
 
@@ -73,7 +75,7 @@ void SIGVerseTb3GraspingAuto::moveGripper(const double position, const double cu
   positions.push_back(position); // for grip_joint
   positions.push_back(position); // for grip_joint_sub
 
-  int duration_sec = calcTrajectoryDuration(position, current_pos);
+  int duration_sec = calc_trajectory_duration(position, current_pos);
 
   trajectory_msgs::msg::JointTrajectoryPoint point;
   point.positions = positions;
@@ -87,7 +89,7 @@ void SIGVerseTb3GraspingAuto::moveGripper(const double position, const double cu
 }
 
 
-void SIGVerseTb3GraspingAuto::stopJoints(const int duration_sec)
+void SIGVerseTb3GraspingAuto::stop_joints(const int duration_sec)
 {
   std::vector<std::string> names {JOINT1_NAME, JOINT2_NAME, JOINT3_NAME, JOINT4_NAME};
 
@@ -110,7 +112,7 @@ void SIGVerseTb3GraspingAuto::stopJoints(const int duration_sec)
 }
 
 
-bool SIGVerseTb3GraspingAuto::findGraspingTarget(geometry_msgs::msg::Point &target_pos, const std::string &target_name)
+bool SIGVerseTb3GraspingAuto::find_grasping_target(geometry_msgs::msg::Point &target_pos, const std::string &target_name)
 {
   std::scoped_lock lock(yolo_mutex_);
   if (!yolo_objects_ || yolo_objects_->detections.empty()){ return false; }
@@ -139,13 +141,13 @@ bool SIGVerseTb3GraspingAuto::findGraspingTarget(geometry_msgs::msg::Point &targ
 
   target_pos = nearest_pos.value();
 
-  publishDebugMarkers(frame_id, target_pos);
+  publish_debug_markers(frame_id, target_pos);
 
   return true;
 }
 
 
-bool SIGVerseTb3GraspingAuto::moveArmTowardObject(const std::string &target_name)
+bool SIGVerseTb3GraspingAuto::move_arm_toward_object(const std::string &target_name)
 {
   auto logger = node_->get_logger();
 
@@ -153,12 +155,12 @@ bool SIGVerseTb3GraspingAuto::moveArmTowardObject(const std::string &target_name
   {
     geometry_msgs::msg::Point target_pos;
 
-    if(!findGraspingTarget(target_pos, target_name)){ return false; }
+    if(!find_grasping_target(target_pos, target_name)){ return false; }
 
     RCLCPP_INFO(logger, "Target Object=%s", target_name.c_str());
 
     // Gripper Open
-    moveGripper(GRIP_MIN, grip_joint_pos_);
+    move_gripper(GRIP_MIN, grip_joint_pos_);
 
     RCLCPP_INFO(logger, "MoveIt -START-");
 
@@ -191,30 +193,30 @@ bool SIGVerseTb3GraspingAuto::moveArmTowardObject(const std::string &target_name
   }
   catch (const std::exception& e)
   {
-    RCLCPP_ERROR(logger, "moveArmTowardObject: Standard exception: %s",e.what());
+    RCLCPP_ERROR(logger, "move_arm_toward_object: Standard exception: %s",e.what());
   }
   catch (...) 
   {
-    RCLCPP_ERROR(logger, "moveArmTowardObject: Unknown exception caught");
+    RCLCPP_ERROR(logger, "move_arm_toward_object: Unknown exception caught");
   }
 
   return true;
 }
 
 
-void SIGVerseTb3GraspingAuto::initializePosture()
+void SIGVerseTb3GraspingAuto::initialize_posture()
 {
   // Rotate joint1
-  moveArm(JOINT1_NAME, 0.0, joint1_pos_);
+  move_arm(JOINT1_NAME, 0.0, joint1_pos_);
 
   // Rotate joint2, joint3, joint4
-  moveArm(JOINT2_NAME, 0.0, joint2_pos_);
-  moveArm(JOINT3_NAME, 0.0, joint3_pos_);
-  moveArm(JOINT4_NAME, 0.0, joint4_pos_);
+  move_arm(JOINT2_NAME, 0.0, joint2_pos_);
+  move_arm(JOINT3_NAME, 0.0, joint3_pos_);
+  move_arm(JOINT4_NAME, 0.0, joint4_pos_);
 }
 
 
-std::string SIGVerseTb3GraspingAuto::getDetectedObjectsList()
+std::string SIGVerseTb3GraspingAuto::get_detected_objects_list()
 {
   std::scoped_lock lock(yolo_mutex_);
   if (!yolo_objects_ || yolo_objects_->detections.empty()){ return ""; }
@@ -230,16 +232,26 @@ std::string SIGVerseTb3GraspingAuto::getDetectedObjectsList()
 }
 
 
-void SIGVerseTb3GraspingAuto::showDetectedObjectsList()
+void SIGVerseTb3GraspingAuto::show_detected_objects_list()
 {
-  puts("\n");
-  puts("---------------------------");
-  puts("Detected objects Info");
-  puts(("objects=" + getDetectedObjectsList()).c_str());
-  puts("---------------------------");
+  int rows, cols;
+  getmaxyx(stdscr, rows, cols);
+  if (rows <= WINDOW_HEADER_HEIGHT + 6) { return; }
+
+  resize_window();
+
+  // Render the list at fixed positions just below the header
+  mvprintw(WINDOW_HEADER_HEIGHT + 2, 0, "---------------------------");
+  mvprintw(WINDOW_HEADER_HEIGHT + 3, 0, "Detected objects Info");
+  mvprintw(WINDOW_HEADER_HEIGHT + 4, 0, "objects=%s", get_detected_objects_list().c_str());
+  mvprintw(WINDOW_HEADER_HEIGHT + 5, 0, "---------------------------");
+
+  move(WINDOW_HEADER_HEIGHT + 6, 0);
+
+  refresh();
 }
 
-void SIGVerseTb3GraspingAuto::publishDebugMarkers(const std::string& frame_id, const geometry_msgs::msg::Point& target_pos)
+void SIGVerseTb3GraspingAuto::publish_debug_markers(const std::string& frame_id, const geometry_msgs::msg::Point& target_pos)
 {
   visualization_msgs::msg::MarkerArray markerArray;
   const auto stamp = rclcpp::Time(0);
@@ -260,34 +272,79 @@ void SIGVerseTb3GraspingAuto::publishDebugMarkers(const std::string& frame_id, c
   pub_debug_markers_->publish(markerArray);
 }
 
-void SIGVerseTb3GraspingAuto::showHelp()
+void SIGVerseTb3GraspingAuto::update_window_layout()
 {
-  puts("\n");
-  puts("---------------------------");
-  puts("Operate from keyboard");
-  puts("---------------------------");
-  puts("arrow keys : Move");
-  puts("---------------------------");
-  puts("Space: Stop");
-  puts("---------------------------");
-  puts("w: Go Forward");
-  puts("s: Go Back");
-  puts("d: Turn Right");
-  puts("a: Turn Left");
-  puts("---------------------------");
-  puts(("1: Grasp " + GRASPING_TARGET1_NAME).c_str());
-  puts(("2: Grasp " + GRASPING_TARGET2_NAME).c_str());
-  puts(("3: Grasp " + GRASPING_TARGET3_NAME).c_str());
-  puts(("4: Grasp " + GRASPING_TARGET4_NAME).c_str());
-  puts(("5: Grasp " + GRASPING_TARGET5_NAME).c_str());
-  puts("---------------------------");
-  puts("o: Hand Open");
-  puts("---------------------------");
-  puts("l: Show Detected objects list");
-  puts("h: Show help");
+  int rows, cols;
+  getmaxyx(stdscr, rows, cols);
+
+  if (rows <= 2) { return; } // terminal unavailable
+  if (rows <= header_height_ + 2) { header_height_ = rows - 1; }
+  else                            { header_height_ = WINDOW_HEADER_HEIGHT + 2; }
+
+  if (win_header_) 
+  {
+    wresize(win_header_, header_height_, cols);
+    mvwin(win_header_, 0, 0);
+    werase(stdscr);
+  }
+  else 
+  {
+    win_header_ = newwin(header_height_, cols, 0, 0);
+    if (!win_header_) { return; }
+    wrefresh(win_header_);
+    move(header_height_, 0);
+  }
+
+  refresh();
+
+  std::printf("\033[%d;%dr", header_height_ + 1, rows); // limit scrolling to [header+1 .. rows]
+  std::fflush(stdout);
 }
 
-void SIGVerseTb3GraspingAuto::keyLoop(int argc, char** argv)
+void SIGVerseTb3GraspingAuto::init_window() 
+{
+  setlocale(LC_ALL, "");
+  initscr();
+  refresh();
+  update_window_layout();
+}
+
+void SIGVerseTb3GraspingAuto::resize_window() 
+{
+  update_window_layout();
+  show_help();
+}
+
+void SIGVerseTb3GraspingAuto::shutdown_window() 
+{
+  std::printf("\033[r");
+  std::fflush(stdout);
+
+  if (win_header_) { delwin(win_header_); win_header_ = nullptr; }
+  endwin();
+}
+
+void SIGVerseTb3GraspingAuto::show_help() 
+{
+  if (!win_header_){ return; }
+  wclear(win_header_);
+  box(win_header_, 0, 0);
+  mvwprintw(win_header_, 1, 2, "arrow keys : Move");
+  mvwprintw(win_header_, 2, 2, "Space: Stop");
+  mvwprintw(win_header_, 3, 2, "w/s/d/a: Forward/Backward/Turn Right/Turn Left");
+  mvwprintw(win_header_, 4, 2, "  1: Grasp %s", GRASPING_TARGET1_NAME.c_str());
+  mvwprintw(win_header_, 5, 2, "  2: Grasp %s", GRASPING_TARGET2_NAME.c_str());
+  mvwprintw(win_header_, 6, 2, "  3: Grasp %s", GRASPING_TARGET3_NAME.c_str());
+  mvwprintw(win_header_, 7, 2, "  4: Grasp %s", GRASPING_TARGET4_NAME.c_str());
+  mvwprintw(win_header_, 8, 2, "  5: Grasp %s", GRASPING_TARGET5_NAME.c_str());
+  mvwprintw(win_header_, 9, 2, "o: Hand Open");
+  mvwprintw(win_header_,10, 2, "l: Show Detected objects list");
+  wrefresh(win_header_);
+  move(header_height_, 0);
+  refresh();
+}
+
+void SIGVerseTb3GraspingAuto::key_loop(int argc, char** argv)
 {
   char c;
   int  ret;
@@ -309,13 +366,16 @@ void SIGVerseTb3GraspingAuto::keyLoop(int argc, char** argv)
 
   try
   {
+    init_window();
+    show_help();
+
     rclcpp::init(argc, argv);
 
     node_ = rclcpp::Node::make_shared("tb3_omc_grasping_auto");
 
     // Override the default ros sigint handler.
-    // This must be set after the first NodeHandle is created.
-    signal(SIGINT, rosSigintHandler);
+    signal(SIGINT, ros_sigint_handler);
+    signal(SIGWINCH, [](int){ need_redraw_window_.store(true, std::memory_order_relaxed); });
 
     auto logger = node_->get_logger();
 
@@ -325,8 +385,8 @@ void SIGVerseTb3GraspingAuto::keyLoop(int argc, char** argv)
     pub_joint_trajectory_  = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/tb3/joint_trajectory", 10);
     pub_debug_markers_     = node_->create_publisher<visualization_msgs::msg::MarkerArray> ("/tb3/debug_markers", 10);
 
-    auto sub_joint_state     = node_->create_subscription<sensor_msgs::msg::JointState>      ("/tb3/joint_state",     10, std::bind(&SIGVerseTb3GraspingAuto::jointStateCallback, this, std::placeholders::_1));
-    auto sub_yolo_detections = node_->create_subscription<yolo_msgs::msg::DetectionArray>    ("/yolo_objects/detections_3d", 10, std::bind(&SIGVerseTb3GraspingAuto::yoloDetectionCallback, this, std::placeholders::_1));
+    auto sub_joint_state     = node_->create_subscription<sensor_msgs::msg::JointState>      ("/tb3/joint_state",     10, std::bind(&SIGVerseTb3GraspingAuto::joint_state_callback, this, std::placeholders::_1));
+    auto sub_yolo_detections = node_->create_subscription<yolo_msgs::msg::DetectionArray>    ("/yolo_objects/detections_3d", 10, std::bind(&SIGVerseTb3GraspingAuto::yolo_detection_callback, this, std::placeholders::_1));
 
     sleep(2);
 
@@ -334,13 +394,15 @@ void SIGVerseTb3GraspingAuto::keyLoop(int argc, char** argv)
     GraspingStage stage = GraspingStage::MoveArm;
     time_point<system_clock> latest_stage_time;
 
-    showHelp();
+//    showHelp();
 
     while (rclcpp::ok())
     {
+      if (need_redraw_window_.exchange(false)) { resize_window(); }
+
       if(!is_grasping)
       {
-        if(canReceiveKey(kfd))
+        if(can_receive_key(kfd))
         {
           // get the next event from the keyboard
           if((ret = read(kfd, &buf, sizeof(buf))) < 0)
@@ -356,59 +418,53 @@ void SIGVerseTb3GraspingAuto::keyLoop(int argc, char** argv)
             case ' ':
             {
               RCLCPP_DEBUG(logger, "Stop");
-              moveBase(0.0, 0.0);
-              stopJoints(1);
+              move_base(0.0, 0.0);
+              stop_joints(1);
               break;
             }
             case 'w':
             case KEYCODE_UP:
             {
               RCLCPP_DEBUG(logger, "Go Forward");
-              moveBase(+LINEAR_VEL, 0.0);
+              move_base(+LINEAR_VEL, 0.0);
               break;
             }
             case 's':
             case KEYCODE_DOWN:
             {
               RCLCPP_DEBUG(logger, "Go Back");
-              moveBase(-LINEAR_VEL, 0.0);
+              move_base(-LINEAR_VEL, 0.0);
               break;
             }
             case 'd':
             case KEYCODE_RIGHT:
             {
               RCLCPP_DEBUG(logger, "Turn Right");
-              moveBase(0.0, -ANGULAR_VEL);
+              move_base(0.0, -ANGULAR_VEL);
               break;
             }
             case 'a':
             case KEYCODE_LEFT:
             {
               RCLCPP_DEBUG(logger, "Turn Left");
-              moveBase(0.0, +ANGULAR_VEL);
+              move_base(0.0, +ANGULAR_VEL);
               break;
             }
-            case '1': { is_grasping = moveArmTowardObject(GRASPING_TARGET1_NAME); break; }
-            case '2': { is_grasping = moveArmTowardObject(GRASPING_TARGET2_NAME); break; }
-            case '3': { is_grasping = moveArmTowardObject(GRASPING_TARGET3_NAME); break; }
-            case '4': { is_grasping = moveArmTowardObject(GRASPING_TARGET4_NAME); break; }
-            case '5': { is_grasping = moveArmTowardObject(GRASPING_TARGET5_NAME); break; }
+            case '1': { is_grasping = move_arm_toward_object(GRASPING_TARGET1_NAME); break; }
+            case '2': { is_grasping = move_arm_toward_object(GRASPING_TARGET2_NAME); break; }
+            case '3': { is_grasping = move_arm_toward_object(GRASPING_TARGET3_NAME); break; }
+            case '4': { is_grasping = move_arm_toward_object(GRASPING_TARGET4_NAME); break; }
+            case '5': { is_grasping = move_arm_toward_object(GRASPING_TARGET5_NAME); break; }
             case 'o':
             {
               RCLCPP_DEBUG(logger, "Hand Open");
-              moveGripper(GRIP_MIN, grip_joint_pos_);
+              move_gripper(GRIP_MIN, grip_joint_pos_);
               break;
             }
             case 'l':
             {
               RCLCPP_DEBUG(logger, "Show Detected objects list");
-              showDetectedObjectsList();
-              break;
-            }
-            case 'h':
-            {
-              RCLCPP_DEBUG(logger, "Show Help");
-              showHelp();
+              show_detected_objects_list();
               break;
             }
           }
@@ -420,42 +476,42 @@ void SIGVerseTb3GraspingAuto::keyLoop(int argc, char** argv)
         {
           case MoveArm:
           {
-            goNext(latest_stage_time, stage);
+            go_next(latest_stage_time, stage);
             break;
           }
           case WaitMoveArm:
           {
-            if(isWaiting(latest_stage_time, 3000)){ break; }
+            if(is_waiting(latest_stage_time, 3000)){ break; }
 
-            goNext(latest_stage_time, stage);
+            go_next(latest_stage_time, stage);
             break;
           }
           case Grasp:
           {
             RCLCPP_DEBUG(logger, "Hand Close");
-            moveGripper(GRIP_MAX, grip_joint_pos_);
+            move_gripper(GRIP_MAX, grip_joint_pos_);
 
-            goNext(latest_stage_time, stage);
+            go_next(latest_stage_time, stage);
             break;
           }
           case WaitGrasp:
           {
-            if(isWaiting(latest_stage_time, 2000)){ break; }
+            if(is_waiting(latest_stage_time, 2000)){ break; }
 
-            goNext(latest_stage_time, stage);
+            go_next(latest_stage_time, stage);
             break;
           }
           case UpArm:
           {
             RCLCPP_DEBUG(logger, "Up Arm");
-            initializePosture();
+            initialize_posture();
 
-            goNext(latest_stage_time, stage);
+            go_next(latest_stage_time, stage);
             break;
           }
           case WaitUpArm:
           {
-            if(isWaiting(latest_stage_time, 3000)){ break; }
+            if(is_waiting(latest_stage_time, 3000)){ break; }
 
             stage = GraspingStage::MoveArm;
             is_grasping = false;
@@ -481,6 +537,8 @@ void SIGVerseTb3GraspingAuto::keyLoop(int argc, char** argv)
   tcsetattr(kfd, TCSANOW, &cooked);
   /////////////////////////////////////////////
 
+  shutdown_window();
+
   return;
 }
 
@@ -489,7 +547,7 @@ int main(int argc, char** argv)
 {
   SIGVerseTb3GraspingAuto grasping_auto;
 
-  grasping_auto.keyLoop(argc, argv);
+  grasping_auto.key_loop(argc, argv);
 
   return(EXIT_SUCCESS);
 }
