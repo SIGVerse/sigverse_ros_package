@@ -12,7 +12,7 @@ void SIGVerseTb3GraspingAuto::yolo_detection_callback(const yolo_msgs::msg::Dete
 
 void SIGVerseTb3GraspingAuto::joint_state_callback(const sensor_msgs::msg::JointState::SharedPtr joint_state)
 {
-  // Check Time Stamp 
+  // Check Time Stamp
 //  auto logger = node_->get_logger();
 //  const auto &st = joint_state->header.stamp;
 //  RCLCPP_INFO(logger, "JointState stamp: %d.%09u (sec.nsec)", st.sec, st.nanosec);
@@ -232,21 +232,15 @@ std::string SIGVerseTb3GraspingAuto::get_detected_objects_list()
 }
 
 
-void SIGVerseTb3GraspingAuto::show_detected_objects_list()
+void SIGVerseTb3GraspingAuto::display_message_in_window(const std::string& text)
 {
   int rows, cols;
   getmaxyx(stdscr, rows, cols);
   if (rows <= WINDOW_HEADER_HEIGHT + 6) { return; }
-
   resize_window();
 
-  // Render the list at fixed positions just below the header
-  mvprintw(WINDOW_HEADER_HEIGHT + 2, 0, "---------------------------");
-  mvprintw(WINDOW_HEADER_HEIGHT + 3, 0, "Detected objects Info");
-  mvprintw(WINDOW_HEADER_HEIGHT + 4, 0, "objects=%s", get_detected_objects_list().c_str());
-  mvprintw(WINDOW_HEADER_HEIGHT + 5, 0, "---------------------------");
-
-  move(WINDOW_HEADER_HEIGHT + 6, 0);
+  mvprintw(WINDOW_HEADER_HEIGHT + 2, 0, "%s", text.c_str());
+  move(WINDOW_HEADER_HEIGHT + 3, 0);
 
   refresh();
 }
@@ -394,8 +388,6 @@ void SIGVerseTb3GraspingAuto::key_loop(int argc, char** argv)
     GraspingStage stage = GraspingStage::MoveArm;
     time_point<system_clock> latest_stage_time;
 
-//    showHelp();
-
     while (rclcpp::ok())
     {
       if (need_redraw_window_.exchange(false)) { resize_window(); }
@@ -409,6 +401,13 @@ void SIGVerseTb3GraspingAuto::key_loop(int argc, char** argv)
           {
             perror("read():");
             exit(EXIT_FAILURE);
+          }
+
+          // Check if input is multi-byte, but exclude escape sequences (arrow keys)
+          if(ret >= 3 && buf[0] != 0x1b)
+          {
+            display_message_in_window("Please use half-width input mode!");
+            continue;
           }
 
           c = buf[ret-1];
@@ -464,7 +463,7 @@ void SIGVerseTb3GraspingAuto::key_loop(int argc, char** argv)
             case 'l':
             {
               RCLCPP_DEBUG(logger, "Show Detected objects list");
-              show_detected_objects_list();
+              display_message_in_window("Detected objects: " + get_detected_objects_list());
               break;
             }
           }

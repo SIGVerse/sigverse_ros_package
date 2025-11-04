@@ -110,7 +110,7 @@ private:
   static void go_next(time_point<system_clock> &latest_stage_time, GraspingStage &stage);
 
   std::string get_detected_objects_list();
-  void show_detected_objects_list();
+  void display_message_in_window(const std::string& text);
   void publish_debug_markers(const std::string& frame_id, const geometry_msgs::msg::Point& target_pos);
   void show_help();
   void update_window_layout();
