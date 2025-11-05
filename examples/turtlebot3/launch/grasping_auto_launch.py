@@ -60,6 +60,7 @@ def generate_launch_description():
     joint_limits_dict       = load_yaml(moveit_config_pkg, "config/joint_limits.yaml")
     ompl_planning_dict      = load_yaml(moveit_config_pkg, "config/ompl_planning.yaml")
     moveit_controllers_dict = load_yaml(moveit_config_pkg, "config/moveit_controllers.yaml")
+    sensors_3d_dict         = load_yaml(moveit_config_pkg, "config/sensors_3d.yaml")
 
     moveit_controllers_param = {
         "moveit_simple_controller_manager": {
@@ -81,6 +82,7 @@ def generate_launch_description():
             ompl_planning_dict,
             {"moveit_controller_manager": "moveit_simple_controller_manager/MoveItSimpleControllerManager"},
             moveit_controllers_param,
+            sensors_3d_dict,
         ],
         remappings=[("/joint_states", "/tb3/joint_state")],
     )

@@ -1,0 +1,13 @@
+# Dummy depth-based Octomap updater
+sensors:
+  - camera_depth_image
+camera_depth_image:
+    sensor_plugin: occupancy_map_monitor/DepthImageOctomapUpdater
+    image_topic: /camera/depth/image_raw
+    queue_size: 5
+    near_clipping_plane_distance: 0.1
+    far_clipping_plane_distance: 12.0
+    shadow_threshold: 0.2
+    padding_scale: 1.0
+    max_update_rate: 1.0
+#    filtered_cloud_topic: /camera/filtered_points
