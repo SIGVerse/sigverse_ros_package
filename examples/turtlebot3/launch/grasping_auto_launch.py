@@ -9,6 +9,8 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+from moveit_configs_utils import MoveItConfigsBuilder
+from launch.logging import get_logger
 
 def load_yaml(pkg: str, relpath: str):
     path = os.path.join(get_package_share_directory(pkg), relpath)
@@ -16,16 +18,9 @@ def load_yaml(pkg: str, relpath: str):
         return yaml.safe_load(file)
 
 def generate_launch_description():
-    declare_sigverse_port  = DeclareLaunchArgument("sigverse_ros_bridge_port", default_value="50001")
-    declare_rosbridge_port = DeclareLaunchArgument("ros_bridge_port", default_value="9090")
-    declare_camera_ns      = DeclareLaunchArgument("camera_ns", default_value="/camera")
-    declare_urdf_file = DeclareLaunchArgument(
-        "urdf_file",
-        default_value=PathJoinSubstitution([
-            FindPackageShare("sigverse_turtlebot3_manipulation_description"),
-            "urdf", "turtlebot3_manipulation.urdf.xacro"
-        ])
-    )
+    declare_sigverse_port    = DeclareLaunchArgument("sigverse_ros_bridge_port", default_value="50001")
+    declare_rosbridge_port   = DeclareLaunchArgument("ros_bridge_port", default_value="9090")
+    declare_camera_ns        = DeclareLaunchArgument("camera_ns", default_value="/camera")
     declare_controllers_file = DeclareLaunchArgument(
         "controllers_file",
         default_value=PathJoinSubstitution([
@@ -34,6 +29,9 @@ def generate_launch_description():
         ])
     )
 
+    description_dir = get_package_share_directory("sigverse_turtlebot3_manipulation_description")
+    urdf_path = str(Path(description_dir, "urdf",  "turtlebot3_manipulation.urdf.xacro"))
+
     controller_manager_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
@@ -41,7 +39,7 @@ def generate_launch_description():
         output="screen",
 #        prefix='gnome-terminal --title="controller_manager" --',
         parameters=[
-            {"robot_description": Command(["xacro ", LaunchConfiguration("urdf_file")])},
+            {"robot_description": Command(["xacro ", urdf_path])},
             LaunchConfiguration("controllers_file")
         ]
     )
@@ -54,36 +52,25 @@ def generate_launch_description():
         output="screen"
     )
 
-    moveit_config_pkg = "sigverse_turtlebot3_manipulation_moveit_config"
-    srdf_content = (Path(get_package_share_directory(moveit_config_pkg)).joinpath("config/turtlebot3_manipulation.srdf")).read_text()
-    kinematics_dict         = load_yaml(moveit_config_pkg, "config/kinematics.yaml")
-    joint_limits_dict       = load_yaml(moveit_config_pkg, "config/joint_limits.yaml")
-    ompl_planning_dict      = load_yaml(moveit_config_pkg, "config/ompl_planning.yaml")
-    moveit_controllers_dict = load_yaml(moveit_config_pkg, "config/moveit_controllers.yaml")
-    sensors_3d_dict         = load_yaml(moveit_config_pkg, "config/sensors_3d.yaml")
-
-    moveit_controllers_param = {
-        "moveit_simple_controller_manager": {
-            "controller_names": moveit_controllers_dict["controller_names"],
-            "arm_controller": moveit_controllers_dict["arm_controller"]
-        }
-    }
+    moveit_config = (
+        MoveItConfigsBuilder("sigverse_turtlebot3_manipulation")
+        .robot_description           (file_path=urdf_path)
+        .robot_description_semantic  (file_path="config/turtlebot3_manipulation.srdf")
+        .robot_description_kinematics(file_path="config/kinematics.yaml")
+        .joint_limits                (file_path="config/joint_limits.yaml")
+        .planning_scene_monitor(publish_robot_description=True, publish_robot_description_semantic=True)
+        .trajectory_execution        (file_path="config/moveit_controllers.yaml")
+        .planning_pipelines          (pipelines=["ompl"], default_planning_pipeline="ompl")
+        .sensors_3d                  (file_path="config/sensors_3d.yaml")
+        .to_moveit_configs()
+    )
 
     move_group_node = Node(
         package="moveit_ros_move_group",
         executable="move_group",
 #        name="move_group",
         output="screen",
-        parameters=[
-            {"robot_description": Command(["xacro ", LaunchConfiguration("urdf_file")])},
-            {"robot_description_semantic": srdf_content},
-            {"robot_description_kinematics": kinematics_dict},
-            {"robot_description_planning": joint_limits_dict},
-            ompl_planning_dict,
-            {"moveit_controller_manager": "moveit_simple_controller_manager/MoveItSimpleControllerManager"},
-            moveit_controllers_param,
-            sensors_3d_dict,
-        ],
+        parameters=[moveit_config.to_dict()],
         remappings=[("/joint_states", "/tb3/joint_state")],
     )
 
@@ -109,13 +96,20 @@ def generate_launch_description():
         }.items()
     )
 
+    moveit_config_pkg = "sigverse_turtlebot3_manipulation_moveit_config"
+    srdf_content    = (Path(get_package_share_directory(moveit_config_pkg)).joinpath("config/turtlebot3_manipulation.srdf")).read_text()
+    kinematics_dict = load_yaml(moveit_config_pkg, "config/kinematics.yaml")
+
+#    logger = get_logger("dump")
+#    logger.info("kinematics_dict:\n" + yaml.safe_dump(kinematics_dict, sort_keys=False))
+
     grasping_auto_node = Node(
         package="sigverse_turtlebot3",
         executable="grasping_auto",
         output="screen",
         prefix='gnome-terminal --title="TurtleBot3 teleop key" --geometry=60x20 --',
         parameters=[
-            {"robot_description": Command(["xacro ", LaunchConfiguration("urdf_file")])},
+            {"robot_description": Command(["xacro ", urdf_path])},
             {"robot_description_semantic": srdf_content},
             {"robot_description_kinematics": kinematics_dict},
         ]
@@ -155,7 +149,6 @@ def generate_launch_description():
         declare_sigverse_port,
         declare_rosbridge_port,
         declare_camera_ns,
-        declare_urdf_file,
         declare_controllers_file,
 
         controller_manager_node,
