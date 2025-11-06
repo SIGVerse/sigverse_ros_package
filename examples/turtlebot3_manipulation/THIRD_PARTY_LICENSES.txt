@@ -1,0 +1,7 @@
+This project includes code copied from the TurtleBot3 project:
+  https://github.com/ROBOTIS-GIT/turtlebot3
+  https://github.com/ROBOTIS-GIT/turtlebot3_manipulation
+
+  License: Apache License 2.0
+  License text: https://www.apache.org/licenses/LICENSE-2.0
+

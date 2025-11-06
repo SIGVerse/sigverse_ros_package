@@ -3,6 +3,8 @@
 <robot name="turtlebot3_manipulation" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:arg name="prefix" default="" />
 
+  <xacro:include filename="$(find sigverse_turtlebot3_manipulation_description)/urdf/common_properties.urdf" />
+
   <!-- Include TurtleBot3 Waffle Pi urdf macro -->
   <xacro:include filename="$(find turtlebot3_manipulation_description)/urdf/turtlebot3_waffle_pi.urdf.xacro" />
 
