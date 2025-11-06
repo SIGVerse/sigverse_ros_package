@@ -55,21 +55,21 @@
 class SIGVerseROSBridge
 {
 private:
-  static pid_t gettid(void);
+  static pid_t get_tid(void);
 
-  static void rosSigintHandler(int sig);
-  static bool checkReceivable (int fd );
+  static void ros_sigint_handler(int sig);
+  static bool check_receivable (int fd );
 
-  static void setVectorDouble(std::vector<double> &destVec, const bsoncxx::array::view &arrayView);
-  static void setVectorFloat (std::vector<float>  &destVec, const bsoncxx::array::view &arrayView);
-
-  template < size_t ArrayNum >
-  static void setArrayDouble(std::array<double, ArrayNum> &vec, const bsoncxx::array::view &arrayView);
+  static void set_vector_double(std::vector<double> &destVec, const bsoncxx::array::view &arrayView);
+  static void set_vector_float (std::vector<float>  &destVec, const bsoncxx::array::view &arrayView);
 
   template < size_t ArrayNum >
-  static void setArrayDouble(boost::array<double, ArrayNum> &vec, const bsoncxx::array::view &arrayView);
+  static void set_array_double(std::array<double, ArrayNum> &vec, const bsoncxx::array::view &arrayView);
 
-  static void *receivingThread(void *param);
+  template < size_t ArrayNum >
+  static void set_array_double(boost::array<double, ArrayNum> &vec, const bsoncxx::array::view &arrayView);
+
+  static void *receiving_thread(void *param);
 
   static bool isRunning;
   static int  syncTimeCnt;

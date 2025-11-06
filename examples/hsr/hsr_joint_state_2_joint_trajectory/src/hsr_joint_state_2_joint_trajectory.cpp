@@ -19,13 +19,13 @@ public:
 
 private:
 
-  static void rosSigintHandler([[maybe_unused]] int sig);
-  void jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr joint_state);
-  bool isContainJointNames(std::vector<std::string> joint_names);
-  double getCurrentJointStatesAngle(std::string joint_name);
-  void moveArm();
-  void moveHead();
-  void moveGripper();
+  static void ros_sigint_handler([[maybe_unused]] int sig);
+  void joint_state_callback(const sensor_msgs::msg::JointState::SharedPtr joint_state);
+  bool is_contain_joint_names(std::vector<std::string> joint_names);
+  double get_current_joint_states_angle(std::string joint_name);
+  void move_arm();
+  void move_head();
+  void move_gripper();
 
   sensor_msgs::msg::JointState current_joint_states_;
 
@@ -45,7 +45,7 @@ HsrJointState2JointTrajectory::HsrJointState2JointTrajectory()
 {
   // Override the default ros sigint handler.
   // This must be set after the first NodeHandle is created.
-  signal(SIGINT, rosSigintHandler);
+  signal(SIGINT, ros_sigint_handler);
 
   arm_joint_names_.push_back("arm_lift_joint");
   arm_joint_names_.push_back("arm_flex_joint");
@@ -58,26 +58,26 @@ HsrJointState2JointTrajectory::HsrJointState2JointTrajectory()
 
   node_ = rclcpp::Node::make_shared("hsr_joint_state_2_joint_trajectory");
 
-  sub_joint_state_        = node_->create_subscription<sensor_msgs::msg::JointState>("/joint_states", 10, std::bind(&HsrJointState2JointTrajectory::jointStateCallback, this, std::placeholders::_1));
+  sub_joint_state_        = node_->create_subscription<sensor_msgs::msg::JointState>("/joint_states", 10, std::bind(&HsrJointState2JointTrajectory::joint_state_callback, this, std::placeholders::_1));
   pub_arm_trajectory_     = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/hsrb/arm_trajectory_controller/command", 10);
   pub_head_trajectory_    = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/hsrb/head_trajectory_controller/command", 10);
   pub_gripper_trajectory_ = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/hsrb/gripper_controller/command", 10);
 }
 
 
-void HsrJointState2JointTrajectory::rosSigintHandler([[maybe_unused]] int sig)
+void HsrJointState2JointTrajectory::ros_sigint_handler([[maybe_unused]] int sig)
 {
   rclcpp::shutdown();
 }
 
 
-void HsrJointState2JointTrajectory::jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr joint_state)
+void HsrJointState2JointTrajectory::joint_state_callback(const sensor_msgs::msg::JointState::SharedPtr joint_state)
 {
   current_joint_states_ = *joint_state;
 }
 
 
-bool HsrJointState2JointTrajectory::isContainJointNames(std::vector<std::string> joint_names)
+bool HsrJointState2JointTrajectory::is_contain_joint_names(std::vector<std::string> joint_names)
 {
   if(current_joint_states_.name.empty()){ return false; }
 
@@ -91,7 +91,7 @@ bool HsrJointState2JointTrajectory::isContainJointNames(std::vector<std::string>
 }
 
 
-double HsrJointState2JointTrajectory::getCurrentJointStatesAngle(std::string joint_name)
+double HsrJointState2JointTrajectory::get_current_joint_states_angle(std::string joint_name)
 {
   std::vector<std::string>::iterator it = std::find(current_joint_states_.name.begin(), current_joint_states_.name.end(), joint_name);
   int index = std::distance(current_joint_states_.name.begin(), it);
@@ -99,14 +99,14 @@ double HsrJointState2JointTrajectory::getCurrentJointStatesAngle(std::string joi
 }
 
 
-void HsrJointState2JointTrajectory::moveArm()
+void HsrJointState2JointTrajectory::move_arm()
 {
-  if(isContainJointNames(arm_joint_names_) == false){ return; }
+  if(is_contain_joint_names(arm_joint_names_) == false){ return; }
 
   std::vector<double> goal_position;
 
   for(size_t i = 0; i < arm_joint_names_.size(); i++){
-    goal_position.push_back(getCurrentJointStatesAngle(arm_joint_names_[i]));
+    goal_position.push_back(get_current_joint_states_angle(arm_joint_names_[i]));
   }
 
   trajectory_msgs::msg::JointTrajectoryPoint arm_joint_point;
@@ -121,14 +121,14 @@ void HsrJointState2JointTrajectory::moveArm()
 }
 
 
-void HsrJointState2JointTrajectory::moveHead()
+void HsrJointState2JointTrajectory::move_head()
 {
-  if(isContainJointNames(head_joint_names_) == false){ return; }
+  if(is_contain_joint_names(head_joint_names_) == false){ return; }
 
   std::vector<double> goal_position;
 
   for(size_t i = 0; i < head_joint_names_.size(); i++){
-    goal_position.push_back(getCurrentJointStatesAngle(head_joint_names_[i]));
+    goal_position.push_back(get_current_joint_states_angle(head_joint_names_[i]));
   }
 
   trajectory_msgs::msg::JointTrajectoryPoint head_joint_point;
@@ -143,14 +143,14 @@ void HsrJointState2JointTrajectory::moveHead()
 }
 
 
-void HsrJointState2JointTrajectory::moveGripper()
+void HsrJointState2JointTrajectory::move_gripper()
 {
-  if(isContainJointNames(gripper_joint_names_) == false){ return; }
+  if(is_contain_joint_names(gripper_joint_names_) == false){ return; }
 
   std::vector<double> goal_position;
 
   for(size_t i = 0; i < gripper_joint_names_.size(); i++){
-    goal_position.push_back(getCurrentJointStatesAngle(gripper_joint_names_[i]));
+    goal_position.push_back(get_current_joint_states_angle(gripper_joint_names_[i]));
   }
 
   trajectory_msgs::msg::JointTrajectoryPoint gripper_joint_point;
@@ -171,9 +171,9 @@ int HsrJointState2JointTrajectory::run()
 
   while (rclcpp::ok())
   {
-    moveArm();
-    moveHead();
-    moveGripper();
+    move_arm();
+    move_head();
+    move_gripper();
 
     rclcpp::spin_some(node_);
     loop_rate.sleep();

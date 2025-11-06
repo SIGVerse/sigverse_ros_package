@@ -40,7 +40,7 @@ private:
   const double kJointCommandDelta = 0.001;  // 0.001 rad = 0.057 degrees
   // const double kJointUpdateInterval = 0.1;  // sec
 
-  bool HasJointCommandChanged() const noexcept;
+  bool has_joint_command_changed() const noexcept;
 
   std::unordered_map<std::string, double> joint_position_map_; 
   std::unordered_map<std::string, double> joint_position_command_map_;

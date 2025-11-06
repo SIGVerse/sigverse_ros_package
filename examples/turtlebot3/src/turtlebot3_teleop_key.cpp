@@ -36,22 +36,22 @@ private:
 public:
   SIGVerseTb3TeleopKey();
 
-  void keyLoop(int argc, char** argv);
+  void key_loop(int argc, char** argv);
 
 private:
 
-  static void rosSigintHandler([[maybe_unused]] int sig);
-  static int  canReceiveKey( const int fd );
+  static void ros_sigint_handler([[maybe_unused]] int sig);
+  static int  can_receive_key( const int fd );
 
-  void jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr joint_state);
-  void moveBase(rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr publisher, const double linear_x, const double angular_z);
-  void moveArm(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const std::string &name, const double position, const double current_pos);
-  void moveHand(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const double position, const double current_pos);
-  void stopJoints(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const int duration_sec);
+  void joint_state_callback(const sensor_msgs::msg::JointState::SharedPtr joint_state);
+  void move_base(rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr publisher, const double linear_x, const double angular_z);
+  void move_arm(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const std::string &name, const double position, const double current_pos);
+  void move_hand(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const double position, const double current_pos);
+  void stop_joints(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const int duration_sec);
 
-  static int calcTrajectoryDuration(const double val, const double current_val);
+  static int calc_trajectory_duration(const double val, const double current_val);
 
-  void showHelp();
+  void show_help();
 
   rclcpp::Node::SharedPtr node_;
 
@@ -68,13 +68,13 @@ SIGVerseTb3TeleopKey::SIGVerseTb3TeleopKey()
 }
 
 
-void SIGVerseTb3TeleopKey::rosSigintHandler([[maybe_unused]] int sig)
+void SIGVerseTb3TeleopKey::ros_sigint_handler([[maybe_unused]] int sig)
 {
   rclcpp::shutdown();
 }
 
 
-int SIGVerseTb3TeleopKey::canReceiveKey( const int fd )
+int SIGVerseTb3TeleopKey::can_receive_key( const int fd )
 {
   fd_set fdset;
   struct timeval timeout;
@@ -87,7 +87,7 @@ int SIGVerseTb3TeleopKey::canReceiveKey( const int fd )
   return select( fd+1 , &fdset , NULL , NULL , &timeout );
 }
 
-void SIGVerseTb3TeleopKey::jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr joint_state)
+void SIGVerseTb3TeleopKey::joint_state_callback(const sensor_msgs::msg::JointState::SharedPtr joint_state)
 {
   for(size_t i=0; i<joint_state->name.size(); i++)
   {
@@ -118,7 +118,7 @@ void SIGVerseTb3TeleopKey::jointStateCallback(const sensor_msgs::msg::JointState
   }
 }
 
-void SIGVerseTb3TeleopKey::moveBase(rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr publisher, const double linear_x, const double angular_z)
+void SIGVerseTb3TeleopKey::move_base(rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr publisher, const double linear_x, const double angular_z)
 {
   geometry_msgs::msg::Twist twist;
 
@@ -133,7 +133,7 @@ void SIGVerseTb3TeleopKey::moveBase(rclcpp::Publisher<geometry_msgs::msg::Twist>
 }
 
 
-void SIGVerseTb3TeleopKey::moveArm(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const std::string &name, const double position, const double current_pos)
+void SIGVerseTb3TeleopKey::move_arm(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const std::string &name, const double position, const double current_pos)
 {
   std::vector<std::string> names;
   names.push_back(name);
@@ -141,7 +141,7 @@ void SIGVerseTb3TeleopKey::moveArm(rclcpp::Publisher<trajectory_msgs::msg::Joint
   std::vector<double> positions;
   positions.push_back(position);
 
-  double duration_sec = calcTrajectoryDuration(position, current_pos);
+  double duration_sec = calc_trajectory_duration(position, current_pos);
 
   builtin_interfaces::msg::Duration duration;
   duration.sec  = static_cast<int32_t>(duration_sec);
@@ -160,7 +160,7 @@ void SIGVerseTb3TeleopKey::moveArm(rclcpp::Publisher<trajectory_msgs::msg::Joint
   publisher->publish(joint_trajectory);
 }
 
-void SIGVerseTb3TeleopKey::moveHand(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const double position, const double current_pos)
+void SIGVerseTb3TeleopKey::move_hand(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const double position, const double current_pos)
 {
   std::vector<std::string> joint_names {GRIP_JOINT_NAME, GRIP_JOINT_SUB_NAME};
 
@@ -169,7 +169,7 @@ void SIGVerseTb3TeleopKey::moveHand(rclcpp::Publisher<trajectory_msgs::msg::Join
   positions.push_back(position); // for gripper_left_joint
   positions.push_back(position); // for gripper_right_joint
 
-  double duration_sec = calcTrajectoryDuration(position, current_pos);
+  double duration_sec = calc_trajectory_duration(position, current_pos);
 
   builtin_interfaces::msg::Duration duration;
   duration.sec  = static_cast<int32_t>(duration_sec);
@@ -187,7 +187,7 @@ void SIGVerseTb3TeleopKey::moveHand(rclcpp::Publisher<trajectory_msgs::msg::Join
 }
 
 
-void SIGVerseTb3TeleopKey::stopJoints(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const int duration_sec)
+void SIGVerseTb3TeleopKey::stop_joints(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const int duration_sec)
 {
   std::vector<std::string> names {JOINT1_NAME, JOINT2_NAME, JOINT3_NAME, JOINT4_NAME};
 
@@ -215,13 +215,13 @@ void SIGVerseTb3TeleopKey::stopJoints(rclcpp::Publisher<trajectory_msgs::msg::Jo
 }
 
 
-int SIGVerseTb3TeleopKey::calcTrajectoryDuration(const double val, const double current_val)
+int SIGVerseTb3TeleopKey::calc_trajectory_duration(const double val, const double current_val)
 {
   return std::max<int>((int)(std::abs(val - current_val) / 0.5), 1);
 }
 
 
-void SIGVerseTb3TeleopKey::showHelp()
+void SIGVerseTb3TeleopKey::show_help()
 {
   puts("\n");
   puts("---------------------------");
@@ -252,7 +252,7 @@ void SIGVerseTb3TeleopKey::showHelp()
 }
 
 
-void SIGVerseTb3TeleopKey::keyLoop(int argc, char** argv)
+void SIGVerseTb3TeleopKey::key_loop(int argc, char** argv)
 {
   char c;
   int  ret;
@@ -280,21 +280,21 @@ void SIGVerseTb3TeleopKey::keyLoop(int argc, char** argv)
 
   // Override the default ros sigint handler.
   // This must be set after the first NodeHandle is created.
-  signal(SIGINT, rosSigintHandler);
+  signal(SIGINT, ros_sigint_handler);
 
   rclcpp::Rate loop_rate(50);
 
-  auto sub_joint_state = node_->create_subscription<sensor_msgs::msg::JointState>      ("/tb3/joint_state", 10, std::bind(&SIGVerseTb3TeleopKey::jointStateCallback, this, std::placeholders::_1));
+  auto sub_joint_state = node_->create_subscription<sensor_msgs::msg::JointState>      ("/tb3/joint_state", 10, std::bind(&SIGVerseTb3TeleopKey::joint_state_callback, this, std::placeholders::_1));
   auto pub_base_twist  = node_->create_publisher<geometry_msgs::msg::Twist>            ("/tb3/cmd_vel", 10);
   auto pub_joint_traj  = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/tb3/joint_trajectory", 10);
 
   sleep(2);
 
-  showHelp();
+  show_help();
 
   while (rclcpp::ok())
   {
-    if(canReceiveKey(kfd))
+    if(can_receive_key(kfd))
     {
       // get the next event from the keyboard
       if((ret = read(kfd, &buf, sizeof(buf))) < 0)
@@ -310,126 +310,126 @@ void SIGVerseTb3TeleopKey::keyLoop(int argc, char** argv)
         case ' ':
         {
           RCLCPP_DEBUG(logger, "Stop");
-          moveBase(pub_base_twist, 0.0, 0.0);
-          stopJoints(pub_joint_traj, 1.0);
+          move_base(pub_base_twist, 0.0, 0.0);
+          stop_joints(pub_joint_traj, 1.0);
           break;
         }
         case 'w':
         case KEYCODE_UP:
         {
           RCLCPP_DEBUG(logger, "Go Forward");
-          moveBase(pub_base_twist, +LINEAR_VEL, 0.0);
+          move_base(pub_base_twist, +LINEAR_VEL, 0.0);
           break;
         }
         case 's':
         case KEYCODE_DOWN:
         {
           RCLCPP_DEBUG(logger, "Go Back");
-          moveBase(pub_base_twist, -LINEAR_VEL, 0.0);
+          move_base(pub_base_twist, -LINEAR_VEL, 0.0);
           break;
         }
         case 'd':
         case KEYCODE_RIGHT:
         {
           RCLCPP_DEBUG(logger, "Turn Right");
-          moveBase(pub_base_twist, 0.0, -ANGULAR_VEL);
+          move_base(pub_base_twist, 0.0, -ANGULAR_VEL);
           break;
         }
         case 'a':
         case KEYCODE_LEFT:
         {
           RCLCPP_DEBUG(logger, "Turn Left");
-          moveBase(pub_base_twist, 0.0, +ANGULAR_VEL);
+          move_base(pub_base_twist, 0.0, +ANGULAR_VEL);
           break;
         }
         case 'u':
         {
           RCLCPP_DEBUG(logger, "Rotate Arm - Upward");
-          moveArm(pub_joint_traj, JOINT2_NAME, 0.0, joint2_pos1_);
-          moveArm(pub_joint_traj, JOINT3_NAME, 0.0, joint3_pos1_);
-          moveArm(pub_joint_traj, JOINT4_NAME, 0.0, joint4_pos1_);
+          move_arm(pub_joint_traj, JOINT2_NAME, 0.0, joint2_pos1_);
+          move_arm(pub_joint_traj, JOINT3_NAME, 0.0, joint3_pos1_);
+          move_arm(pub_joint_traj, JOINT4_NAME, 0.0, joint4_pos1_);
           break;
         }
         case 'j':
         {
           RCLCPP_DEBUG(logger, "Rotate Arm - Horizontal");
-          moveArm(pub_joint_traj, JOINT2_NAME, +1.20, joint2_pos1_);
-          moveArm(pub_joint_traj, JOINT3_NAME, -0.80, joint3_pos1_);
-          moveArm(pub_joint_traj, JOINT4_NAME, +0.00, joint4_pos1_);
+          move_arm(pub_joint_traj, JOINT2_NAME, +1.20, joint2_pos1_);
+          move_arm(pub_joint_traj, JOINT3_NAME, -0.80, joint3_pos1_);
+          move_arm(pub_joint_traj, JOINT4_NAME, +0.00, joint4_pos1_);
           break;
         }
         case 'm':
         {
           RCLCPP_DEBUG(logger, "Rotate Arm - Downward");
-          moveArm(pub_joint_traj, JOINT2_NAME, +1.20, joint2_pos1_);
-          moveArm(pub_joint_traj, JOINT3_NAME, -0.80, joint3_pos1_);
-          moveArm(pub_joint_traj, JOINT4_NAME, +0.80, joint4_pos1_);
+          move_arm(pub_joint_traj, JOINT2_NAME, +1.20, joint2_pos1_);
+          move_arm(pub_joint_traj, JOINT3_NAME, -0.80, joint3_pos1_);
+          move_arm(pub_joint_traj, JOINT4_NAME, +0.80, joint4_pos1_);
           break;
         }
         case '1':
         {
           RCLCPP_DEBUG(logger, "Joint1 Right");
-          moveArm(pub_joint_traj, JOINT1_NAME, JOINT_MIN, joint1_pos1_);
+          move_arm(pub_joint_traj, JOINT1_NAME, JOINT_MIN, joint1_pos1_);
           break;
         }
         case '2':
         {
           RCLCPP_DEBUG(logger, "Joint1 Left");
-          moveArm(pub_joint_traj, JOINT1_NAME, JOINT_MAX, joint1_pos1_);
+          move_arm(pub_joint_traj, JOINT1_NAME, JOINT_MAX, joint1_pos1_);
           break;
         }
         case '3':
         {
           RCLCPP_DEBUG(logger, "Joint2 Up");
-          moveArm(pub_joint_traj, JOINT2_NAME, JOINT_MIN, joint2_pos1_);
+          move_arm(pub_joint_traj, JOINT2_NAME, JOINT_MIN, joint2_pos1_);
           break;
         }
         case '4':
         {
           RCLCPP_DEBUG(logger, "Joint2 Down");
-          moveArm(pub_joint_traj, JOINT2_NAME, JOINT_MAX, joint2_pos1_);
+          move_arm(pub_joint_traj, JOINT2_NAME, JOINT_MAX, joint2_pos1_);
           break;
         }
         case '5':
         {
           RCLCPP_DEBUG(logger, "Joint3 Up");
-          moveArm(pub_joint_traj, JOINT3_NAME, JOINT_MIN, joint3_pos1_);
+          move_arm(pub_joint_traj, JOINT3_NAME, JOINT_MIN, joint3_pos1_);
           break;
         }
         case '6':
         {
           RCLCPP_DEBUG(logger, "Joint3 Down");
-          moveArm(pub_joint_traj, JOINT3_NAME, JOINT_MAX, joint3_pos1_);
+          move_arm(pub_joint_traj, JOINT3_NAME, JOINT_MAX, joint3_pos1_);
           break;
         }
         case '7':
         {
           RCLCPP_DEBUG(logger, "Joint4 Up");
-          moveArm(pub_joint_traj, JOINT4_NAME, JOINT_MIN, joint4_pos1_);
+          move_arm(pub_joint_traj, JOINT4_NAME, JOINT_MIN, joint4_pos1_);
           break;
         }
         case '8':
         {
           RCLCPP_DEBUG(logger, "Joint4 Down");
-          moveArm(pub_joint_traj, JOINT4_NAME, JOINT_MAX, joint4_pos1_);
+          move_arm(pub_joint_traj, JOINT4_NAME, JOINT_MAX, joint4_pos1_);
           break;
         }
         case 'o':
         {
           RCLCPP_DEBUG(logger, "Hand Open");
-          moveHand(pub_joint_traj, GRIP_MIN, grip_joint_pos1_);
+          move_hand(pub_joint_traj, GRIP_MIN, grip_joint_pos1_);
           break;
         }
         case 'c':
         {
           RCLCPP_DEBUG(logger, "Hand Close");
-          moveHand(pub_joint_traj, GRIP_MAX, grip_joint_pos1_);
+          move_hand(pub_joint_traj, GRIP_MAX, grip_joint_pos1_);
           break;
         }
         case 'h':
         {
           RCLCPP_DEBUG(logger, "Show Help");
-          showHelp();
+          show_help();
           break;
         }
       }
@@ -453,7 +453,7 @@ int main(int argc, char** argv)
 {
   SIGVerseTb3TeleopKey teleop_key;
 
-  teleop_key.keyLoop(argc, argv);
+  teleop_key.key_loop(argc, argv);
 
   return(EXIT_SUCCESS);
 }

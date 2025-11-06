@@ -32,21 +32,21 @@ private:
 public:
   SIGVerseTiagoTeleopKey();
 
-  static void rosSigintHandler([[maybe_unused]] int sig);
-  static int  canReceive(int fd);
+  static void ros_sigint_handler([[maybe_unused]] int sig);
+  static int  can_receive(int fd);
 
-  void messageCallback(const std_msgs::msg::String::SharedPtr message);
-  void jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr joint_state);
-  void sendMessage(const std::string &message);
-  void moveBaseTwist(double linear_x, double linear_y, double angular_z);
-  void operateTorso(const double torso_lift_pos, const double duration_sec);
-  void operateHead(const double head_1_pos, const double head_2_pos, const double duration_sec);
-  void operateArm(const std::vector<double> & positions, const double duration_sec);
-  void operateArm(const int joint_number, const double arm_pos, const double duration_sec);
-  void operateHand(bool grasp);
+  void message_callback(const std_msgs::msg::String::SharedPtr message);
+  void joint_state_callback(const sensor_msgs::msg::JointState::SharedPtr joint_state);
+  void send_message(const std::string &message);
+  void move_base_twist(double linear_x, double linear_y, double angular_z);
+  void operate_torso(const double torso_lift_pos, const double duration_sec);
+  void operate_head(const double head_1_pos, const double head_2_pos, const double duration_sec);
+  void operate_arm(const std::vector<double> & positions, const double duration_sec);
+  void operate_arm(const int joint_number, const double arm_pos, const double duration_sec);
+  void operate_hand(bool grasp);
 
-  void showHelp();
-  void showHelpArm(const std::string &arm_name);
+  void show_help();
+  void show_help_arm(const std::string &arm_name);
   int run();
 
 private:
@@ -105,18 +105,18 @@ SIGVerseTiagoTeleopKey::SIGVerseTiagoTeleopKey()
   pub_head_trajectory_    = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/head_controller/command", 10);
   pub_arm_trajectory_     = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/arm_controller/command", 10);
   pub_gripper_trajectory_ = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/gripper_controller/command", 10);
-  sub_msg_                = node_->create_subscription<std_msgs::msg::String>("/tiago/message/to_robot", 10, std::bind(&SIGVerseTiagoTeleopKey::messageCallback, this, std::placeholders::_1));
-  sub_joint_state_        = node_->create_subscription<sensor_msgs::msg::JointState>("/joint_states",    10, std::bind(&SIGVerseTiagoTeleopKey::jointStateCallback, this, std::placeholders::_1));
+  sub_msg_                = node_->create_subscription<std_msgs::msg::String>("/tiago/message/to_robot", 10, std::bind(&SIGVerseTiagoTeleopKey::message_callback, this, std::placeholders::_1));
+  sub_joint_state_        = node_->create_subscription<sensor_msgs::msg::JointState>("/joint_states",    10, std::bind(&SIGVerseTiagoTeleopKey::joint_state_callback, this, std::placeholders::_1));
 }
 
 
-void SIGVerseTiagoTeleopKey::rosSigintHandler([[maybe_unused]] int sig)
+void SIGVerseTiagoTeleopKey::ros_sigint_handler([[maybe_unused]] int sig)
 {
   rclcpp::shutdown();
 }
 
 
-int SIGVerseTiagoTeleopKey::canReceive( int fd )
+int SIGVerseTiagoTeleopKey::can_receive( int fd )
 {
   fd_set fdset;
   struct timeval timeout;
@@ -129,12 +129,12 @@ int SIGVerseTiagoTeleopKey::canReceive( int fd )
   return select( fd+1 , &fdset , NULL , NULL , &timeout );
 }
 
-void SIGVerseTiagoTeleopKey::messageCallback(const std_msgs::msg::String::SharedPtr message)
+void SIGVerseTiagoTeleopKey::message_callback(const std_msgs::msg::String::SharedPtr message)
 {
   RCLCPP_INFO(node_->get_logger(), "Subscribe message: %s", message->data.c_str());
 }
 
-void SIGVerseTiagoTeleopKey::jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr joint_state)
+void SIGVerseTiagoTeleopKey::joint_state_callback(const sensor_msgs::msg::JointState::SharedPtr joint_state)
 {
   for(size_t i=0; i<joint_state->name.size(); i++)
   {
@@ -153,7 +153,7 @@ void SIGVerseTiagoTeleopKey::jointStateCallback(const sensor_msgs::msg::JointSta
   }
 }
 
-void SIGVerseTiagoTeleopKey::sendMessage(const std::string &message)
+void SIGVerseTiagoTeleopKey::send_message(const std::string &message)
 {
   RCLCPP_INFO(node_->get_logger(), "Send message:%s", message.c_str());
 
@@ -162,7 +162,7 @@ void SIGVerseTiagoTeleopKey::sendMessage(const std::string &message)
   pub_msg_->publish(string_msg);
 }
 
-void SIGVerseTiagoTeleopKey::moveBaseTwist(double linear_x, double linear_y, double angular_z)
+void SIGVerseTiagoTeleopKey::move_base_twist(double linear_x, double linear_y, double angular_z)
 {
   geometry_msgs::msg::Twist twist;
 
@@ -172,7 +172,7 @@ void SIGVerseTiagoTeleopKey::moveBaseTwist(double linear_x, double linear_y, dou
   pub_base_twist_->publish(twist);
 }
 
-void SIGVerseTiagoTeleopKey::operateTorso(const double torso_lift_pos, const double duration_sec)
+void SIGVerseTiagoTeleopKey::operate_torso(const double torso_lift_pos, const double duration_sec)
 {
   trajectory_msgs::msg::JointTrajectory joint_trajectory;
   joint_trajectory.joint_names.push_back("torso_lift_joint");
@@ -186,7 +186,7 @@ void SIGVerseTiagoTeleopKey::operateTorso(const double torso_lift_pos, const dou
   pub_torso_trajectory_->publish(joint_trajectory);
 }
 
-void SIGVerseTiagoTeleopKey::operateHead(const double head_1_pos, const double head_2_pos, const double duration_sec)
+void SIGVerseTiagoTeleopKey::operate_head(const double head_1_pos, const double head_2_pos, const double duration_sec)
 {
   trajectory_msgs::msg::JointTrajectory joint_trajectory;
   joint_trajectory.joint_names.push_back("head_1_joint");
@@ -201,7 +201,7 @@ void SIGVerseTiagoTeleopKey::operateHead(const double head_1_pos, const double h
   pub_torso_trajectory_->publish(joint_trajectory);
 }
 
-void SIGVerseTiagoTeleopKey::operateArm(const std::vector<double> & positions, const double duration_sec)
+void SIGVerseTiagoTeleopKey::operate_arm(const std::vector<double> & positions, const double duration_sec)
 {
   trajectory_msgs::msg::JointTrajectory joint_trajectory;
   joint_trajectory.joint_names.push_back("arm_1_joint");
@@ -221,7 +221,7 @@ void SIGVerseTiagoTeleopKey::operateArm(const std::vector<double> & positions, c
   pub_arm_trajectory_->publish(joint_trajectory);
 }
 
-void SIGVerseTiagoTeleopKey::operateArm(const int joint_number, const double add_pos, const double duration_sec)
+void SIGVerseTiagoTeleopKey::operate_arm(const int joint_number, const double add_pos, const double duration_sec)
 {
   std::string joint_name = "arm_" + std::to_string(joint_number) + "_joint";
 
@@ -237,7 +237,7 @@ void SIGVerseTiagoTeleopKey::operateArm(const int joint_number, const double add
 
   positions[joint_number-1] = clamped_next_pos;
 
-  operateArm(positions, duration_sec);
+  operate_arm(positions, duration_sec);
 }
 
 //double SIGVerseTiagoTeleopKey::getDurationRot(const double next_pos, const double current_pos)
@@ -245,7 +245,7 @@ void SIGVerseTiagoTeleopKey::operateArm(const int joint_number, const double add
 //  return std::max<double>((std::abs(next_pos - current_pos) * 1.2), 1.0);
 //}
 
-void SIGVerseTiagoTeleopKey::operateHand(bool is_hand_open)
+void SIGVerseTiagoTeleopKey::operate_hand(bool is_hand_open)
 {
   trajectory_msgs::msg::JointTrajectory joint_trajectory;
   joint_trajectory.joint_names.push_back("gripper_left_finger_joint");
@@ -270,7 +270,7 @@ void SIGVerseTiagoTeleopKey::operateHand(bool is_hand_open)
 }
 
 
-void SIGVerseTiagoTeleopKey::showHelp()
+void SIGVerseTiagoTeleopKey::show_help()
 {
   puts("Operate by Keyboard");
   puts("---------------------------");
@@ -297,7 +297,7 @@ void SIGVerseTiagoTeleopKey::showHelp()
   puts(("2 : Send Message: "+MSG_POINT_IT).c_str());
 }
 
-void SIGVerseTiagoTeleopKey::showHelpArm(const std::string &arm_name)
+void SIGVerseTiagoTeleopKey::show_help_arm(const std::string &arm_name)
 {
   puts("");
   puts("---------------------------");
@@ -329,11 +329,11 @@ int SIGVerseTiagoTeleopKey::run()
   tcsetattr(kfd, TCSANOW, &raw);
   /////////////////////////////////////////////
 
-  showHelp();
+  show_help();
 
   // Override the default ros sigint handler.
   // This must be set after the first Node is created.
-  signal(SIGINT, rosSigintHandler);
+  signal(SIGINT, ros_sigint_handler);
 
   auto logger = node_->get_logger();
 
@@ -351,7 +351,7 @@ int SIGVerseTiagoTeleopKey::run()
 
   while (rclcpp::ok())
   {
-    if(canReceive(kfd))
+    if(can_receive(kfd))
     {
       // get the next event from the keyboard
       if((ret = read(kfd, &buf, sizeof(buf))) < 0)
@@ -366,42 +366,42 @@ int SIGVerseTiagoTeleopKey::run()
       {
         case '1':
         {
-          sendMessage(MSG_TELL_ME);
+          send_message(MSG_TELL_ME);
           break;
         }
         case '2':
         {
-          sendMessage(MSG_POINT_IT);
+          send_message(MSG_POINT_IT);
           break;
         }
         case KEYCODE_UP:
         {
           RCLCPP_DEBUG(logger, "Go Forward");
-          moveBaseTwist(+linear_coef*move_speed, 0.0, 0.0);
+          move_base_twist(+linear_coef*move_speed, 0.0, 0.0);
           break;
         }
         case KEYCODE_DOWN:
         {
           RCLCPP_DEBUG(logger, "Go Backward");
-          moveBaseTwist(-linear_coef*move_speed, 0.0, 0.0);
+          move_base_twist(-linear_coef*move_speed, 0.0, 0.0);
           break;
         }
         case KEYCODE_RIGHT:
         {
           RCLCPP_DEBUG(logger, "Go Right");
-          moveBaseTwist(0.0, 0.0, -angular_coef*move_speed);
+          move_base_twist(0.0, 0.0, -angular_coef*move_speed);
           break;
         }
         case KEYCODE_LEFT:
         {
           RCLCPP_DEBUG(logger, "Go Left");
-          moveBaseTwist(0.0, 0.0, +angular_coef*move_speed);
+          move_base_twist(0.0, 0.0, +angular_coef*move_speed);
           break;
         }
         case ' ':
         {
           RCLCPP_DEBUG(logger, "Stop");
-          moveBaseTwist(0.0, 0.0, 0.0);
+          move_base_twist(0.0, 0.0, 0.0);
           break;
         }
         case 'r':
@@ -421,73 +421,73 @@ int SIGVerseTiagoTeleopKey::run()
         case 'y':
         {
           RCLCPP_DEBUG(logger, "Rotate Arm - Upward");
-          operateArm({ 1.57, -1.4, -3.14, 2.2, 1.57, 0.0, 0.0 }, 3.0);
+          operate_arm({ 1.57, -1.4, -3.14, 2.2, 1.57, 0.0, 0.0 }, 3.0);
           break;
         }
         case 'h':
         {
           RCLCPP_DEBUG(logger, "Rotate Arm - Horizontal");
-          operateArm({ 1.57, -1.4, -3.14, 2.0, 1.57, 0.6, 0.0 }, 3.0);
+          operate_arm({ 1.57, -1.4, -3.14, 2.0, 1.57, 0.6, 0.0 }, 3.0);
           break;
         }
         case 'n':
         {
           RCLCPP_DEBUG(logger, "Rotate Arm - Downward");
-          operateArm({ 1.57, -1.3, -3.14, 0.7, 1.57, 0.0, 0.0 }, 3.0);
+          operate_arm({ 1.57, -1.3, -3.14, 0.7, 1.57, 0.0, 0.0 }, 3.0);
           break;
         }
         case 'q':
         {
           RCLCPP_DEBUG(logger, "Torso Height - Up");
-          operateTorso(0.35, std::max<int>((int)(std::abs(0.35 - torso_lift_joint_pos1_) / 0.05), 1));
+          operate_torso(0.35, std::max<int>((int)(std::abs(0.35 - torso_lift_joint_pos1_) / 0.05), 1));
           break;
         }
         case 'a':
         {
           RCLCPP_DEBUG(logger, "Torso Height - Stop");
-          operateTorso(2.0*torso_lift_joint_pos1_-torso_lift_joint_pos2_, 0.5);
+          operate_torso(2.0*torso_lift_joint_pos1_-torso_lift_joint_pos2_, 0.5);
           break;
         }
         case 'z':
         {
           RCLCPP_DEBUG(logger, "Torso Height - Down");
-          operateTorso(0.0, std::max<int>((int)(std::abs(0.0 - torso_lift_joint_pos1_) / 0.05), 1));
+          operate_torso(0.0, std::max<int>((int)(std::abs(0.0 - torso_lift_joint_pos1_) / 0.05), 1));
           break;
         }
         case 'w':
         {
           RCLCPP_DEBUG(logger, "Turn Head - Left");
-          operateHead(+1.24, 0.0, 2.0);
+          operate_head(+1.24, 0.0, 2.0);
           break;
         }
         case 's':
         {
           RCLCPP_DEBUG(logger, "Turn Head - Front");
-          operateHead(0.0, 0.0, 2.0);
+          operate_head(0.0, 0.0, 2.0);
           break;
         }
         case 'x':
         {
           RCLCPP_DEBUG(logger, "Turn Head - Right");
-          operateHead(-1.24, 0.0, 2.0);
+          operate_head(-1.24, 0.0, 2.0);
           break;
         }
         case 'e':
         {
           RCLCPP_DEBUG(logger, "Turn Head - Up");
-          operateHead(0.0, 0.79, 2.0);
+          operate_head(0.0, 0.79, 2.0);
           break;
         }
         case 'd':
         {
           RCLCPP_DEBUG(logger, "Turn Head - Front");
-          operateHead(0.0, 0.0, 2.0);
+          operate_head(0.0, 0.0, 2.0);
           break;
         }
         case 'c':
         {
           RCLCPP_DEBUG(logger, "Turn Head - Down");
-          operateHead(0.0, -0.98, 2.0);
+          operate_head(0.0, -0.98, 2.0);
           break;
         }
         case 'u':
@@ -502,13 +502,13 @@ int SIGVerseTiagoTeleopKey::run()
 
           switch(c)
           {
-            case 'u':{ joint_number = 1; RCLCPP_DEBUG(logger, "Control Arm1"); showHelpArm("Arm1"); break; }
-            case 'j':{ joint_number = 2; RCLCPP_DEBUG(logger, "Control Arm2"); showHelpArm("Arm2"); break; }
-            case 'm':{ joint_number = 3; RCLCPP_DEBUG(logger, "Control Arm3"); showHelpArm("Arm3"); break; }
-            case 'i':{ joint_number = 4; RCLCPP_DEBUG(logger, "Control Arm4"); showHelpArm("Arm4"); break; }
-            case 'k':{ joint_number = 5; RCLCPP_DEBUG(logger, "Control Arm5"); showHelpArm("Arm5"); break; }
-            case 'o':{ joint_number = 6; RCLCPP_DEBUG(logger, "Control Arm6"); showHelpArm("Arm6"); break; }
-            case 'l':{ joint_number = 7; RCLCPP_DEBUG(logger, "Control Arm7"); showHelpArm("Arm7"); break; }
+            case 'u':{ joint_number = 1; RCLCPP_DEBUG(logger, "Control Arm1"); show_help_arm("Arm1"); break; }
+            case 'j':{ joint_number = 2; RCLCPP_DEBUG(logger, "Control Arm2"); show_help_arm("Arm2"); break; }
+            case 'm':{ joint_number = 3; RCLCPP_DEBUG(logger, "Control Arm3"); show_help_arm("Arm3"); break; }
+            case 'i':{ joint_number = 4; RCLCPP_DEBUG(logger, "Control Arm4"); show_help_arm("Arm4"); break; }
+            case 'k':{ joint_number = 5; RCLCPP_DEBUG(logger, "Control Arm5"); show_help_arm("Arm5"); break; }
+            case 'o':{ joint_number = 6; RCLCPP_DEBUG(logger, "Control Arm6"); show_help_arm("Arm6"); break; }
+            case 'l':{ joint_number = 7; RCLCPP_DEBUG(logger, "Control Arm7"); show_help_arm("Arm7"); break; }
           }
 
           bool is_in_control = true;
@@ -518,7 +518,7 @@ int SIGVerseTiagoTeleopKey::run()
             rclcpp::spin_some(node_);
             loop_rate.sleep();
 
-            if(!canReceive(kfd)){ continue; }
+            if(!can_receive(kfd)){ continue; }
 
             if(read(kfd, &c, 1) < 0)
             {
@@ -528,13 +528,13 @@ int SIGVerseTiagoTeleopKey::run()
 
             switch(c)
             {
-              case 'u':{ RCLCPP_DEBUG(logger, "Arm  +  "); operateArm(joint_number, +1.0, 2.0); break; }
-              case 'j':{ RCLCPP_DEBUG(logger, "Arm Stop"); operateArm(joint_number,  0.0, 2.0); break; }
-              case 'm':{ RCLCPP_DEBUG(logger, "Arm  -  "); operateArm(joint_number, -1.0, 2.0); break; }
+              case 'u':{ RCLCPP_DEBUG(logger, "Arm  +  "); operate_arm(joint_number, +1.0, 2.0); break; }
+              case 'j':{ RCLCPP_DEBUG(logger, "Arm Stop"); operate_arm(joint_number,  0.0, 2.0); break; }
+              case 'm':{ RCLCPP_DEBUG(logger, "Arm  -  "); operate_arm(joint_number, -1.0, 2.0); break; }
               case 'q':
               {
                 is_in_control = false;
-                showHelp();
+                show_help();
                 break;
               }
             }
@@ -543,7 +543,7 @@ int SIGVerseTiagoTeleopKey::run()
         }
         case 'g':
         {
-          operateHand(is_hand_open);
+          operate_hand(is_hand_open);
 
           is_hand_open = !is_hand_open;
           break;

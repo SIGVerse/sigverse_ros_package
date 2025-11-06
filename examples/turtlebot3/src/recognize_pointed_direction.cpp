@@ -28,15 +28,15 @@ public:
   void run(int argc, char** argv);
 
 private:
-  static void rosSigintHandler([[maybe_unused]] int sig);
+  static void ros_sigint_handler([[maybe_unused]] int sig);
 
-  void yoloDetectionCallback(const yolo_msgs::msg::DetectionArray::SharedPtr detection_array);
-  bool computePointingFloorIntersection(const geometry_msgs::msg::Point& shoulder, const geometry_msgs::msg::Point& wrist, double floor_z, geometry_msgs::msg::Point& floor_hit_point);
-  void publishDebugMarkers(const std::string& frame_id, const geometry_msgs::msg::Point& hit_point);
+  void yolo_detection_callback(const yolo_msgs::msg::DetectionArray::SharedPtr detection_array);
+  bool compute_pointing_floor_intersection(const geometry_msgs::msg::Point& shoulder, const geometry_msgs::msg::Point& wrist, double floor_z, geometry_msgs::msg::Point& floor_hit_point);
+  void publish_debug_markers(const std::string& frame_id, const geometry_msgs::msg::Point& hit_point);
 
-  void instructionCallback(const std_msgs::msg::String::SharedPtr instruction_message);
-  void rotateArm();
-  void moveArm(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const std::string &name, const double position);
+  void instruction_callback(const std_msgs::msg::String::SharedPtr instruction_message);
+  void rotate_arm();
+  void move_arm(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const std::string &name, const double position);
 
   rclcpp::Node::SharedPtr node_;
 
@@ -53,12 +53,12 @@ SIGVerseTb3RecognizePointedDirection::SIGVerseTb3RecognizePointedDirection()
   hit_point_.x = std::numeric_limits<double>::quiet_NaN();
 }
 
-void SIGVerseTb3RecognizePointedDirection::rosSigintHandler([[maybe_unused]] int sig)
+void SIGVerseTb3RecognizePointedDirection::ros_sigint_handler([[maybe_unused]] int sig)
 {
   rclcpp::shutdown();
 }
 
-void SIGVerseTb3RecognizePointedDirection::yoloDetectionCallback(const yolo_msgs::msg::DetectionArray::SharedPtr detection_array)
+void SIGVerseTb3RecognizePointedDirection::yolo_detection_callback(const yolo_msgs::msg::DetectionArray::SharedPtr detection_array)
 {
   if (detection_array->detections.empty()) { return; }
 
@@ -81,7 +81,7 @@ void SIGVerseTb3RecognizePointedDirection::yoloDetectionCallback(const yolo_msgs
   }
 
   // Update hit_point_
-  if (computePointingFloorIntersection(keypoint_map_[RIGHT_SHOULDER], keypoint_map_[RIGHT_WRIST], floor_z_, hit_point_)) 
+  if (compute_pointing_floor_intersection(keypoint_map_[RIGHT_SHOULDER], keypoint_map_[RIGHT_WRIST], floor_z_, hit_point_)) 
   {
 //    RCLCPP_INFO(node_->get_logger(), "Hit Position=(%.3f, %.3f, %.3f)", hit_point_.x, hit_point_.y, hit_point_.z);
   }
@@ -90,7 +90,7 @@ void SIGVerseTb3RecognizePointedDirection::yoloDetectionCallback(const yolo_msgs
     RCLCPP_WARN(node_->get_logger(), "Couldn't compute pointing floor intersection");
   }
 
-  publishDebugMarkers(best_detection->keypoints3d.frame_id, hit_point_);
+  publish_debug_markers(best_detection->keypoints3d.frame_id, hit_point_);
 }
 
 /**
@@ -101,7 +101,7 @@ void SIGVerseTb3RecognizePointedDirection::yoloDetectionCallback(const yolo_msgs
  * @param floor_hit_point  Output: intersection point with the floor
  * @return true if intersection exists; false otherwise
  */
-bool SIGVerseTb3RecognizePointedDirection::computePointingFloorIntersection(
+bool SIGVerseTb3RecognizePointedDirection::compute_pointing_floor_intersection(
   const geometry_msgs::msg::Point& shoulder, const geometry_msgs::msg::Point& wrist, double floor_z, geometry_msgs::msg::Point& floor_hit_point)
 {
   if (wrist.z >= shoulder.z){ return false; }
@@ -123,7 +123,7 @@ bool SIGVerseTb3RecognizePointedDirection::computePointingFloorIntersection(
   return true;
 }
 
-void SIGVerseTb3RecognizePointedDirection::publishDebugMarkers(const std::string& frame_id, const geometry_msgs::msg::Point& hit_point)
+void SIGVerseTb3RecognizePointedDirection::publish_debug_markers(const std::string& frame_id, const geometry_msgs::msg::Point& hit_point)
 {
   visualization_msgs::msg::MarkerArray markerArray;
   const auto stamp = rclcpp::Time(0);
@@ -161,17 +161,17 @@ void SIGVerseTb3RecognizePointedDirection::publishDebugMarkers(const std::string
 }
 
 
-void SIGVerseTb3RecognizePointedDirection::instructionCallback(const std_msgs::msg::String::SharedPtr instruction_message)
+void SIGVerseTb3RecognizePointedDirection::instruction_callback(const std_msgs::msg::String::SharedPtr instruction_message)
 {
   if(instruction_message->data==INSTRUCTION_MESSAGE)
   {
     RCLCPP_INFO(node_->get_logger(), "Received Instruction Message");
 //    RCLCPP_INFO(node_->get_logger(), "Hit Position=(%.3f, %.3f, %.3f)", hit_point_.x, hit_point_.y, hit_point_.z);
-    rotateArm();
+    rotate_arm();
   }
 }
 
-void SIGVerseTb3RecognizePointedDirection::rotateArm()
+void SIGVerseTb3RecognizePointedDirection::rotate_arm()
 {
   if (std::isnan(hit_point_.x)) 
   {
@@ -180,13 +180,13 @@ void SIGVerseTb3RecognizePointedDirection::rotateArm()
   }
 
   // Rotate the arm
-  if     (hit_point_.y > +0.4){ moveArm(pub_joint_trajectory_, JOINT1_NAME, +0.50); }
-  else if(hit_point_.y >  0.0){ moveArm(pub_joint_trajectory_, JOINT1_NAME, +0.25); }
-  else if(hit_point_.y > -0.4){ moveArm(pub_joint_trajectory_, JOINT1_NAME, -0.25); }
-  else                        { moveArm(pub_joint_trajectory_, JOINT1_NAME, -0.50); }
+  if     (hit_point_.y > +0.4){ move_arm(pub_joint_trajectory_, JOINT1_NAME, +0.50); }
+  else if(hit_point_.y >  0.0){ move_arm(pub_joint_trajectory_, JOINT1_NAME, +0.25); }
+  else if(hit_point_.y > -0.4){ move_arm(pub_joint_trajectory_, JOINT1_NAME, -0.25); }
+  else                        { move_arm(pub_joint_trajectory_, JOINT1_NAME, -0.50); }
 }
 
-void SIGVerseTb3RecognizePointedDirection::moveArm(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const std::string &name, const double position)
+void SIGVerseTb3RecognizePointedDirection::move_arm(rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr publisher, const std::string &name, const double position)
 {
   std::vector<std::string> names;
   names.push_back(name);
@@ -220,7 +220,7 @@ void SIGVerseTb3RecognizePointedDirection::run(int argc, char** argv)
 
   // Override the default ros sigint handler.
   // This must be set after the first NodeHandle is created.
-  signal(SIGINT, rosSigintHandler);
+  signal(SIGINT, ros_sigint_handler);
 
   floor_z_ = node_->declare_parameter<double>("floor_z", -0.5);
 
@@ -229,8 +229,8 @@ void SIGVerseTb3RecognizePointedDirection::run(int argc, char** argv)
   pub_joint_trajectory_ = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/tb3/joint_trajectory", 10);
   pub_debug_markers_    = node_->create_publisher<visualization_msgs::msg::MarkerArray> ("/tb3/debug_markers", 10);
 
-  auto sub_instruction     = node_->create_subscription<std_msgs::msg::String>             ("/tb3/instruction", 10, std::bind(&SIGVerseTb3RecognizePointedDirection::instructionCallback, this, std::placeholders::_1));
-  auto sub_yolo_detections = node_->create_subscription<yolo_msgs::msg::DetectionArray>    ("/yolo_human_pose/detections_3d", 10, std::bind(&SIGVerseTb3RecognizePointedDirection::yoloDetectionCallback, this, std::placeholders::_1));
+  auto sub_instruction     = node_->create_subscription<std_msgs::msg::String>             ("/tb3/instruction", 10, std::bind(&SIGVerseTb3RecognizePointedDirection::instruction_callback, this, std::placeholders::_1));
+  auto sub_yolo_detections = node_->create_subscription<yolo_msgs::msg::DetectionArray>    ("/yolo_human_pose/detections_3d", 10, std::bind(&SIGVerseTb3RecognizePointedDirection::yolo_detection_callback, this, std::placeholders::_1));
 
   sleep(1);
 

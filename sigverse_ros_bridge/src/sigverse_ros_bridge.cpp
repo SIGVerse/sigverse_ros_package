@@ -4,19 +4,19 @@ bool SIGVerseROSBridge::isRunning;
 int  SIGVerseROSBridge::syncTimeCnt;
 int  SIGVerseROSBridge::syncTimeMaxNum;
 
-pid_t SIGVerseROSBridge::gettid(void)
+pid_t SIGVerseROSBridge::get_tid(void)
 {
   return syscall(SYS_gettid);
 }
 
-void SIGVerseROSBridge::rosSigintHandler([[maybe_unused]] int sig)
+void SIGVerseROSBridge::ros_sigint_handler([[maybe_unused]] int sig)
 {
   isRunning = false;
 
   rclcpp::shutdown();
 }
 
-bool SIGVerseROSBridge::checkReceivable( int fd )
+bool SIGVerseROSBridge::check_receivable( int fd )
 {
   fd_set fdset;
   int ret;
@@ -34,7 +34,7 @@ bool SIGVerseROSBridge::checkReceivable( int fd )
 }
 
 
-void SIGVerseROSBridge::setVectorDouble(std::vector<double> &destVec, const bsoncxx::array::view &arrayView)
+void SIGVerseROSBridge::set_vector_double(std::vector<double> &destVec, const bsoncxx::array::view &arrayView)
 {
   int i = 0;
 
@@ -44,7 +44,7 @@ void SIGVerseROSBridge::setVectorDouble(std::vector<double> &destVec, const bson
   }
 }
 
-void SIGVerseROSBridge::setVectorFloat(std::vector<float> &destVec, const bsoncxx::array::view &arrayView)
+void SIGVerseROSBridge::set_vector_float(std::vector<float> &destVec, const bsoncxx::array::view &arrayView)
 {
   int i = 0;
 
@@ -55,7 +55,7 @@ void SIGVerseROSBridge::setVectorFloat(std::vector<float> &destVec, const bsoncx
 }
 
 template <size_t ArrayNum>
-void SIGVerseROSBridge::setArrayDouble(std::array<double, ArrayNum> &destArray, const bsoncxx::array::view &arrayView) {
+void SIGVerseROSBridge::set_array_double(std::array<double, ArrayNum> &destArray, const bsoncxx::array::view &arrayView) {
     int i = 0;
     for (auto itr = arrayView.cbegin(); itr != arrayView.cend(); ++itr) {
         destArray[i++] = (*itr).get_double();
@@ -63,14 +63,14 @@ void SIGVerseROSBridge::setArrayDouble(std::array<double, ArrayNum> &destArray, 
 }
 
 template <size_t ArrayNum>
-void SIGVerseROSBridge::setArrayDouble(boost::array<double, ArrayNum> &destArray, const bsoncxx::array::view &arrayView) {
+void SIGVerseROSBridge::set_array_double(boost::array<double, ArrayNum> &destArray, const bsoncxx::array::view &arrayView) {
     int i = 0;
     for (auto itr = arrayView.cbegin(); itr != arrayView.cend(); ++itr) {
         destArray[i++] = (*itr).get_double();
     }
 }
 
-void * SIGVerseROSBridge::receivingThread(void *param)
+void * SIGVerseROSBridge::receiving_thread(void *param)
 {
   int dstSocket = *((int *)param);
 
@@ -90,13 +90,13 @@ void * SIGVerseROSBridge::receivingThread(void *param)
   std::map<std::string, rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr> imagePublisherMap;
   std::map<std::string, rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr> laserScanPublisherMap;
 
-  std::cout << "Socket open. tid=" << gettid() << std::endl;
+  std::cout << "Socket open. tid=" << get_tid() << std::endl;
 
-  auto node = rclcpp::Node::make_shared("sigverse_ros_bridge_" + std::to_string(gettid()));
+  auto node = rclcpp::Node::make_shared("sigverse_ros_bridge_" + std::to_string(get_tid()));
 
   // Override the default ros sigint handler.
   // This must be set after the first NodeHandle is created.
-  signal(SIGINT, rosSigintHandler);
+  signal(SIGINT, ros_sigint_handler);
 
   rclcpp::Rate loop_rate(100);
 
@@ -105,7 +105,7 @@ void * SIGVerseROSBridge::receivingThread(void *param)
     // Get total BSON data size
     totalReceivedSize = 0;
 
-    if(!checkReceivable(dstSocket)){ continue; }
+    if(!check_receivable(dstSocket)){ continue; }
 
     char bufHeader[4];
 
@@ -114,19 +114,19 @@ void * SIGVerseROSBridge::receivingThread(void *param)
     if(numRcv == 0)
     {
       close(dstSocket);
-      std::cout << "Socket closed. tid=" << gettid() << std::endl;
+      std::cout << "Socket closed. tid=" << get_tid() << std::endl;
       break;
     }
     if(numRcv == -1)
     {
       close(dstSocket);
-      std::cout << "Socket error. tid=" << gettid() << std::endl;
+      std::cout << "Socket error. tid=" << get_tid() << std::endl;
       break;
     }
     if(numRcv < 4)
     {
       close(dstSocket);
-      std::cout << "Can not get data size... tid=" << gettid() << std::endl;
+      std::cout << "Can not get data size... tid=" << get_tid() << std::endl;
       break;
     }
     totalReceivedSize += 4;
@@ -138,7 +138,7 @@ void * SIGVerseROSBridge::receivingThread(void *param)
     if(msgSize > BUFFER_SIZE)
     {
       close(dstSocket);
-      std::cout << "Data size is too big. tid=" << gettid() << std::endl;
+      std::cout << "Data size is too big. tid=" << get_tid() << std::endl;
       break;
     }
 
@@ -149,7 +149,7 @@ void * SIGVerseROSBridge::receivingThread(void *param)
     {
       size_t unreceivedSize = msgSize - (size_t)totalReceivedSize;
 
-      if(!checkReceivable(dstSocket)){ break; }
+      if(!check_receivable(dstSocket)){ break; }
 
       long int receivedSize = read(dstSocket, &(buf[totalReceivedSize]), unreceivedSize);
 
@@ -158,7 +158,7 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 
     if(msgSize!=totalReceivedSize)
     {
-      std::cout << "msgSize!=totalReceivedSize ?????? tid=" << gettid() << std::endl;
+      std::cout << "msgSize!=totalReceivedSize ?????? tid=" << get_tid() << std::endl;
       continue;
     };
 
@@ -255,11 +255,11 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 
       bsoncxx::array::view dView = bsonView["msg"]["d"].get_array().value;
       cameraInfo.d.resize((size_t)std::distance(dView.cbegin(), dView.cend()));
-      setVectorDouble(cameraInfo.d, dView);
+      set_vector_double(cameraInfo.d, dView);
 
-      setArrayDouble(cameraInfo.k, bsonView["msg"]["k"].get_array().value);
-      setArrayDouble(cameraInfo.r, bsonView["msg"]["r"].get_array().value);
-      setArrayDouble(cameraInfo.p, bsonView["msg"]["p"].get_array().value);
+      set_array_double(cameraInfo.k, bsonView["msg"]["k"].get_array().value);
+      set_array_double(cameraInfo.r, bsonView["msg"]["r"].get_array().value);
+      set_array_double(cameraInfo.p, bsonView["msg"]["p"].get_array().value);
 
       cameraInfo.binning_x         = (uint32_t)bsonView["msg"]["binning_x"].get_int32();
       cameraInfo.binning_y         = (uint32_t)bsonView["msg"]["binning_y"].get_int32();
@@ -317,11 +317,11 @@ void * SIGVerseROSBridge::receivingThread(void *param)
 
       bsoncxx::array::view dView_ranges = bsonView["msg"]["ranges"].get_array().value;
       laserScan.ranges.resize(std::distance(dView_ranges.cbegin(), dView_ranges.cend()));
-      setVectorFloat(laserScan.ranges, dView_ranges);
+      set_vector_float(laserScan.ranges, dView_ranges);
 
       bsoncxx::array::view dView_intensities = bsonView["msg"]["intensities"].get_array().value;
       laserScan.intensities.resize(std::distance(dView_intensities.cbegin(), dView_intensities.cend()));
-      setVectorFloat(laserScan.intensities, dView_intensities);
+      set_vector_float(laserScan.intensities, dView_intensities);
 
       laserScanPublisherMap[topicValue]->publish(laserScan);
     }
@@ -455,7 +455,7 @@ int SIGVerseROSBridge::run(int argc, char **argv)
     struct sockaddr_in dstAddr;
     int dstAddrSize = sizeof(dstAddr);
 
-    if(!checkReceivable(srcSocket))
+    if(!check_receivable(srcSocket))
     {
       continue;
     }
@@ -465,7 +465,7 @@ int SIGVerseROSBridge::run(int argc, char **argv)
     std::cout << "Connected from IP=" << inet_ntoa(dstAddr.sin_addr) << " Port=" << dstAddr.sin_port << std::endl;
 
     pthread_t thread;
-    pthread_create( &thread, NULL, receivingThread, (void *)(&dstSocket));
+    pthread_create( &thread, NULL, receiving_thread, (void *)(&dstSocket));
     pthread_detach(thread);
 
     usleep(10 * 1000);

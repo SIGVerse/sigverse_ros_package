@@ -160,7 +160,7 @@ SIGVerseTurtleBot3System::write(const rclcpp::Time & /*time*/, const rclcpp::Dur
 
   if (joint_position_command_map_.empty()) { return hardware_interface::return_type::OK; }
 
-  if (!HasJointCommandChanged()) return hardware_interface::return_type::OK;
+  if (!has_joint_command_changed()) return hardware_interface::return_type::OK;
 
   // build single-point JointTrajectory
   trajectory_msgs::msg::JointTrajectory joint_trajectory;
@@ -190,7 +190,7 @@ SIGVerseTurtleBot3System::write(const rclcpp::Time & /*time*/, const rclcpp::Dur
   return hardware_interface::return_type::OK;
 }
 
-bool SIGVerseTurtleBot3System::HasJointCommandChanged() const noexcept
+bool SIGVerseTurtleBot3System::has_joint_command_changed() const noexcept
 {
   rclcpp::Time now = node_->get_clock()->now();
 
