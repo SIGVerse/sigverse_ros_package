@@ -32,6 +32,15 @@ def generate_launch_description():
     description_dir = get_package_share_directory("sigverse_turtlebot3_manipulation_description")
     urdf_path = str(Path(description_dir, "urdf",  "turtlebot3_manipulation.urdf.xacro"))
 
+#    robot_state_publisher_node = Node(
+#        package="robot_state_publisher",
+#        executable="robot_state_publisher",
+#        output="screen",
+#        parameters=[{
+#            "robot_description": Command(["xacro ", urdf_path])
+#        }]
+#    )
+
     controller_manager_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
@@ -151,6 +160,7 @@ def generate_launch_description():
         declare_camera_ns,
         declare_controllers_file,
 
+#        robot_state_publisher_node,
         controller_manager_node,
         spawn_arm_controller,
         move_group_node,
