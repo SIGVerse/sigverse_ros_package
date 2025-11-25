@@ -442,6 +442,9 @@ int SIGVerseROSBridge::run(int argc, char **argv)
 
   srcSocket = socket(AF_INET, SOCK_STREAM, 0);
 
+  int opt = 1;
+  setsockopt(srcSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
   bind(srcSocket, (struct sockaddr *)&srcAddr, sizeof(srcAddr));
 
   listen(srcSocket, 100);
