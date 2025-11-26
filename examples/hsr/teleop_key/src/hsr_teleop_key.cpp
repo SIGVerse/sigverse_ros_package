@@ -1,6 +1,5 @@
 #include <memory>
 #include <cmath>
-#include <signal.h>
 #include <termios.h>
 #include <functional>
 
@@ -40,7 +39,6 @@ private:
 public:
   SIGVerseHsrTeleopKey();
 
-  static void ros_sigint_handler([[maybe_unused]] int sig);
   static int  can_receive(int fd);
 
   void message_callback(const std_msgs::msg::String::SharedPtr message);
@@ -110,12 +108,6 @@ SIGVerseHsrTeleopKey::SIGVerseHsrTeleopKey()
 
 //  pub_suction_goal_       = node_handle_.advertise<tmc_suction::SuctionControlActionGoal>  ("/hsrb/suction_control/goal", 10, false);
 //  sub_suction_result_     = node_handle_.subscribe<tmc_suction::SuctionControlActionResult>("/hsrb/suction_control/result", 10, &SIGVerseHsrTeleopKey::suctionResultCallback, this);
-}
-
-
-void SIGVerseHsrTeleopKey::ros_sigint_handler([[maybe_unused]] int sig)
-{
-  rclcpp::shutdown();
 }
 
 
@@ -372,10 +364,6 @@ int SIGVerseHsrTeleopKey::run()
   /////////////////////////////////////////////
 
   show_help();
-
-  // Override the default ros sigint handler.
-  // This must be set after the first NodeHandle is created.
-  signal(SIGINT, ros_sigint_handler);
 
   auto logger = node_->get_logger();
 

@@ -1,6 +1,5 @@
 #include <memory>
 #include <cmath>
-#include <signal.h>
 #include <termios.h>
 #include <functional>
 
@@ -32,7 +31,6 @@ private:
 public:
   SIGVerseTiagoTeleopKey();
 
-  static void ros_sigint_handler([[maybe_unused]] int sig);
   static int  can_receive(int fd);
 
   void message_callback(const std_msgs::msg::String::SharedPtr message);
@@ -107,12 +105,6 @@ SIGVerseTiagoTeleopKey::SIGVerseTiagoTeleopKey()
   pub_gripper_trajectory_ = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/gripper_controller/command", 10);
   sub_msg_                = node_->create_subscription<std_msgs::msg::String>("/tiago/message/to_robot", 10, std::bind(&SIGVerseTiagoTeleopKey::message_callback, this, std::placeholders::_1));
   sub_joint_state_        = node_->create_subscription<sensor_msgs::msg::JointState>("/joint_states",    10, std::bind(&SIGVerseTiagoTeleopKey::joint_state_callback, this, std::placeholders::_1));
-}
-
-
-void SIGVerseTiagoTeleopKey::ros_sigint_handler([[maybe_unused]] int sig)
-{
-  rclcpp::shutdown();
 }
 
 
@@ -330,10 +322,6 @@ int SIGVerseTiagoTeleopKey::run()
   /////////////////////////////////////////////
 
   show_help();
-
-  // Override the default ros sigint handler.
-  // This must be set after the first Node is created.
-  signal(SIGINT, ros_sigint_handler);
 
   auto logger = node_->get_logger();
 

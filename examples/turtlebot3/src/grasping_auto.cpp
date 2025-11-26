@@ -353,8 +353,6 @@ void SIGVerseTb3GraspingAuto::key_loop(int argc, char** argv)
 
     node_ = rclcpp::Node::make_shared("tb3_omc_grasping_auto");
 
-    // Override the default ros sigint handler.
-    signal(SIGINT, ros_sigint_handler);
     signal(SIGWINCH, [](int){ need_redraw_window_.store(true, std::memory_order_relaxed); });
 
     auto logger = node_->get_logger();

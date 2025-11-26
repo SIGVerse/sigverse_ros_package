@@ -3,7 +3,6 @@
 
 #include <cstdio>
 #include <cmath>
-#include <csignal>
 #include <optional>
 #include <mutex>
 #include <atomic>
@@ -83,9 +82,6 @@ public:
   void key_loop(int argc, char** argv);
 
 private:
-
-  static void ros_sigint_handler([[maybe_unused]] int sig);
-
   void yolo_detection_callback(const yolo_msgs::msg::DetectionArray::SharedPtr detection_array);
   void joint_state_callback   (const sensor_msgs::msg::JointState::SharedPtr joint_state);
 
@@ -141,12 +137,6 @@ SIGVerseTb3GraspingAuto::SIGVerseTb3GraspingAuto()
   joint3_pos_ = 0.0;
   joint4_pos_ = 0.0;
   grip_joint_pos_ = 0.0;
-}
-
-
-void SIGVerseTb3GraspingAuto::ros_sigint_handler([[maybe_unused]] int sig)
-{
-  rclcpp::shutdown();
 }
 
 

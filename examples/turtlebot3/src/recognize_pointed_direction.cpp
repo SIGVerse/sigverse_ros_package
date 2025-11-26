@@ -1,6 +1,5 @@
 #include <cstdio>
 #include <cmath>
-#include <csignal>
 #include <limits>
 #include <unistd.h>
 #include <termios.h>
@@ -28,8 +27,6 @@ public:
   void run(int argc, char** argv);
 
 private:
-  static void ros_sigint_handler([[maybe_unused]] int sig);
-
   void yolo_detection_callback(const yolo_msgs::msg::DetectionArray::SharedPtr detection_array);
   bool compute_pointing_floor_intersection(const geometry_msgs::msg::Point& shoulder, const geometry_msgs::msg::Point& wrist, double floor_z, geometry_msgs::msg::Point& floor_hit_point);
   void publish_debug_markers(const std::string& frame_id, const geometry_msgs::msg::Point& hit_point);
@@ -51,11 +48,6 @@ private:
 SIGVerseTb3RecognizePointedDirection::SIGVerseTb3RecognizePointedDirection()
 {
   hit_point_.x = std::numeric_limits<double>::quiet_NaN();
-}
-
-void SIGVerseTb3RecognizePointedDirection::ros_sigint_handler([[maybe_unused]] int sig)
-{
-  rclcpp::shutdown();
 }
 
 void SIGVerseTb3RecognizePointedDirection::yolo_detection_callback(const yolo_msgs::msg::DetectionArray::SharedPtr detection_array)
@@ -217,10 +209,6 @@ void SIGVerseTb3RecognizePointedDirection::run(int argc, char** argv)
   rclcpp::init(argc, argv);
 
   node_ = rclcpp::Node::make_shared("tb3_omc_recognize_pointed_direction");
-
-  // Override the default ros sigint handler.
-  // This must be set after the first NodeHandle is created.
-  signal(SIGINT, ros_sigint_handler);
 
   floor_z_ = node_->declare_parameter<double>("floor_z", -0.5);
 

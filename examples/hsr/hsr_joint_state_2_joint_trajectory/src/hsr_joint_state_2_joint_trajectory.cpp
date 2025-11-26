@@ -1,5 +1,4 @@
 #include <memory>
-#include <signal.h>
 #include <functional>
 #include <algorithm>
 #include <vector>
@@ -18,8 +17,6 @@ public:
   int run();
 
 private:
-
-  static void ros_sigint_handler([[maybe_unused]] int sig);
   void joint_state_callback(const sensor_msgs::msg::JointState::SharedPtr joint_state);
   bool is_contain_joint_names(std::vector<std::string> joint_names);
   double get_current_joint_states_angle(std::string joint_name);
@@ -43,10 +40,6 @@ private:
 
 HsrJointState2JointTrajectory::HsrJointState2JointTrajectory()
 {
-  // Override the default ros sigint handler.
-  // This must be set after the first NodeHandle is created.
-  signal(SIGINT, ros_sigint_handler);
-
   arm_joint_names_.push_back("arm_lift_joint");
   arm_joint_names_.push_back("arm_flex_joint");
   arm_joint_names_.push_back("arm_roll_joint");
@@ -62,12 +55,6 @@ HsrJointState2JointTrajectory::HsrJointState2JointTrajectory()
   pub_arm_trajectory_     = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/hsrb/arm_trajectory_controller/command", 10);
   pub_head_trajectory_    = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/hsrb/head_trajectory_controller/command", 10);
   pub_gripper_trajectory_ = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>("/hsrb/gripper_controller/command", 10);
-}
-
-
-void HsrJointState2JointTrajectory::ros_sigint_handler([[maybe_unused]] int sig)
-{
-  rclcpp::shutdown();
 }
 
 

@@ -1,19 +1,11 @@
 #include "sigverse_ros_bridge.hpp"
 
-bool SIGVerseROSBridge::isRunning;
 int  SIGVerseROSBridge::syncTimeCnt;
 int  SIGVerseROSBridge::syncTimeMaxNum;
 
 pid_t SIGVerseROSBridge::get_tid(void)
 {
   return syscall(SYS_gettid);
-}
-
-void SIGVerseROSBridge::ros_sigint_handler([[maybe_unused]] int sig)
-{
-  isRunning = false;
-
-  rclcpp::shutdown();
 }
 
 bool SIGVerseROSBridge::check_receivable( int fd )
@@ -93,10 +85,6 @@ void * SIGVerseROSBridge::receiving_thread(void *param)
   std::cout << "Socket open. tid=" << get_tid() << std::endl;
 
   auto node = rclcpp::Node::make_shared("sigverse_ros_bridge_" + std::to_string(get_tid()));
-
-  // Override the default ros sigint handler.
-  // This must be set after the first NodeHandle is created.
-  signal(SIGINT, ros_sigint_handler);
 
   rclcpp::Rate loop_rate(100);
 
@@ -427,7 +415,6 @@ int SIGVerseROSBridge::run(int argc, char **argv)
     }
   }
 
-  isRunning = true;
   syncTimeCnt = 0;
 
   int srcSocket;
@@ -451,7 +438,7 @@ int SIGVerseROSBridge::run(int argc, char **argv)
 
   std::cout << "Waiting for connection... port=" << portNumber << std::endl;
 
-  while(isRunning)
+  while(rclcpp::ok())
   {
     int dstSocket;
 

@@ -1,5 +1,4 @@
 #include <cstdio>
-#include <csignal>
 #include <unistd.h>
 #include <termios.h>
 #include <functional>
@@ -39,8 +38,6 @@ public:
   void key_loop(int argc, char** argv);
 
 private:
-
-  static void ros_sigint_handler([[maybe_unused]] int sig);
   static int  can_receive_key( const int fd );
 
   void joint_state_callback(const sensor_msgs::msg::JointState::SharedPtr joint_state);
@@ -65,12 +62,6 @@ SIGVerseTb3TeleopKey::SIGVerseTb3TeleopKey()
 {
   joint1_pos1_ = 0.0; joint2_pos1_ = 0.0; joint3_pos1_ = 0.0; joint4_pos1_ = 0.0; grip_joint_pos1_ = 0.0;
   joint1_pos2_ = 0.0; joint2_pos2_ = 0.0; joint3_pos2_ = 0.0; joint4_pos2_ = 0.0;
-}
-
-
-void SIGVerseTb3TeleopKey::ros_sigint_handler([[maybe_unused]] int sig)
-{
-  rclcpp::shutdown();
 }
 
 
@@ -277,10 +268,6 @@ void SIGVerseTb3TeleopKey::key_loop(int argc, char** argv)
   node_ = rclcpp::Node::make_shared("tb3_omc_teleop_key");
 
   auto logger = node_->get_logger();
-
-  // Override the default ros sigint handler.
-  // This must be set after the first NodeHandle is created.
-  signal(SIGINT, ros_sigint_handler);
 
   rclcpp::Rate loop_rate(50);
 

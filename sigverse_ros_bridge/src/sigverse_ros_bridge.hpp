@@ -14,7 +14,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <pthread.h>
-#include <signal.h>
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
@@ -57,7 +56,6 @@ class SIGVerseROSBridge
 private:
   static pid_t get_tid(void);
 
-  static void ros_sigint_handler(int sig);
   static bool check_receivable (int fd );
 
   static void set_vector_double(std::vector<double> &destVec, const bsoncxx::array::view &arrayView);
@@ -71,7 +69,6 @@ private:
 
   static void *receiving_thread(void *param);
 
-  static bool isRunning;
   static int  syncTimeCnt;
   static int  syncTimeMaxNum;
 
