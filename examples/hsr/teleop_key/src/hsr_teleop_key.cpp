@@ -332,7 +332,7 @@ void SIGVerseHsrTeleopKey::show_help()
   puts("b : Rotate Arm - Upward");
   puts("c : Rotate Arm - Horizontal");
   puts("d : Rotate Arm - Downward");
-  puts("e : Rotate Arm - Suction Downward");
+//  puts("e : Rotate Arm - Suction Downward");
   puts("---------------------------");
   puts("g : Grasp/Open Hand");
   puts("v : Suction ON");
@@ -542,12 +542,12 @@ int SIGVerseHsrTeleopKey::run()
           operate_arm_flex(-2.2, 0.35);
           break;
         }
-        case 'e':
-        {
-          RCLCPP_DEBUG(logger, "Rotate Arm - Suction Downward");
-          operate_arm(arm_lift_joint_pos1_, -2.01, -0.878, -1.108, 0.174, 3);
-          break;
-        }
+        // case 'e':
+        // {
+        //   RCLCPP_DEBUG(logger, "Rotate Arm - Suction Downward");
+        //   operate_arm(arm_lift_joint_pos1_, -2.01, -0.878, -1.108, 0.174, 3);
+        //   break;
+        // }
         case 'g':
         {
           operate_hand(is_hand_open);
