@@ -232,19 +232,6 @@ std::string SIGVerseTb3GraspingAuto::get_detected_objects_list()
 }
 
 
-void SIGVerseTb3GraspingAuto::display_message_in_window(const std::string& text)
-{
-  int rows, cols;
-  getmaxyx(stdscr, rows, cols);
-  if (rows <= WINDOW_HEADER_HEIGHT + 6) { return; }
-  resize_window();
-
-  mvprintw(WINDOW_HEADER_HEIGHT + 2, 0, "%s", text.c_str());
-  move(WINDOW_HEADER_HEIGHT + 3, 0);
-
-  refresh();
-}
-
 void SIGVerseTb3GraspingAuto::publish_debug_markers(const std::string& frame_id, const geometry_msgs::msg::Point& target_pos)
 {
   visualization_msgs::msg::MarkerArray markerArray;
@@ -264,6 +251,19 @@ void SIGVerseTb3GraspingAuto::publish_debug_markers(const std::string& frame_id,
   markerArray.markers.push_back(target);
 
   pub_debug_markers_->publish(markerArray);
+}
+
+void SIGVerseTb3GraspingAuto::display_message_in_window(const std::string& text)
+{
+  int rows, cols;
+  getmaxyx(stdscr, rows, cols);
+  if (rows <= WINDOW_HEADER_HEIGHT + 6) { return; }
+  resize_window();
+
+  mvprintw(WINDOW_HEADER_HEIGHT + 2, 0, "%s", text.c_str());
+  move(WINDOW_HEADER_HEIGHT + 3, 0);
+
+  refresh();
 }
 
 void SIGVerseTb3GraspingAuto::update_window_layout()
