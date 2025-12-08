@@ -335,8 +335,8 @@ void SIGVerseHsrTeleopKey::show_help()
 //  puts("e : Rotate Arm - Suction Downward");
   puts("---------------------------");
   puts("g : Grasp/Open Hand");
-  puts("v : Suction ON");
-  puts("w : Suction OFF");
+//  puts("v : Suction ON");
+//  puts("w : Suction OFF");
   puts("---------------------------");
   puts(("1 : Send Message: "+MSG_TELL_ME).c_str());
   puts(("2 : Send Message: "+MSG_POINT_IT).c_str());
