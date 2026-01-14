@@ -1,51 +1,42 @@
-## Setup
+# Setup
 
-### Install Mongo C Driver
+## Install ROS 2 Humble Hawksbill
 
-```bash:
-$ cd ~/Downloads
-$ wget https://github.com/mongodb/mongo-c-driver/releases/download/1.4.2/mongo-c-driver-1.4.2.tar.gz
-$ tar zxvf mongo-c-driver-1.4.2.tar.gz
-$ cd mongo-c-driver-1.4.2
-$ ./configure
-$ make
-$ sudo make install
-```
+Please see the link below.  
+https://github.com/SIGVerse/sigverse_unity_project/wiki/Tutorial-using-ROS#install-ros-2-humble-hawksbill
 
-### Install Mongo C++ Driver
+## Install Mongo C Driver
 
-```bash:
-$ cd ~/Downloads
-$ wget https://github.com/mongodb/mongo-cxx-driver/archive/r3.0.3.tar.gz
-$ tar zxvf r3.0.3.tar.gz
-$ cd mongo-cxx-driver-r3.0.3/build
-$ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DLIBMONGOC_DIR=/usr/local -DLIBBSON_DIR=/usr/local ..
-$ sudo make EP_mnmlstc_core
-$ make
-$ sudo make install
-```
+Please see the link below.  
+https://github.com/SIGVerse/sigverse_unity_project/wiki/Tutorial-using-ROS#install-mongo-c-driver
 
-### Install SIGVerse ROS Bridge
+## Install Mongo C++ Driver
+
+Please see the link below.  
+https://github.com/SIGVerse/sigverse_unity_project/wiki/Tutorial-using-ROS#install-mongo-cpp-driver
+
+## Install SIGVerse ROS Bridge
 
 ```bash:
-$ cd ~/catkin_ws/src
-$ git clone https://github.com/SIGVerse/sigverse_ros_package.git
-$ cd ..
-$ catkin_make
+cd ~/ros2_ws/src
+git clone https://github.com/SIGVerse/sigverse_ros_package.git
+cd ~/ros2_ws/
+colcon build --symlink-install
+source ~/ros2_ws/install/setup.bash
 ```
 
 
-## How to use
+# How to use
 
 ```bash:
-$ rosrun sigverse_ros_bridge sigverse_ros_bridge
+$ ros2 run sigverse_ros_bridge sigverse_ros_bridge
 ```
 
 Default port number is 50001.  
 If you need change the port number, please pass the argument.
 
 ```bash
-$ rosrun sigverse_ros_bridge sigverse_ros_bridge 12345
+$ ros2 run sigverse_ros_bridge sigverse_ros_bridge 12345
 ```
 
 
